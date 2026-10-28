@@ -1,0 +1,61 @@
+{
+  "description": "Actionable numerical guidance for policy or script adjustment.",
+  "properties": {
+    "variable": {
+      "title": "Variable",
+      "type": "string"
+    },
+    "delta": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "items": {
+            "type": "number"
+          },
+          "type": "array"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Delta"
+    },
+    "unit": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Unit"
+    },
+    "move": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Move"
+    },
+    "basis": {
+      "title": "Basis",
+      "type": "string"
+    }
+  },
+  "required": [
+    "variable",
+    "basis"
+  ],
+  "title": "Hint",
+  "type": "object"
+}

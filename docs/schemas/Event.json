@@ -1,0 +1,119 @@
+{
+  "$defs": {
+    "Verdict": {
+      "description": "User-facing overall verdict for a run or step.",
+      "enum": [
+        "PASS",
+        "FAIL",
+        "CANT_TELL"
+      ],
+      "title": "Verdict",
+      "type": "string"
+    }
+  },
+  "description": "Physical transition or discrete event.",
+  "properties": {
+    "step": {
+      "title": "Step",
+      "type": "integer"
+    },
+    "step_name": {
+      "title": "Step Name",
+      "type": "string"
+    },
+    "kind": {
+      "enum": [
+        "achieved",
+        "failed",
+        "grasped",
+        "lifted",
+        "contacted",
+        "released",
+        "entered",
+        "settled",
+        "broke",
+        "order_violation"
+      ],
+      "title": "Kind",
+      "type": "string"
+    },
+    "predicate": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Predicate"
+    },
+    "args": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Args",
+      "type": "array"
+    },
+    "t_s": {
+      "title": "T S",
+      "type": "number"
+    },
+    "frame": {
+      "title": "Frame",
+      "type": "integer"
+    },
+    "fps": {
+      "title": "Fps",
+      "type": "number"
+    },
+    "measurements": {
+      "additionalProperties": {
+        "maxItems": 2,
+        "minItems": 2,
+        "prefixItems": [
+          {
+            "type": "number"
+          },
+          {
+            "type": "number"
+          }
+        ],
+        "type": "array"
+      },
+      "title": "Measurements",
+      "type": "object"
+    },
+    "source": {
+      "enum": [
+        "demo",
+        "attempt"
+      ],
+      "title": "Source",
+      "type": "string"
+    },
+    "verdict": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Verdict"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    }
+  },
+  "required": [
+    "step",
+    "step_name",
+    "kind",
+    "t_s",
+    "frame",
+    "fps",
+    "source"
+  ],
+  "title": "Event",
+  "type": "object"
+}

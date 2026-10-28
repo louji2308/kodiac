@@ -1,0 +1,85 @@
+{
+  "$defs": {
+    "ReasonCode": {
+      "description": "Canonical reason codes required whenever an evaluation yields CANT_TELL.",
+      "enum": [
+        "not_visible",
+        "occluded",
+        "below_noise_floor",
+        "view_blocked",
+        "appearance_unresolved",
+        "depth_ambiguous"
+      ],
+      "title": "ReasonCode",
+      "type": "string"
+    },
+    "Tri": {
+      "description": "3-valued Kleene logic tri-state: True (T), False (F), Unknown (U).",
+      "enum": [
+        "T",
+        "F",
+        "U"
+      ],
+      "title": "Tri",
+      "type": "string"
+    }
+  },
+  "description": "Physical component measurement with uncertainty and margin.",
+  "properties": {
+    "name": {
+      "title": "Name",
+      "type": "string"
+    },
+    "value": {
+      "title": "Value",
+      "type": "number"
+    },
+    "threshold": {
+      "title": "Threshold",
+      "type": "number"
+    },
+    "margin": {
+      "title": "Margin",
+      "type": "number"
+    },
+    "sigma": {
+      "title": "Sigma",
+      "type": "number"
+    },
+    "unit": {
+      "enum": [
+        "cm",
+        "s",
+        "ratio",
+        "cm/s"
+      ],
+      "title": "Unit",
+      "type": "string"
+    },
+    "tri": {
+      "$ref": "#/$defs/Tri"
+    },
+    "reason": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ReasonCode"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    }
+  },
+  "required": [
+    "name",
+    "value",
+    "threshold",
+    "margin",
+    "sigma",
+    "unit",
+    "tri"
+  ],
+  "title": "Component",
+  "type": "object"
+}

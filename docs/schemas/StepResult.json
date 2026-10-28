@@ -1,0 +1,170 @@
+{
+  "$defs": {
+    "Component": {
+      "description": "Physical component measurement with uncertainty and margin.",
+      "properties": {
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "value": {
+          "title": "Value",
+          "type": "number"
+        },
+        "threshold": {
+          "title": "Threshold",
+          "type": "number"
+        },
+        "margin": {
+          "title": "Margin",
+          "type": "number"
+        },
+        "sigma": {
+          "title": "Sigma",
+          "type": "number"
+        },
+        "unit": {
+          "enum": [
+            "cm",
+            "s",
+            "ratio",
+            "cm/s"
+          ],
+          "title": "Unit",
+          "type": "string"
+        },
+        "tri": {
+          "$ref": "#/$defs/Tri"
+        },
+        "reason": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ReasonCode"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "name",
+        "value",
+        "threshold",
+        "margin",
+        "sigma",
+        "unit",
+        "tri"
+      ],
+      "title": "Component",
+      "type": "object"
+    },
+    "ReasonCode": {
+      "description": "Canonical reason codes required whenever an evaluation yields CANT_TELL.",
+      "enum": [
+        "not_visible",
+        "occluded",
+        "below_noise_floor",
+        "view_blocked",
+        "appearance_unresolved",
+        "depth_ambiguous"
+      ],
+      "title": "ReasonCode",
+      "type": "string"
+    },
+    "Tri": {
+      "description": "3-valued Kleene logic tri-state: True (T), False (F), Unknown (U).",
+      "enum": [
+        "T",
+        "F",
+        "U"
+      ],
+      "title": "Tri",
+      "type": "string"
+    },
+    "Verdict": {
+      "description": "User-facing overall verdict for a run or step.",
+      "enum": [
+        "PASS",
+        "FAIL",
+        "CANT_TELL"
+      ],
+      "title": "Verdict",
+      "type": "string"
+    }
+  },
+  "description": "Outcome of a single sequential step in a run.",
+  "properties": {
+    "index": {
+      "title": "Index",
+      "type": "integer"
+    },
+    "name": {
+      "title": "Name",
+      "type": "string"
+    },
+    "verdict": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Verdict"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "t_s": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "T S"
+    },
+    "frame": {
+      "anyOf": [
+        {
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Frame"
+    },
+    "decisive": {
+      "items": {
+        "$ref": "#/$defs/Component"
+      },
+      "title": "Decisive",
+      "type": "array"
+    },
+    "reasons": {
+      "items": {
+        "$ref": "#/$defs/ReasonCode"
+      },
+      "title": "Reasons",
+      "type": "array"
+    },
+    "evidence": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Evidence",
+      "type": "array"
+    }
+  },
+  "required": [
+    "index",
+    "name"
+  ],
+  "title": "StepResult",
+  "type": "object"
+}

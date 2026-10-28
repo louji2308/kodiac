@@ -1,0 +1,375 @@
+{
+  "$defs": {
+    "Atom": {
+      "description": "Atomic predicate, visual check, or manual assertion.",
+      "properties": {
+        "kind": {
+          "enum": [
+            "pred",
+            "looks",
+            "manual"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "name": {
+          "anyOf": [
+            {
+              "enum": [
+                "on",
+                "inside",
+                "near",
+                "lifted",
+                "moves_with",
+                "dwell"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Name"
+        },
+        "args": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Args",
+          "type": "array"
+        },
+        "params": {
+          "items": {
+            "$ref": "#/$defs/Param"
+          },
+          "title": "Params",
+          "type": "array"
+        },
+        "looks_pos": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Looks Pos"
+        },
+        "looks_neg": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Looks Neg"
+        },
+        "manual_text": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Manual Text"
+        }
+      },
+      "required": [
+        "kind"
+      ],
+      "title": "Atom",
+      "type": "object"
+    },
+    "Expr": {
+      "description": "Boolean expression tree over Atoms.",
+      "properties": {
+        "op": {
+          "enum": [
+            "and",
+            "or",
+            "not",
+            "atom"
+          ],
+          "title": "Op",
+          "type": "string"
+        },
+        "children": {
+          "items": {
+            "$ref": "#/$defs/Expr"
+          },
+          "title": "Children",
+          "type": "array"
+        },
+        "atom": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Atom"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "op"
+      ],
+      "title": "Expr",
+      "type": "object"
+    },
+    "ObjectDecl": {
+      "description": "Declaration of an object tracked or tested in a .green specification.",
+      "properties": {
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "role": {
+          "default": "rigid",
+          "enum": [
+            "effector",
+            "rigid",
+            "container",
+            "articulated",
+            "surface"
+          ],
+          "title": "Role",
+          "type": "string"
+        },
+        "prompt": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Prompt"
+        },
+        "aliases": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Aliases",
+          "type": "array"
+        },
+        "size_cm": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Size Cm"
+        },
+        "height_cm": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Height Cm"
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "title": "ObjectDecl",
+      "type": "object"
+    },
+    "Param": {
+      "description": "Numerical threshold parameter comparison.",
+      "properties": {
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "op": {
+          "enum": [
+            "=",
+            "<=",
+            ">="
+          ],
+          "title": "Op",
+          "type": "string"
+        },
+        "value": {
+          "title": "Value",
+          "type": "number"
+        }
+      },
+      "required": [
+        "name",
+        "op",
+        "value"
+      ],
+      "title": "Param",
+      "type": "object"
+    },
+    "Provenance": {
+      "description": "Origin and grounding metadata for a step or clause.",
+      "properties": {
+        "quote": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Quote"
+        },
+        "t_start": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "T Start"
+        },
+        "t_end": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "T End"
+        },
+        "source": {
+          "enum": [
+            "voice",
+            "text",
+            "compiler-default",
+            "user-edit"
+          ],
+          "title": "Source",
+          "type": "string"
+        }
+      },
+      "required": [
+        "source"
+      ],
+      "title": "Provenance",
+      "type": "object"
+    },
+    "Step": {
+      "description": "One sequential step in a .green specification.",
+      "properties": {
+        "index": {
+          "title": "Index",
+          "type": "integer"
+        },
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "expr": {
+          "$ref": "#/$defs/Expr"
+        },
+        "provenance": {
+          "$ref": "#/$defs/Provenance"
+        },
+        "extra_provenance": {
+          "items": {
+            "$ref": "#/$defs/Provenance"
+          },
+          "title": "Extra Provenance",
+          "type": "array"
+        }
+      },
+      "required": [
+        "index",
+        "name",
+        "expr",
+        "provenance"
+      ],
+      "title": "Step",
+      "type": "object"
+    }
+  },
+  "description": "Parsed and validated .green test specification.",
+  "properties": {
+    "version": {
+      "const": "0.1",
+      "default": "0.1",
+      "enum": [
+        "0.1"
+      ],
+      "title": "Version",
+      "type": "string"
+    },
+    "name": {
+      "title": "Name",
+      "type": "string"
+    },
+    "objects": {
+      "items": {
+        "$ref": "#/$defs/ObjectDecl"
+      },
+      "title": "Objects",
+      "type": "array"
+    },
+    "steps": {
+      "items": {
+        "$ref": "#/$defs/Step"
+      },
+      "title": "Steps",
+      "type": "array"
+    },
+    "params": {
+      "items": {
+        "$ref": "#/$defs/Param"
+      },
+      "title": "Params",
+      "type": "array"
+    },
+    "header_comment": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Header Comment"
+    }
+  },
+  "required": [
+    "name",
+    "objects",
+    "steps"
+  ],
+  "title": "GreenTest",
+  "type": "object"
+}

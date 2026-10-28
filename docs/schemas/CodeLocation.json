@@ -1,0 +1,29 @@
+{
+  "description": "Source code mapping for an identified failure.",
+  "properties": {
+    "file": {
+      "title": "File",
+      "type": "string"
+    },
+    "line": {
+      "title": "Line",
+      "type": "integer"
+    },
+    "code": {
+      "title": "Code",
+      "type": "string"
+    },
+    "span_id": {
+      "title": "Span Id",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "file",
+    "line",
+    "code",
+    "span_id"
+  ],
+  "title": "CodeLocation",
+  "type": "object"
+}

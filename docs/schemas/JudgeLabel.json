@@ -1,0 +1,81 @@
+{
+  "$defs": {
+    "Verdict": {
+      "description": "User-facing overall verdict for a run or step.",
+      "enum": [
+        "PASS",
+        "FAIL",
+        "CANT_TELL"
+      ],
+      "title": "Verdict",
+      "type": "string"
+    }
+  },
+  "description": "Label for judge pool benchmarking.",
+  "properties": {
+    "judge": {
+      "title": "Judge",
+      "type": "string"
+    },
+    "episode_id": {
+      "title": "Episode Id",
+      "type": "string"
+    },
+    "accept": {
+      "title": "Accept",
+      "type": "boolean"
+    },
+    "score": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Score"
+    },
+    "verdict": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Verdict"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "latency_ms": {
+      "title": "Latency Ms",
+      "type": "integer"
+    },
+    "cost_usd": {
+      "title": "Cost Usd",
+      "type": "number"
+    },
+    "calibration_threshold": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Calibration Threshold"
+    }
+  },
+  "required": [
+    "judge",
+    "episode_id",
+    "accept",
+    "latency_ms",
+    "cost_usd"
+  ],
+  "title": "JudgeLabel",
+  "type": "object"
+}

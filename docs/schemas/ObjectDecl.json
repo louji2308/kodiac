@@ -1,0 +1,69 @@
+{
+  "description": "Declaration of an object tracked or tested in a .green specification.",
+  "properties": {
+    "name": {
+      "title": "Name",
+      "type": "string"
+    },
+    "role": {
+      "default": "rigid",
+      "enum": [
+        "effector",
+        "rigid",
+        "container",
+        "articulated",
+        "surface"
+      ],
+      "title": "Role",
+      "type": "string"
+    },
+    "prompt": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Prompt"
+    },
+    "aliases": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Aliases",
+      "type": "array"
+    },
+    "size_cm": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Size Cm"
+    },
+    "height_cm": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Height Cm"
+    }
+  },
+  "required": [
+    "name"
+  ],
+  "title": "ObjectDecl",
+  "type": "object"
+}

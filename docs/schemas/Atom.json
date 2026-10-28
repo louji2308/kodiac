@@ -1,0 +1,120 @@
+{
+  "$defs": {
+    "Param": {
+      "description": "Numerical threshold parameter comparison.",
+      "properties": {
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "op": {
+          "enum": [
+            "=",
+            "<=",
+            ">="
+          ],
+          "title": "Op",
+          "type": "string"
+        },
+        "value": {
+          "title": "Value",
+          "type": "number"
+        }
+      },
+      "required": [
+        "name",
+        "op",
+        "value"
+      ],
+      "title": "Param",
+      "type": "object"
+    }
+  },
+  "description": "Atomic predicate, visual check, or manual assertion.",
+  "properties": {
+    "kind": {
+      "enum": [
+        "pred",
+        "looks",
+        "manual"
+      ],
+      "title": "Kind",
+      "type": "string"
+    },
+    "name": {
+      "anyOf": [
+        {
+          "enum": [
+            "on",
+            "inside",
+            "near",
+            "lifted",
+            "moves_with",
+            "dwell"
+          ],
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Name"
+    },
+    "args": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Args",
+      "type": "array"
+    },
+    "params": {
+      "items": {
+        "$ref": "#/$defs/Param"
+      },
+      "title": "Params",
+      "type": "array"
+    },
+    "looks_pos": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Looks Pos"
+    },
+    "looks_neg": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Looks Neg"
+    },
+    "manual_text": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Manual Text"
+    }
+  },
+  "required": [
+    "kind"
+  ],
+  "title": "Atom",
+  "type": "object"
+}

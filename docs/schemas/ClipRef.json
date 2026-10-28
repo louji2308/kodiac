@@ -1,0 +1,61 @@
+{
+  "description": "Reference to an input video clip or robotic episode.",
+  "properties": {
+    "uri": {
+      "title": "Uri",
+      "type": "string"
+    },
+    "source_kind": {
+      "enum": [
+        "real",
+        "sim",
+        "upload",
+        "demo"
+      ],
+      "title": "Source Kind",
+      "type": "string"
+    },
+    "dataset": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Dataset"
+    },
+    "episode_index": {
+      "anyOf": [
+        {
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Episode Index"
+    },
+    "camera": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Camera"
+    }
+  },
+  "required": [
+    "uri",
+    "source_kind"
+  ],
+  "title": "ClipRef",
+  "type": "object"
+}

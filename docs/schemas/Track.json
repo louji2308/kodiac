@@ -1,0 +1,117 @@
+{
+  "$defs": {
+    "ObjMask": {
+      "description": "Mask annotation for a single object in a single frame.",
+      "properties": {
+        "obj": {
+          "title": "Obj",
+          "type": "string"
+        },
+        "frame": {
+          "title": "Frame",
+          "type": "integer"
+        },
+        "score": {
+          "title": "Score",
+          "type": "number"
+        },
+        "bbox_xyxy": {
+          "maxItems": 4,
+          "minItems": 4,
+          "prefixItems": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            }
+          ],
+          "title": "Bbox Xyxy",
+          "type": "array"
+        },
+        "rle": {
+          "title": "Rle",
+          "type": "string"
+        },
+        "area_px": {
+          "title": "Area Px",
+          "type": "integer"
+        },
+        "rle_size": {
+          "default": [
+            0,
+            0
+          ],
+          "maxItems": 2,
+          "minItems": 2,
+          "prefixItems": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "integer"
+            }
+          ],
+          "title": "Rle Size",
+          "type": "array"
+        }
+      },
+      "required": [
+        "obj",
+        "frame",
+        "score",
+        "bbox_xyxy",
+        "rle",
+        "area_px"
+      ],
+      "title": "ObjMask",
+      "type": "object"
+    }
+  },
+  "description": "Temporal sequence of object masks across frames.",
+  "properties": {
+    "obj": {
+      "title": "Obj",
+      "type": "string"
+    },
+    "frames": {
+      "additionalProperties": {
+        "$ref": "#/$defs/ObjMask"
+      },
+      "title": "Frames",
+      "type": "object"
+    },
+    "backend": {
+      "enum": [
+        "api",
+        "modal",
+        "fixture"
+      ],
+      "title": "Backend",
+      "type": "string"
+    },
+    "direction": {
+      "title": "Direction",
+      "type": "string"
+    },
+    "trace_id": {
+      "title": "Trace Id",
+      "type": "string"
+    }
+  },
+  "required": [
+    "obj",
+    "frames",
+    "backend",
+    "direction",
+    "trace_id"
+  ],
+  "title": "Track",
+  "type": "object"
+}

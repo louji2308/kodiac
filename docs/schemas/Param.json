@@ -1,0 +1,29 @@
+{
+  "description": "Numerical threshold parameter comparison.",
+  "properties": {
+    "name": {
+      "title": "Name",
+      "type": "string"
+    },
+    "op": {
+      "enum": [
+        "=",
+        "<=",
+        ">="
+      ],
+      "title": "Op",
+      "type": "string"
+    },
+    "value": {
+      "title": "Value",
+      "type": "number"
+    }
+  },
+  "required": [
+    "name",
+    "op",
+    "value"
+  ],
+  "title": "Param",
+  "type": "object"
+}

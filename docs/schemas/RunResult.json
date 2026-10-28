@@ -1,0 +1,737 @@
+{
+  "$defs": {
+    "Blame": {
+      "description": "Full causal attribution for a failed test execution.",
+      "properties": {
+        "facts": {
+          "$ref": "#/$defs/FactTable"
+        },
+        "summary": {
+          "title": "Summary",
+          "type": "string"
+        },
+        "summary_source": {
+          "enum": [
+            "muse-spark",
+            "template"
+          ],
+          "title": "Summary Source",
+          "type": "string"
+        },
+        "hint": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Hint"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "warnings": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Warnings",
+          "type": "array"
+        }
+      },
+      "required": [
+        "facts",
+        "summary",
+        "summary_source"
+      ],
+      "title": "Blame",
+      "type": "object"
+    },
+    "ClipRef": {
+      "description": "Reference to an input video clip or robotic episode.",
+      "properties": {
+        "uri": {
+          "title": "Uri",
+          "type": "string"
+        },
+        "source_kind": {
+          "enum": [
+            "real",
+            "sim",
+            "upload",
+            "demo"
+          ],
+          "title": "Source Kind",
+          "type": "string"
+        },
+        "dataset": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Dataset"
+        },
+        "episode_index": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Episode Index"
+        },
+        "camera": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Camera"
+        }
+      },
+      "required": [
+        "uri",
+        "source_kind"
+      ],
+      "title": "ClipRef",
+      "type": "object"
+    },
+    "CodeLocation": {
+      "description": "Source code mapping for an identified failure.",
+      "properties": {
+        "file": {
+          "title": "File",
+          "type": "string"
+        },
+        "line": {
+          "title": "Line",
+          "type": "integer"
+        },
+        "code": {
+          "title": "Code",
+          "type": "string"
+        },
+        "span_id": {
+          "title": "Span Id",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "file",
+        "line",
+        "code",
+        "span_id"
+      ],
+      "title": "CodeLocation",
+      "type": "object"
+    },
+    "Component": {
+      "description": "Physical component measurement with uncertainty and margin.",
+      "properties": {
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "value": {
+          "title": "Value",
+          "type": "number"
+        },
+        "threshold": {
+          "title": "Threshold",
+          "type": "number"
+        },
+        "margin": {
+          "title": "Margin",
+          "type": "number"
+        },
+        "sigma": {
+          "title": "Sigma",
+          "type": "number"
+        },
+        "unit": {
+          "enum": [
+            "cm",
+            "s",
+            "ratio",
+            "cm/s"
+          ],
+          "title": "Unit",
+          "type": "string"
+        },
+        "tri": {
+          "$ref": "#/$defs/Tri"
+        },
+        "reason": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ReasonCode"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "name",
+        "value",
+        "threshold",
+        "margin",
+        "sigma",
+        "unit",
+        "tri"
+      ],
+      "title": "Component",
+      "type": "object"
+    },
+    "Event": {
+      "description": "Physical transition or discrete event.",
+      "properties": {
+        "step": {
+          "title": "Step",
+          "type": "integer"
+        },
+        "step_name": {
+          "title": "Step Name",
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "achieved",
+            "failed",
+            "grasped",
+            "lifted",
+            "contacted",
+            "released",
+            "entered",
+            "settled",
+            "broke",
+            "order_violation"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "predicate": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Predicate"
+        },
+        "args": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Args",
+          "type": "array"
+        },
+        "t_s": {
+          "title": "T S",
+          "type": "number"
+        },
+        "frame": {
+          "title": "Frame",
+          "type": "integer"
+        },
+        "fps": {
+          "title": "Fps",
+          "type": "number"
+        },
+        "measurements": {
+          "additionalProperties": {
+            "maxItems": 2,
+            "minItems": 2,
+            "prefixItems": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              }
+            ],
+            "type": "array"
+          },
+          "title": "Measurements",
+          "type": "object"
+        },
+        "source": {
+          "enum": [
+            "demo",
+            "attempt"
+          ],
+          "title": "Source",
+          "type": "string"
+        },
+        "verdict": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Verdict"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "step",
+        "step_name",
+        "kind",
+        "t_s",
+        "frame",
+        "fps",
+        "source"
+      ],
+      "title": "Event",
+      "type": "object"
+    },
+    "FactTable": {
+      "description": "Rigorous physical facts established at failure onset frame t*.",
+      "properties": {
+        "t_star_s": {
+          "title": "T Star S",
+          "type": "number"
+        },
+        "frame": {
+          "title": "Frame",
+          "type": "integer"
+        },
+        "fps": {
+          "title": "Fps",
+          "type": "number"
+        },
+        "sigma_frames": {
+          "title": "Sigma Frames",
+          "type": "number"
+        },
+        "step_index": {
+          "title": "Step Index",
+          "type": "integer"
+        },
+        "step_name": {
+          "title": "Step Name",
+          "type": "string"
+        },
+        "literal": {
+          "title": "Literal",
+          "type": "string"
+        },
+        "transition": {
+          "enum": [
+            "T->F",
+            "never_T",
+            "order",
+            "unmet"
+          ],
+          "title": "Transition",
+          "type": "string"
+        },
+        "facts": {
+          "additionalProperties": {
+            "type": "object"
+          },
+          "title": "Facts",
+          "type": "object"
+        },
+        "dataset_index": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Dataset Index"
+        },
+        "action_chunk": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Action Chunk"
+        },
+        "code_location": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/CodeLocation"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "evidence": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Evidence",
+          "type": "array"
+        },
+        "trace_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Trace Ids",
+          "type": "array"
+        }
+      },
+      "required": [
+        "t_star_s",
+        "frame",
+        "fps",
+        "sigma_frames",
+        "step_index",
+        "step_name",
+        "literal",
+        "transition",
+        "facts"
+      ],
+      "title": "FactTable",
+      "type": "object"
+    },
+    "Hint": {
+      "description": "Actionable numerical guidance for policy or script adjustment.",
+      "properties": {
+        "variable": {
+          "title": "Variable",
+          "type": "string"
+        },
+        "delta": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "items": {
+                "type": "number"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Delta"
+        },
+        "unit": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Unit"
+        },
+        "move": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Move"
+        },
+        "basis": {
+          "title": "Basis",
+          "type": "string"
+        }
+      },
+      "required": [
+        "variable",
+        "basis"
+      ],
+      "title": "Hint",
+      "type": "object"
+    },
+    "ReasonCode": {
+      "description": "Canonical reason codes required whenever an evaluation yields CANT_TELL.",
+      "enum": [
+        "not_visible",
+        "occluded",
+        "below_noise_floor",
+        "view_blocked",
+        "appearance_unresolved",
+        "depth_ambiguous"
+      ],
+      "title": "ReasonCode",
+      "type": "string"
+    },
+    "StepResult": {
+      "description": "Outcome of a single sequential step in a run.",
+      "properties": {
+        "index": {
+          "title": "Index",
+          "type": "integer"
+        },
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "verdict": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Verdict"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "t_s": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "T S"
+        },
+        "frame": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Frame"
+        },
+        "decisive": {
+          "items": {
+            "$ref": "#/$defs/Component"
+          },
+          "title": "Decisive",
+          "type": "array"
+        },
+        "reasons": {
+          "items": {
+            "$ref": "#/$defs/ReasonCode"
+          },
+          "title": "Reasons",
+          "type": "array"
+        },
+        "evidence": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Evidence",
+          "type": "array"
+        }
+      },
+      "required": [
+        "index",
+        "name"
+      ],
+      "title": "StepResult",
+      "type": "object"
+    },
+    "Tri": {
+      "description": "3-valued Kleene logic tri-state: True (T), False (F), Unknown (U).",
+      "enum": [
+        "T",
+        "F",
+        "U"
+      ],
+      "title": "Tri",
+      "type": "string"
+    },
+    "Verdict": {
+      "description": "User-facing overall verdict for a run or step.",
+      "enum": [
+        "PASS",
+        "FAIL",
+        "CANT_TELL"
+      ],
+      "title": "Verdict",
+      "type": "string"
+    }
+  },
+  "description": "Complete, immutable output of a Kodiac run evaluation.",
+  "properties": {
+    "run_id": {
+      "title": "Run Id",
+      "type": "string"
+    },
+    "test_name": {
+      "title": "Test Name",
+      "type": "string"
+    },
+    "test_sha256": {
+      "title": "Test Sha256",
+      "type": "string"
+    },
+    "config_sha256": {
+      "title": "Config Sha256",
+      "type": "string"
+    },
+    "clip": {
+      "$ref": "#/$defs/ClipRef"
+    },
+    "verdict": {
+      "$ref": "#/$defs/Verdict"
+    },
+    "exit_code": {
+      "enum": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "title": "Exit Code",
+      "type": "integer"
+    },
+    "steps": {
+      "items": {
+        "$ref": "#/$defs/StepResult"
+      },
+      "title": "Steps",
+      "type": "array"
+    },
+    "reasons": {
+      "items": {
+        "$ref": "#/$defs/ReasonCode"
+      },
+      "title": "Reasons",
+      "type": "array"
+    },
+    "blame": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Blame"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "diff_text": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Diff Text"
+    },
+    "events": {
+      "items": {
+        "$ref": "#/$defs/Event"
+      },
+      "title": "Events",
+      "type": "array"
+    },
+    "manual_checks": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Manual Checks",
+      "type": "array"
+    },
+    "timings_ms": {
+      "additionalProperties": {
+        "type": "integer"
+      },
+      "title": "Timings Ms",
+      "type": "object"
+    },
+    "backends": {
+      "additionalProperties": {
+        "type": "string"
+      },
+      "title": "Backends",
+      "type": "object"
+    },
+    "badges": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Badges",
+      "type": "array"
+    },
+    "nonce": {
+      "title": "Nonce",
+      "type": "string"
+    },
+    "is_fixture": {
+      "default": false,
+      "title": "Is Fixture",
+      "type": "boolean"
+    },
+    "card_path": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Card Path"
+    },
+    "trace_path": {
+      "title": "Trace Path",
+      "type": "string"
+    },
+    "created_at": {
+      "title": "Created At",
+      "type": "string"
+    }
+  },
+  "required": [
+    "run_id",
+    "test_name",
+    "test_sha256",
+    "config_sha256",
+    "clip",
+    "verdict",
+    "exit_code",
+    "nonce",
+    "trace_path",
+    "created_at"
+  ],
+  "title": "RunResult",
+  "type": "object"
+}

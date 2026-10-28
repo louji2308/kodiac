@@ -1,0 +1,143 @@
+{
+  "$defs": {
+    "CodeLocation": {
+      "description": "Source code mapping for an identified failure.",
+      "properties": {
+        "file": {
+          "title": "File",
+          "type": "string"
+        },
+        "line": {
+          "title": "Line",
+          "type": "integer"
+        },
+        "code": {
+          "title": "Code",
+          "type": "string"
+        },
+        "span_id": {
+          "title": "Span Id",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "file",
+        "line",
+        "code",
+        "span_id"
+      ],
+      "title": "CodeLocation",
+      "type": "object"
+    }
+  },
+  "description": "Rigorous physical facts established at failure onset frame t*.",
+  "properties": {
+    "t_star_s": {
+      "title": "T Star S",
+      "type": "number"
+    },
+    "frame": {
+      "title": "Frame",
+      "type": "integer"
+    },
+    "fps": {
+      "title": "Fps",
+      "type": "number"
+    },
+    "sigma_frames": {
+      "title": "Sigma Frames",
+      "type": "number"
+    },
+    "step_index": {
+      "title": "Step Index",
+      "type": "integer"
+    },
+    "step_name": {
+      "title": "Step Name",
+      "type": "string"
+    },
+    "literal": {
+      "title": "Literal",
+      "type": "string"
+    },
+    "transition": {
+      "enum": [
+        "T->F",
+        "never_T",
+        "order",
+        "unmet"
+      ],
+      "title": "Transition",
+      "type": "string"
+    },
+    "facts": {
+      "additionalProperties": {
+        "type": "object"
+      },
+      "title": "Facts",
+      "type": "object"
+    },
+    "dataset_index": {
+      "anyOf": [
+        {
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Dataset Index"
+    },
+    "action_chunk": {
+      "anyOf": [
+        {
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Action Chunk"
+    },
+    "code_location": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/CodeLocation"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "evidence": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Evidence",
+      "type": "array"
+    },
+    "trace_ids": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Trace Ids",
+      "type": "array"
+    }
+  },
+  "required": [
+    "t_star_s",
+    "frame",
+    "fps",
+    "sigma_frames",
+    "step_index",
+    "step_name",
+    "literal",
+    "transition",
+    "facts"
+  ],
+  "title": "FactTable",
+  "type": "object"
+}

@@ -1,0 +1,153 @@
+{
+  "$defs": {
+    "Verdict": {
+      "description": "User-facing overall verdict for a run or step.",
+      "enum": [
+        "PASS",
+        "FAIL",
+        "CANT_TELL"
+      ],
+      "title": "Verdict",
+      "type": "string"
+    }
+  },
+  "description": "Row schema for batch audit parquet export.",
+  "properties": {
+    "dataset": {
+      "title": "Dataset",
+      "type": "string"
+    },
+    "episode_index": {
+      "title": "Episode Index",
+      "type": "integer"
+    },
+    "camera": {
+      "title": "Camera",
+      "type": "string"
+    },
+    "verdict": {
+      "$ref": "#/$defs/Verdict"
+    },
+    "t_star_s": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "T Star S"
+    },
+    "frame": {
+      "anyOf": [
+        {
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Frame"
+    },
+    "step": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Step"
+    },
+    "predicate": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Predicate"
+    },
+    "margin": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Margin"
+    },
+    "sigma": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Sigma"
+    },
+    "reasons": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Reasons",
+      "type": "array"
+    },
+    "evidence_uri": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Evidence Uri"
+    },
+    "model_ids": {
+      "title": "Model Ids",
+      "type": "string"
+    },
+    "Kodiac_version": {
+      "title": "Kodiac Version",
+      "type": "string"
+    },
+    "human_verified": {
+      "anyOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Human Verified"
+    }
+  },
+  "required": [
+    "dataset",
+    "episode_index",
+    "camera",
+    "verdict",
+    "model_ids",
+    "Kodiac_version"
+  ],
+  "title": "VerdictRow",
+  "type": "object"
+}

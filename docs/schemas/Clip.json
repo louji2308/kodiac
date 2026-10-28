@@ -1,0 +1,106 @@
+{
+  "$defs": {
+    "ClipRef": {
+      "description": "Reference to an input video clip or robotic episode.",
+      "properties": {
+        "uri": {
+          "title": "Uri",
+          "type": "string"
+        },
+        "source_kind": {
+          "enum": [
+            "real",
+            "sim",
+            "upload",
+            "demo"
+          ],
+          "title": "Source Kind",
+          "type": "string"
+        },
+        "dataset": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Dataset"
+        },
+        "episode_index": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Episode Index"
+        },
+        "camera": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Camera"
+        }
+      },
+      "required": [
+        "uri",
+        "source_kind"
+      ],
+      "title": "ClipRef",
+      "type": "object"
+    }
+  },
+  "description": "Normalized video clip container.",
+  "properties": {
+    "ref": {
+      "$ref": "#/$defs/ClipRef"
+    },
+    "path_h264": {
+      "title": "Path H264",
+      "type": "string"
+    },
+    "fps": {
+      "title": "Fps",
+      "type": "number"
+    },
+    "n_frames": {
+      "title": "N Frames",
+      "type": "integer"
+    },
+    "width": {
+      "title": "Width",
+      "type": "integer"
+    },
+    "height": {
+      "title": "Height",
+      "type": "integer"
+    },
+    "sha256": {
+      "title": "Sha256",
+      "type": "string"
+    }
+  },
+  "required": [
+    "ref",
+    "path_h264",
+    "fps",
+    "n_frames",
+    "width",
+    "height",
+    "sha256"
+  ],
+  "title": "Clip",
+  "type": "object"
+}

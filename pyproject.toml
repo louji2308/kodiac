@@ -1,0 +1,66 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "Kodiac-robotics"
+version = "0.1.0"
+description = "Robots can finally fail a test - tests, git bisect, and git blame for robots"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "Apache-2.0" }
+dependencies = [
+    "pydantic>=2.0",
+    "pydantic-settings>=2.0",
+    "typer>=0.12",
+    "rich>=13.0",
+    "orjson>=3.9",
+    "structlog>=24.0",
+    "requests>=2.31",
+    "ruamel.yaml>=0.18",
+    "pillow>=10.0",
+    "tenacity>=8.0",
+    "lark>=1.1",
+    "openai>=1.0",
+    "shapely>=2.0",
+]
+
+[project.optional-dependencies]
+sim = ["mani-skill>=3.0.0", "mujoco>=3.1.0"]
+proof = ["lerobot>=0.6.0", "statsmodels", "matplotlib>=3.8", "plotly>=5.0"]
+app = ["gradio>=5.0.0", "fastapi>=0.110.0", "uvicorn>=0.30.0", "modal>=0.60.0"]
+viz = ["rerun-sdk>=0.18"]
+mcp = ["mcp>=1.0.0"]
+lerobot = ["lerobot>=0.6.0", "huggingface_hub>=0.20"]
+dev = [
+    "pytest>=8.0",
+    "pytest-xdist>=3.5",
+    "pytest-timeout>=2.2",
+    "hypothesis>=6.90",
+    "ruff>=0.5",
+]
+
+[project.scripts]
+Kodiac = "Kodiac_robotics.cli:app"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+cache-dir = "~/.cache/ruff"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "W"]
+ignore = ["E501"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+addopts = "-p no:cacheprovider"
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+    "live: marks tests requiring live API calls",
+    "gpu: marks tests requiring a GPU",
+]

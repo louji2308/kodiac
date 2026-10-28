@@ -1,0 +1,57 @@
+{
+  "description": "Input payload for Kodiac verification operations.",
+  "properties": {
+    "test": {
+      "title": "Test",
+      "type": "string"
+    },
+    "sim_script": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Sim Script"
+    },
+    "seed": {
+      "default": 0,
+      "title": "Seed",
+      "type": "integer"
+    },
+    "clip": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Clip"
+    },
+    "mode": {
+      "default": "full",
+      "enum": [
+        "fast",
+        "full"
+      ],
+      "title": "Mode",
+      "type": "string"
+    },
+    "fresh": {
+      "default": true,
+      "title": "Fresh",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "test"
+  ],
+  "title": "VerifyRequest",
+  "type": "object"
+}

@@ -1,0 +1,56 @@
+{
+  "description": "Origin and grounding metadata for a step or clause.",
+  "properties": {
+    "quote": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Quote"
+    },
+    "t_start": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "T Start"
+    },
+    "t_end": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "T End"
+    },
+    "source": {
+      "enum": [
+        "voice",
+        "text",
+        "compiler-default",
+        "user-edit"
+      ],
+      "title": "Source",
+      "type": "string"
+    }
+  },
+  "required": [
+    "source"
+  ],
+  "title": "Provenance",
+  "type": "object"
+}

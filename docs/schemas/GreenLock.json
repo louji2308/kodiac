@@ -1,0 +1,180 @@
+{
+  "$defs": {
+    "Event": {
+      "description": "Physical transition or discrete event.",
+      "properties": {
+        "step": {
+          "title": "Step",
+          "type": "integer"
+        },
+        "step_name": {
+          "title": "Step Name",
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "achieved",
+            "failed",
+            "grasped",
+            "lifted",
+            "contacted",
+            "released",
+            "entered",
+            "settled",
+            "broke",
+            "order_violation"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "predicate": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Predicate"
+        },
+        "args": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Args",
+          "type": "array"
+        },
+        "t_s": {
+          "title": "T S",
+          "type": "number"
+        },
+        "frame": {
+          "title": "Frame",
+          "type": "integer"
+        },
+        "fps": {
+          "title": "Fps",
+          "type": "number"
+        },
+        "measurements": {
+          "additionalProperties": {
+            "maxItems": 2,
+            "minItems": 2,
+            "prefixItems": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              }
+            ],
+            "type": "array"
+          },
+          "title": "Measurements",
+          "type": "object"
+        },
+        "source": {
+          "enum": [
+            "demo",
+            "attempt"
+          ],
+          "title": "Source",
+          "type": "string"
+        },
+        "verdict": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Verdict"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "step",
+        "step_name",
+        "kind",
+        "t_s",
+        "frame",
+        "fps",
+        "source"
+      ],
+      "title": "Event",
+      "type": "object"
+    },
+    "Verdict": {
+      "description": "User-facing overall verdict for a run or step.",
+      "enum": [
+        "PASS",
+        "FAIL",
+        "CANT_TELL"
+      ],
+      "title": "Verdict",
+      "type": "string"
+    }
+  },
+  "description": "Sidecar lock file (<name>.green.lock) binding test to calibration baselines.",
+  "properties": {
+    "test_sha256": {
+      "title": "Test Sha256",
+      "type": "string"
+    },
+    "transcript": {
+      "items": {
+        "type": "object"
+      },
+      "title": "Transcript",
+      "type": "array"
+    },
+    "object_baselines": {
+      "additionalProperties": {
+        "type": "object"
+      },
+      "title": "Object Baselines",
+      "type": "object"
+    },
+    "demo_events": {
+      "items": {
+        "$ref": "#/$defs/Event"
+      },
+      "title": "Demo Events",
+      "type": "array"
+    },
+    "geometry_tier": {
+      "enum": [
+        "A",
+        "B",
+        "C"
+      ],
+      "title": "Geometry Tier",
+      "type": "string"
+    },
+    "model_ids": {
+      "additionalProperties": {
+        "type": "string"
+      },
+      "title": "Model Ids",
+      "type": "object"
+    },
+    "created_at": {
+      "title": "Created At",
+      "type": "string"
+    }
+  },
+  "required": [
+    "test_sha256",
+    "transcript",
+    "object_baselines",
+    "demo_events",
+    "geometry_tier",
+    "model_ids",
+    "created_at"
+  ],
+  "title": "GreenLock",
+  "type": "object"
+}

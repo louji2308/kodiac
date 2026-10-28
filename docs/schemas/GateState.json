@@ -1,0 +1,41 @@
+{
+  "description": "Persisted state for the Kodiac done-gate.",
+  "properties": {
+    "pinned_test_sha256": {
+      "title": "Pinned Test Sha256",
+      "type": "string"
+    },
+    "pinned_config_sha256": {
+      "title": "Pinned Config Sha256",
+      "type": "string"
+    },
+    "blocks": {
+      "title": "Blocks",
+      "type": "integer"
+    },
+    "max_blocks": {
+      "title": "Max Blocks",
+      "type": "integer"
+    },
+    "last_nonce": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Last Nonce"
+    }
+  },
+  "required": [
+    "pinned_test_sha256",
+    "pinned_config_sha256",
+    "blocks",
+    "max_blocks"
+  ],
+  "title": "GateState",
+  "type": "object"
+}
