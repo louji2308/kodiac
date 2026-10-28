@@ -1,0 +1,8 @@
+--- a/examples/sim/pick_place.py
++++ b/examples/sim/pick_place.py
+@@ -58,3 +58,3 @@
+     # Step 6: Lower to placement pose
+     # ---------------------------------------------------------
+-    place_pose = [cubeB_pos[0], cubeB_pos[1], cubeB_pos[2] + 0.04]
++    place_pose = [cubeB_pos[0] + 0.05, cubeB_pos[1], cubeB_pos[2] + 0.04]  # BUG B02: 5cm XY offset
+     robot.arm.move_to(place_pose)

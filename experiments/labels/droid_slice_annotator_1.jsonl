@@ -1,0 +1,5 @@
+{"annotator":"annotator_1","episode_id":"droid_ep_0000","dataset":"alexander-soare/droid_100","verdict":"PASS","failure_category":null,"notes":null,"timestamp":1793194947.4746563}
+{"annotator":"annotator_1","episode_id":"droid_ep_0001","dataset":"alexander-soare/droid_100","verdict":"FAIL","failure_category":"B1_early_release","notes":null,"timestamp":1793194947.4769762}
+{"annotator":"annotator_1","episode_id":"droid_ep_0002","dataset":"alexander-soare/droid_100","verdict":"PASS","failure_category":null,"notes":null,"timestamp":1793194947.4801702}
+{"annotator":"annotator_1","episode_id":"droid_ep_0003","dataset":"alexander-soare/droid_100","verdict":"FAIL","failure_category":"B1_early_release","notes":null,"timestamp":1793194947.4819658}
+{"annotator":"annotator_1","episode_id":"droid_ep_0004","dataset":"alexander-soare/droid_100","verdict":"PASS","failure_category":null,"notes":null,"timestamp":1793194947.4846418}

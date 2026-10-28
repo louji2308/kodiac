@@ -1,0 +1,10 @@
+--- a/examples/sim/pick_place.py
++++ b/examples/sim/pick_place.py
+@@ -50,6 +50,7 @@
+     # Step 5: Transfer above Cube B
+     # ---------------------------------------------------------
+     pre_place = [cubeB_pos[0], cubeB_pos[1], cubeB_pos[2] + 0.12]
++    robot.gripper.open(steps=15)  # BUG B01: Early release during transit
+     robot.arm.move_to(pre_place)
+ 
+     # ---------------------------------------------------------

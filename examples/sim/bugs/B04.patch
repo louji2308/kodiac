@@ -1,0 +1,6 @@
+--- a/examples/sim/pick_place.py
++++ b/examples/sim/pick_place.py
+@@ -70,3 +70,3 @@
+     # Step 8: Dwell and allow physical settling
+-    robot.wait(duration_s=0.6)
++    robot.wait(duration_s=0.03)  # BUG B04: Short dwell, fails settling velocity check

@@ -1,0 +1,8 @@
+--- a/examples/sim/pick_place.py
++++ b/examples/sim/pick_place.py
+@@ -40,3 +40,3 @@
+     # Step 3: Gripper close & Step 4: Lift
+     # ---------------------------------------------------------
+-    robot.gripper.close(steps=15)
++    # BUG B07: Missing close (robot moves empty-handed)
+     robot.arm.lift(distance=0.12)

@@ -1,0 +1,7 @@
+--- a/examples/sim/pick_place.py
++++ b/examples/sim/pick_place.py
+@@ -65,3 +65,3 @@
+     # Step 7: Open gripper to release
+     # ---------------------------------------------------------
+-    robot.gripper.open(steps=15)
++    pass  # BUG B09: Never opens gripper (drags cube away during retract)

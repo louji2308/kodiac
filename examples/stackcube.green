@@ -1,0 +1,5 @@
+# stackcube.green — ManiSkill Panda StackCube proof specification
+objects: [gripper, cubeA(size_cm=4), cubeB(size_cm=4)]
+1. grasp:   moves_with(gripper, cubeA) and lifted(cubeA, min_cm=2.0)
+2. place:   on(cubeA, cubeB, align_xy_cm<=3.33, gap_cm<=0.5)
+3. release: not moves_with(gripper, cubeA) and dwell(cubeA, cubeB, for_s=0.5)

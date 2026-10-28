@@ -1,0 +1,5 @@
+# stack_blocks.green — compiled from 11 s webcam demo
+objects: [gripper, red_block(size_cm=4), green_block(size_cm=4)]
+1. grasp:   moves_with(gripper, red_block) and lifted(red_block, min_cm=2.0)               # "pick up the red block" [0:01.2–0:04.0]
+2. place:   on(red_block, green_block, align_xy_cm<=1.5)                                   # "put it on the green one" [0:04.1–0:07.5]
+3. release: not moves_with(gripper, red_block) and dwell(red_block, green_block, for_s=0.5) # "let go" [0:07.6–0:10.4] (+dwell: compiler default)

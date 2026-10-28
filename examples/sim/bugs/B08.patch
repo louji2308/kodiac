@@ -1,0 +1,8 @@
+--- a/examples/sim/pick_place.py
++++ b/examples/sim/pick_place.py
+@@ -28,3 +28,3 @@
+     # Step 1: Pre-grasp approach above Cube A
+     # ---------------------------------------------------------
+-    pre_grasp = [cubeA_pos[0], cubeA_pos[1], cubeA_pos[2] + 0.12]
++    pre_grasp = [0.25, -0.10, cubeA_pos[2] + 0.12]  # BUG B08: Navigates to wrong location
+     robot.arm.move_to(pre_grasp)

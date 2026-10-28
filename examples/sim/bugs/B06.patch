@@ -1,0 +1,8 @@
+--- a/examples/sim/pick_place.py
++++ b/examples/sim/pick_place.py
+@@ -34,3 +34,3 @@
+     # Step 2: Descend to grasp pose
+     # ---------------------------------------------------------
+-    grasp_pose = [cubeA_pos[0], cubeA_pos[1], cubeA_pos[2]]
++    grasp_pose = [cubeA_pos[0], cubeA_pos[1], cubeA_pos[2] + 0.07]  # BUG B06: High grasp (grasping air)
+     robot.arm.move_to(grasp_pose)

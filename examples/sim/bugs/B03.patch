@@ -1,0 +1,6 @@
+--- a/examples/sim/pick_place.py
++++ b/examples/sim/pick_place.py
+@@ -43,3 +43,3 @@
+     # Step 4: Lift
+-    robot.arm.lift(distance=0.12)
++    robot.arm.lift(distance=0.005)  # BUG B03: Low lift (insufficient obstacle clearance)
