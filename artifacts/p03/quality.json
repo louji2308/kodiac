@@ -1,0 +1,20 @@
+{
+  "timestamp": "2026-10-28T16:40:00Z",
+  "golden_clips_evaluated": [
+    "correct_run.mp4",
+    "b01_early_release.mp4",
+    "b02_xy_misalignment.mp4",
+    "b09_lift_failure.mp4",
+    "occluded_clip.mp4"
+  ],
+  "metrics": {
+    "canvas_size_invariant_pass_rate": 1.0,
+    "rle_size_match_clip_geometry": "100% (640x480)",
+    "stackcube_block_id_swaps": 0,
+    "cyclic_tracking_consistency_mean_iou": 0.942,
+    "cyclic_consistency_threshold": 0.70,
+    "proof_arms_partitioned": 10,
+    "proof_arms_size_matched_invariant": "PASSED (|size_matched| == |kodiac_cloud|)"
+  },
+  "overall_verdict": "PASS"
+}

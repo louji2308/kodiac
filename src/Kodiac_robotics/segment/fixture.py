@@ -159,7 +159,8 @@ class FixtureBackend:
         min_f = min(f0, f1)
         max_f = max(f0, f1)
 
-        for role, _seed in seeds.items():
+        target_roles = list(seeds.keys()) if seeds else list(all_tracks.keys())
+        for role in target_roles:
             matched = self._match_track_for_role(role, None, all_tracks)
             if matched is not None:
                 filtered_frames: dict[int, ObjMask] = {

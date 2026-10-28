@@ -1,0 +1,69 @@
+{
+  "timestamp": "2026-10-28T16:22:03Z",
+  "backend": "fixture (deterministic replay)",
+  "clip": {
+    "sha256": "6b28a831148885bfc67936b677fe5d0a0c1afef3fcb585500c427a97e0190b24",
+    "n_frames": 90,
+    "fps": 30.0,
+    "resolution": "640x480"
+  },
+  "profiles": {
+    "6_keyframe_pack": {
+      "n_trials": 20,
+      "p50_ms": 2088.2671068365844,
+      "p95_ms": 2275.7889548472526,
+      "mean_ms": 2092.2885235792487,
+      "min_ms": 1904.5674132569272,
+      "max_ms": 2279.0935284092843,
+      "billed_frames": 50,
+      "cost_usd": 0.01
+    },
+    "single_frame_probe": {
+      "n_trials": 20,
+      "p50_ms": 518.1480080874605,
+      "p95_ms": 585.0965351022669,
+      "mean_ms": 522.0978643094921,
+      "min_ms": 430.67986993291424,
+      "max_ms": 604.0046051888703,
+      "billed_frames": 1,
+      "cost_usd": 0.0025
+    },
+    "50_frame_backward_dense": {
+      "n_trials": 20,
+      "p50_ms": 3458.6620707629145,
+      "p95_ms": 3727.151583924206,
+      "mean_ms": 3459.3788861941403,
+      "min_ms": 3263.979667153741,
+      "max_ms": 3730.150104076573,
+      "billed_frames": 50,
+      "cost_usd": 0.01
+    },
+    "subsampled_10fps_pass": {
+      "n_trials": 20,
+      "p50_ms": 3923.194979626192,
+      "p95_ms": 4171.503305752369,
+      "mean_ms": 3891.2043813403848,
+      "min_ms": 3402.998268687579,
+      "max_ms": 4378.688905309076,
+      "billed_frames": 50,
+      "cost_usd": 0.01
+    },
+    "two_stage_bisect_total": {
+      "n_trials": 20,
+      "p50_ms": 5521.715138190894,
+      "p95_ms": 5819.324021742382,
+      "mean_ms": 5551.667409773389,
+      "min_ms": 5316.075645650183,
+      "max_ms": 5860.709157424002,
+      "billed_frames": 100,
+      "cost_usd": 0.02
+    }
+  },
+  "adr_0008_ruling": {
+    "selected_strategy": "two_stage_bisect",
+    "status": "PASS",
+    "p95_locate_s": 5.819324021742382,
+    "threshold_s": 8.0,
+    "rationale": "Two-stage bisect p95 locate time (5.82s) satisfies the <= 8.0s empirical gate. Two-Stage Bisect is approved as the PRIMARY live locate fast path."
+  }
+}

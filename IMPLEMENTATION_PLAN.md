@@ -262,7 +262,7 @@ tracking over exact windows, keyframe packing, and **measured latency and cost**
 - [ ] All three backends return `Track`s for golden clips; CI (fixtures) green.
 - [ ] Backward propagation verified on the hosted and Modal backends.
 - [ ] Modal vs hosted mask IoU ≥ 0.8 on the same clips (or the discrepancy documented).
-- [ ] `sam_bench.json` + ADR-0004 written (live locate strategy decided with numbers).
+- [ ] `sam_bench.json` + ADR-0008 written (live locate strategy decided with numbers).
 - [ ] Pool tracking ≥50% complete; baseline labelling running; `prereg-v1` tagged.
 - [ ] **Walking skeleton runs end to end** on sim B1 + one real clip (P03.S13).
 
