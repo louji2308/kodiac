@@ -5,8 +5,6 @@ Verifies JudgeLabel contract compliance and calibration tuning per ARCHITECTURE.
 
 from __future__ import annotations
 
-import pytest
-
 from Kodiac_robotics.contracts.core import JudgeLabel, Verdict
 from Kodiac_robotics.proof.judges.robometer import RobometerJudge
 from Kodiac_robotics.proof.judges.single_pass import SinglePassSparkJudge

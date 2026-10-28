@@ -11,8 +11,6 @@ Enforces:
 
 from __future__ import annotations
 
-import os
-import sys
 import time
 from pathlib import Path
 from typing import Any, Dict, List
@@ -115,8 +113,7 @@ def train_proof_policy(
 
     # Import policy dependencies inside container
     import torch
-    import pyarrow.parquet as pq
-    from Kodiac_robotics.proof.pi0 import StateDiffusionPolicy, StateTrajectoryDataset
+
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     torch.manual_seed(seed)

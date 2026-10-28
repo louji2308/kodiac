@@ -22,7 +22,6 @@ import argparse
 import http.server
 import json
 import logging
-import os
 import random
 import sys
 import time
@@ -518,7 +517,7 @@ def run_test_telemetry(
         log_blind_record(bl_rec, blind_file)
 
     print(f"PASS: Verified {len(lines)} records in {timing_file}")
-    print(f"PASS: Strict data isolation verified across 200 DROID blind episodes")
+    print("PASS: Strict data isolation verified across 200 DROID blind episodes")
     print("All telemetry schemas and timing constraints satisfied.")
     return 0
 

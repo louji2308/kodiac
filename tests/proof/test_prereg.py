@@ -6,7 +6,6 @@ Verifies Invariant I8, ADR-0006, and P02 RULING pre-registration requirements.
 from __future__ import annotations
 
 import re
-from pathlib import Path
 
 import pytest
 import yaml
@@ -15,7 +14,6 @@ from Kodiac_robotics.proof.pool import (
     assert_preregistration_ready,
     compute_prereg_hashes,
     find_repo_root,
-    verify_preregistration_tag,
 )
 
 

@@ -202,7 +202,7 @@ unedited take". The N/10 batch result is shown as an end card, with a link to th
 | `config.py` | Settings (env + `Kodiac.toml`): backends, model IDs, thresholds, cache dir | `Settings.load()` | all |
 | `cache.py` | Content-hash cache (disk) | `cached_call(key_parts, fn)` | KD-10 |
 | `io/` | Ingest (file / LeRobot / sim / webcam), time base, transcode, window cutting, keyframe packing, frame access | `open_clip(ref) -> Clip`, `cut_window(clip, f0, f1) -> Path`, `pack_frames(clip, idx) -> Path` | F01, F11 |
-| `segment/` | `Segmenter` protocol + backends `api.py`, `modal_backend.py`, `fixture.py`; re-ID; mask decode | `segment_keyframes(...)`, `track(window, seeds, direction)` | F07, F12, F14 |
+| `segment/` | `Segmenter` protocol + backends `api.py`, `modal_backend.py`, `fixture.py`; `rle.py` (pure-Python/NumPy COCO RLE); `reid.py` (eroded HSV Re-ID); `prompts.py` (embodiment aliasing); `tracks.py` | `segment_keyframes(...)`, `track(window, seeds, direction)` | F07, F12, F14 |
 | `geometry/` | Anchors, scale model tiers A/B/C, ground-plane fit, rim ellipse, optional depth | `ScaleModel.fit(clip_masks) -> ScaleModel`, `to_table_frame(...)` | F15, F17 |
 | `predicates/` | The six predicates + `looks` dispatch + MANUAL; per-frame `PredFrame` tri-states with margin/σ | `evaluate(expr, tracks, scale, t) -> PredFrame` | F16–F21 |
 | `uncertainty/` | σ_px estimation, Monte-Carlo propagation, λ calibration, gates G1–G6 | `sigma_margin(...)`, `apply_gates(...)` | F22–F24 |
@@ -286,6 +286,12 @@ class ClipRef(BaseModel):
 
 class Clip(BaseModel):
     ref: ClipRef; path_h264: str; fps: float; n_frames: int; width: int; height: int; sha256: str
+
+class WindowCut(BaseModel):
+    path: str; valid_f0: int; valid_f1: int; padded_f0: int; padded_f1: int; n_frames: int; fps: float; parent_sha256: str
+
+class PackedKeyframes(BaseModel):
+    path: str; original_indices: list[int]; index_map: dict[int, int]; n_frames: int
 
 class ObjMask(BaseModel):
     obj: str; frame: int; score: float; bbox_xyxy: tuple[float, float, float, float]

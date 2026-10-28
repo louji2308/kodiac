@@ -54,22 +54,22 @@
 - id: F11
   name: Universal ingest, fps-agnostic time
   tier: MVP
-  status: planned
+  status: in_progress
   evidence: null
 - id: F12
   name: Object tracking with stable IDs
   tier: MVP
-  status: planned
+  status: in_progress
   evidence: null
 - id: F13
   name: Two-stage git bisect fast path
   tier: MVP
-  status: planned
+  status: in_progress
   evidence: null
 - id: F14
   name: Dense backward window
   tier: MVP
-  status: planned
+  status: in_progress
   evidence: null
 - id: F15
   name: Scale model (px -> cm)

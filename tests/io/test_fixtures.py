@@ -14,6 +14,7 @@ import json
 from pathlib import Path
 
 import pytest
+
 from Kodiac_robotics.io.lerobot import get_video_metadata
 
 FIXTURES_DIR = Path("tests/fixtures/clips")

@@ -84,3 +84,17 @@ All rulings, architectural choices, and deviations are logged here chronological
   - Require a 2-episode end-to-end smoke test in T02 before launching the full 1,000-episode background generator.
 - **Rationale:** Guarantees that the practice pool is immediately usable for downstream policy retraining in P05/P08 without requiring expensive data re-generation.
 - **Supersedes:** None.
+
+---
+
+### ADR-0008 · 2026-10-28 · P03 · Live Failure Locate Strategy & Empirical Latency Gating (KD-05)
+- **Context:** To satisfy the <12s live demo latency budget (KD-05), Kodiac must locate the physical failure onset frame $t^*$ and track object instances with persistent IDs across video clips. Two candidate approaches exist: (1) Two-Stage Bisect (6-keyframe pack for coarse localization + 50-frame backward dense window for causal attribution), and (2) 10 fps Subsampled Single-Pass Forward Locate (~100 frames in 1 API call).
+- **Decision:**
+  - Formally designate **Two-Stage Bisect** as the primary live fast path. It incurs 100 billed frames ($0.02 cost) and directly leverages Meta SAM 3.1 backward tracking as our hero "time machine" story (video Beat C3).
+  - Implement an empirical latency gate in `scripts/bench_sam.py` ($n \ge 20$ trials). If 6-keyframe bisect + 50-frame backward window p95 locate latency exceeds **8.0 s**, activate the automatic fallback:
+    - **Fallback Live Path:** 10 fps subsampled single-pass locate (~3.8 s), reserving backward tracking strictly for final blame refinement.
+    - **Hosted Demo Safety:** Default to `⚡ CACHED` replays on the public hosted web demo if network round-trip exceeds 11.5 s.
+  - Require pure-Python/NumPy vectorized COCO RLE codec (`segment/rle.py`) with `box_local_to_full_frame_rle` translation to eliminate `pycocotools` C-extension compilation and avoid `(0, 0)` mask canvas displacement.
+  - Require dual-mode fixture recording (`scripts/record_fixtures.py --synthetic` / `--live`) to ensure 100% offline green CI without waiting for external API keys.
+- **Rationale:** Aligns hackathon narrative impact with rigorous engineering tripwires, preserving backward tracking as the core demo differentiator while ensuring a fail-safe fallback against network queueing and rate limits.
+- **Supersedes:** None.

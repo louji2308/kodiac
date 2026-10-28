@@ -9,7 +9,6 @@ import tempfile
 from pathlib import Path
 
 import pyarrow.parquet as pq
-import pytest
 
 from Kodiac_robotics.proof.appearance import (
     build_appearance_benchmark_manifest,

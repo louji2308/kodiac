@@ -9,7 +9,6 @@ import tempfile
 from pathlib import Path
 
 import numpy as np
-import pytest
 import torch
 
 from Kodiac_robotics.proof.pi0 import (

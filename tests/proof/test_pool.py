@@ -10,7 +10,6 @@ from pathlib import Path
 
 import numpy as np
 import pyarrow.parquet as pq
-import pytest
 
 from Kodiac_robotics.proof.pool import (
     PoolEpisodeRecord,

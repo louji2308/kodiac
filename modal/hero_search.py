@@ -10,14 +10,10 @@ Conforms to ARCHITECTURE.md §0, §7, and P02 RULING (T03).
 
 from __future__ import annotations
 
-import argparse
-import hashlib
-import json
 import logging
 import os
 import shutil
 import subprocess
-import sys
 from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any, Dict, List, Optional
@@ -405,14 +401,14 @@ def render_hero_markdown_index(cards: List[HeroCandidateCard]) -> str:
                 "",
                 f"- **Dataset URI:** `{c.repro_uri}`",
                 f"- **Hardware Platform:** {c.robot} (Teleoperated via {c.teleop_hardware})",
-                f"- **Data Origin:** Real teleoperated robot demonstration (`source_kind: real`)",
+                "- **Data Origin:** Real teleoperated robot demonstration (`source_kind: real`)",
                 f"- **Camera Stream:** `{c.camera_name}` ({c.resolution} @ {c.fps:.1f} fps CFR H.264)",
                 f"- **Failure Predicate:** `{c.failure_predicate}`",
                 f"- **Exact Physical Onset ($t^*$):** frame {int(round(c.failure_time_s * c.fps))} ({c.failure_time_s:.2f} s)",
                 f"- **Duration:** {c.duration_s:.1f} seconds",
                 f"- **Thumbnail:** `![{c.candidate_id}]({c.thumbnail_path})`",
                 f"- **5-Second Preview Clip:** [`{c.preview_path}`]({c.preview_path})",
-                f"- **Judge Appeal & Video Cold Open Rationale:**",
+                "- **Judge Appeal & Video Cold Open Rationale:**",
                 f"  > {c.judge_appeal_rationale}",
                 "",
                 "---",

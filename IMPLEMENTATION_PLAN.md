@@ -234,25 +234,25 @@ tracking over exact windows, keyframe packing, and **measured latency and cost**
   §7.2 (`use_fa3=False` on L4); `handle_request` / `handle_stream_request` with `start_frame_index` + `max_frame_num_to_track`;
   scale-to-zero; returns RLE masks; the HF cache volume. Batch entrypoint `track_many(manifest)`.
 - **P03.S04 Fixture backend** (`segment/fixture.py`): replays recorded `output_text` (or decoded RLE JSON) by request key; the
-  `scripts/record_fixtures.py` recorder; CI uses `Kodiac_SAM_BACKEND=fixture`.
+  `scripts/record_fixtures.py` recorder (supporting dual-mode `--synthetic` offline bootstrap and `--live`); CI uses `Kodiac_SAM_BACKEND=fixture`.
 - **P03.S05 Prompt sets & effector aliasing** (`segment/prompts.py`): per-role prompt sets (robot gripper / end effector / gripper fingers vs.
   hand); clip-type detection by the higher score on the first keyframes.
 - **P03.S06 Re-ID & track assembly** (`segment/reid.py`, `segment/tracks.py`): match objects across keyframe calls and window calls
-  (prompt label, HSV histogram, centroid continuity, IoU); merge `both`-direction outputs; enforce ≤16 objects; IoU(fwd, bwd)
+  (prompt label, eroded-core HSV histogram, centroid velocity continuity, coarse categorical Hue gating, IoU); merge `both`-direction outputs; enforce ≤16 objects; IoU(fwd, bwd)
   consistency → a confidence flag.
 - **P03.S07 Latency & cost benchmark** (`scripts/bench_sam.py` → `artifacts/p03/sam_bench.json`): n ≥ 20 runs each of: 6-frame pack
   (text), single-frame probe (image mode), 50-frame backward window (box seeds), subsampled full-clip pass (10 fps, ≤150 frames). Report p50/p95,
-  billed frames, $. Write **ADR-0004 · live locate strategy** (KD-05 decision).
+  billed frames, $. Formalize **ADR-0008 · live locate strategy** (KD-05 decision; Two-Stage Bisect primary, 8.0s p95 gate to subsampled fallback).
 - **P03.S08 Quality check on golden clips** (`tests/segment/test_quality.py`, `slow`): mask IoU vs. sim ground-truth segmentation
   (ManiSkill can render segmentation; use it as GT); ID swap count; backward vs forward IoU. Record in `artifacts/p03/quality.json`.
-- **P03.S09 Debug overlay renderer** (`render/overlay.py`): supervision mask outlines + labels on frames; used by tests and humans.
+- **P03.S09 Debug overlay renderer** (`render/overlay.py`): mask outlines, centroid crosshairs, and bottom anchors in categorical hues at native resolution; decoupled from P04 verdicts.
 - **P03.S10 🔁 Pool tracking** (BG-A): Modal batch full-path tracking for every pool episode (needed for Kodiac labels in P04). Store
   RLE tracks on the `gl-pool` volume. Poll status at each stage transition.
 - **P03.S11 🔁 Baseline labels** (BG-A): run single-pass Spark (2 fps), Robometer-4B, and TOPReward over the **calibration split first**, then
   the train split; write `experiments/labels/<judge>.parquet` (`JudgeLabel`). Labels are written but **not analysed** until `prereg-v1` exists.
 - **P03.S12 Tag prereg.** If not done in P02: commit `PREREGISTRATION.md` final + tag `prereg-v1` **before** any label analysis.
 
-- **P03.S13 ⚡ Walking skeleton (ORCH-owned, throwaway)** (`scripts/skeleton.py`): hosted SAM 3.1 masks on `tests/fixtures/clips/b01.mp4` and one real hero candidate → minimal `on` + `moves_with` → verdict → template blame line → card PNG with badge `PROTOTYPE`. Record a VHS take into `video/backup/`. **Exit-gate item.**
+- **P03.S13 ⚡ Walking skeleton (ORCH-owned, throwaway)** (`scripts/skeleton.py`): hosted SAM 3.1 masks on `tests/fixtures/clips/b01_early_release.mp4` and real `HERO-DROID-001` → minimal `on` + `moves_with` → verdict → template blame line → card PNG with badge `[PROTOTYPE · UNCALIBRATED GEOMETRY]`. Record terminal take into `video/backup/`. **Exit-gate item.**
 - **P03.S14 Proof arms** (`proof/arms.py`): accepted sets for every arm from `JudgeLabel` + oracle + prereg seeds (size-matched control, k% doses), so P04.S15 can train. Owner: IMPL-3.
 **Suggested task split.** IMPL-1: S01, S09 (`io/**`, `render/overlay.py`) · IMPL-2: S02, S04, S05, S07 (`segment/api.py`,
 `segment/fixture.py`, `segment/prompts.py`, `scripts/bench_sam.py`, `scripts/record_fixtures.py`) · IMPL-3: S03, S06, S08, S10

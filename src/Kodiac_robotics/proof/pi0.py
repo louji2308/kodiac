@@ -16,7 +16,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.optim as optim
-from torch.utils.data import DataLoader, Dataset
+from torch.utils.data import Dataset
 
 # ==============================================================================
 # Model Architecture: State-Based Diffusion / Policy Network
@@ -230,7 +230,6 @@ def run_smoke_test(episodes_dir: Path | str, num_steps: int = 10) -> dict[str, A
         raise ValueError(f"Need at least 2 .state.npz files in {ep_dir}, found {len(npz_files)}")
 
     dataset = StateTrajectoryDataset(npz_files)
-    loader = DataLoader(dataset, batch_size=32, shuffle=True)
 
     obs_dim = dataset.all_obs.shape[1]
     policy = StateDiffusionPolicy(obs_dim=obs_dim, action_dim=7, hidden_dim=64)

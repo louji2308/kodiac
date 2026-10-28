@@ -18,10 +18,10 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-import pytest
-from pydantic import ValidationError
-from scripts.label_tool import (
-    BlindLabelRecord,
+import pytest  # noqa: E402
+from pydantic import ValidationError  # noqa: E402
+
+from scripts.label_tool import (  # noqa: E402
     TimingRecord,
     generate_droid_slice_episodes,
     generate_timing_audit_episodes,

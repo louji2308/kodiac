@@ -8,7 +8,6 @@ from __future__ import annotations
 
 import time
 from pathlib import Path
-from typing import Any
 
 from Kodiac_robotics.contracts.core import JudgeLabel, Verdict
 
@@ -31,7 +30,7 @@ class TOPRewardJudge:
         oracle_success_hint: bool | None = None,
     ) -> JudgeLabel:
         """Evaluate episode state/action sequence and return reward score."""
-        start_time = time.perf_counter()
+        _ = time.perf_counter()
 
         # Offline / fixture mode
         if oracle_success_hint is not None:
