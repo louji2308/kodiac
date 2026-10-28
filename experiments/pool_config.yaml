@@ -1,0 +1,82 @@
+# experiments/pool_config.yaml
+# Pre-registered Practice Pool Generation Configuration
+# Tagged in git as prereg-v0 before pool generation begins.
+# SHA-256 is cryptographically embedded into experiments/pool/manifest.parquet table metadata.
+
+pool_name: "stackcube-practice-pool-v0"
+task_name: "ManiSkill-Panda-StackCube"
+environment: "ManiSkill3 / SAPIEN 3"
+control_frequency_hz: 30.0
+
+pool_size: 1000
+pi0_ratio: 0.70
+perturbed_expert_ratio: 0.30
+
+splits:
+  calibration: 200
+  train: 800
+
+calibration_subsplits:
+  fit: 100
+  validate: 100
+
+sharding:
+  shard_size: 100
+  format: "parquet"
+
+action_space:
+  control_mode: "pd_ee_delta_pos"
+  action_dim: 7
+  action_bounds: [-1.0, 1.0]
+  dtype: "float32"
+
+observation_space:
+  proprioception: true
+  cube_poses: true
+  camera_calibration: true
+  camera_keys: ["hand_camera", "base_camera"]
+
+oracle_thresholds:
+  align_xy_cm: 3.33
+  gap_cm: 0.5
+  settle_dwell_s: 0.5
+  settle_v_max_m_s: 0.01
+  min_lift_cm: 2.0
+
+perturbations:
+  early_open:
+    weight: 0.25
+    progress_range: [0.60, 0.85]
+    description: "Gripper opens before reaching place target over base cube"
+  xy_offset:
+    weight: 0.25
+    offset_cm_range: [1.0, 6.0]
+    description: "Horizontal displacement applied to target stacking coordinate"
+  low_lift:
+    weight: 0.20
+    lift_m_range: [0.01, 0.03]
+    description: "Vertical lift height reduced below safe clearance (nominal 0.10m)"
+  short_dwell:
+    weight: 0.15
+    dwell_s_range: [0.0, 0.2]
+    description: "Gripper releases before block comes to rest (nominal >=0.5s)"
+  regrasp:
+    weight: 0.15
+    slip_cm_range: [1.5, 3.5]
+    description: "Imperfect grasp causing block to slip or rotate out of parallel alignment"
+
+policy_training:
+  architecture: "DiffusionPolicy-State"
+  gradient_steps: 20000
+  batch_size: 64
+  learning_rate: 1.0e-4
+  checkpoints: [5000, 10000, 15000, 20000]
+  eval_episodes_per_checkpoint: 50
+  final_eval_episodes: 200
+  training_seeds: [42, 43, 44]
+  eval_seeds: [1001, 1002, 1003]
+
+modal_guard:
+  max_runtime_minutes: 20
+  max_gpu_budget_hours: 12.0
+  gpu_type: "L4"
