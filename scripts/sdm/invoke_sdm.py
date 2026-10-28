@@ -43,17 +43,13 @@ def build_command(
     model: str = DEFAULT_MODEL,
 ) -> List[str]:
     """Construct headless OpenCode command according to ADR-0002."""
-    cmd = ["opencode", "run", "-m", model]
+    prompt = (
+        "Act as Senior Decision Maker (SDM). Review the attached packet "
+        "and produce RULING.md strictly following AGENTS.md §6.3 format."
+    )
+    cmd = ["opencode", "run", prompt, "-m", model]
     if packet_path and packet_path.exists():
         cmd.extend(["-f", str(packet_path.resolve())])
-        cmd.append(
-            "Act as Senior Decision Maker (SDM). Review the attached packet "
-            "and produce RULING.md strictly following AGENTS.md §6.3 format."
-        )
-    elif packet_path:
-        cmd.append(f"Act as SDM for packet {packet_path}.")
-    else:
-        cmd.append("Act as SDM. Provide ruling following AGENTS.md §6.3.")
     return cmd
 
 

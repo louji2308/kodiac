@@ -36,3 +36,51 @@ All rulings, architectural choices, and deviations are logged here chronological
   - **SLA Tripwire:** 1.0 hour timeout for live credentials before falling back to mock fixtures to keep task cards unblocked.
 - **Rationale:** Strictly upholds Prime Directive Law 1, ensures reproducible local verification, and unblocks Phase P01 exit gate.
 - **Supersedes:** None.
+
+---
+
+### ADR-0004 · 2026-10-28 · P02 · Dual-Backend Simulation Architecture & Mock Watermarking
+- **Context:** Local development environment is Windows 11 with CPU only (no NVIDIA CUDA GPU, missing `mani_skill` and `sapien`). Running headless SAPIEN simulation locally fails or requires fragile software Vulkan drivers. However, full simulation rollouts and downstream policy retraining require true SAPIEN physics.
+- **Decision:**
+  - Define `SimEnv` Protocol in `src/Kodiac_robotics/sim/env.py` with two interchangeable backends:
+    1. `KinematicMockEnv`: Pure-Python/NumPy kinematic simulation of Panda + StackCube for fast, 100% offline local unit testing, CI, and B01–B10 bug validation.
+    2. `ManiSkillEnv`: Production SAPIEN physics wrapper executed inside Modal L4 GPU containers for the 1,000-episode practice pool and reference policy training.
+  - **Law 1 Anti-Fabrication Watermarking:** `KinematicMockEnv` must burn an indelible visual banner `[MOCK SIMULATION · NOT SAPIEN PHYSICS]` on all rendered MP4 frames and write `is_mock: true` and `env_backend: "kinematic_mock"` in metadata JSON. Mock episodes are strictly rejected from the proof practice pool manifest.
+- **Rationale:** Ensures fast local developer iteration and green CI without GPU dependencies, while cleanly partitioning heavy CUDA/Vulkan physics to Modal. Visual and metadata watermarks prevent any mock simulation from being misrepresented as true physics.
+- **Supersedes:** None.
+
+---
+
+### ADR-0005 · 2026-10-28 · P02 · Causal Span Blame Window for Physical Actuation Delay
+- **Context:** In physical robotics and simulation, physical events (e.g. cube separation, dropping, toppling) lag behind the actuation that caused them due to gravity, inertia, and contact dynamics. For example, `gripper.open()` executes at frame 100 ($t=3.33$ s), but the cube falls and breaks `moves_with` at frame 114 ($t^*=3.80$ s). A naive point-in-time lookup `find_blame_span(t*)` incorrectly blames subsequent statements (such as `arm.move_to` or `wait`).
+- **Decision:**
+  - Standardize `@span` logger in `src/Kodiac_robotics/sim/spans.py` using `sys._getframe(1)` with repo-relative normalized paths (`os.path.relpath(path, repo_root).replace('\\', '/')`) and AST statement resolution.
+  - Implement `find_blame_span(spans, frame_idx, broken_predicate, causal_window_s=1.0, fps=30.0)` which searches backward from $t^*$ within a causal window ($\Delta t \le 1.0$ s) to locate the latest actuation that causally induced the failed predicate transition (e.g. `moves_with` T$\to$F maps to `gripper.open`).
+- **Rationale:** Guarantees that `blame` links the physical failure directly to the exact source code line that caused it (Invariant I4), preventing misleading diagnoses and ensuring Muse Code `/goal` receives actionable hints.
+- **Supersedes:** None.
+
+---
+
+### ADR-0006 · 2026-10-28 · P02 · Git-Native Pre-Registration Verification & Parquet Metadata Anchoring
+- **Context:** Invariant I8 requires pre-registering proof hypotheses H1–H3, arms, oracle tolerances (`align_xy_cm <= 3.33, gap_cm <= 0.5`), and stopping rules before generating the practice pool or evaluating judge labels. OpenTimestamps (`ots`) is missing on the local host and cannot make external network calls from the sandbox.
+- **Decision:**
+  - Author and commit `experiments/PREREGISTRATION.md` and `experiments/pool_config.yaml` to git and create git tag `prereg-v0`.
+  - In `src/Kodiac_robotics/proof/pool.py`, compute the SHA-256 of `experiments/PREREGISTRATION.md` and `experiments/pool_config.yaml` at runtime and embed them directly into `experiments/pool/manifest.parquet` table metadata along with `prereg_tag: "prereg-v0"`.
+  - Tripwire: `proof/pool.py` asserts that git tag `prereg-v0` exists before launching episode generation; execution aborts if the tag is missing or file checksums mismatch.
+  - `ots stamp` is classified as an optional, non-blocking post-push human step outside the sandbox.
+- **Rationale:** Establishes cryptographic, tamper-evident proof hygiene anchored directly in Git history and Parquet metadata, satisfying skeptical robotics judges that retraining results were not p-hacked.
+- **Supersedes:** None.
+
+---
+
+### ADR-0007 · 2026-10-28 · P02 · Unified Action Space & State Trajectory Schema for Practice Pool
+- **Context:** The Senior Decision Maker identified the "Headless Rollout Trap": treating the 1,000-episode pool solely as an evaluation dataset (videos and cube poses) omits the robot control actions and observation vectors required for downstream policy imitation learning (Invariant I8).
+- **Decision:**
+  - Expand the `.state.npz` data contract generated by `sim/env.py` and `proof/pool.py` to include:
+    1. `actions`: `np.ndarray` of shape `(T, 7)` in `pd_ee_delta_pos` space ($[dx, dy, dz, dr, dp, dy, gripper]$), float32.
+    2. `obs_state`: `np.ndarray` of shape `(T, d)` containing robot proprioception (joint positions, joint velocities, EE pose, gripper width) and object poses matching the observation space of the state Diffusion Policy / ACT.
+    3. `cam_K`: $(3, 3)$ float32 intrinsics and `cam_extrinsic`: $(4, 4)$ float32 matrix for camera calibration.
+  - Require converting all motion-planner trajectories (expert and perturbed) to `pd_ee_delta_pos` control mode before saving.
+  - Require a 2-episode end-to-end smoke test in T02 before launching the full 1,000-episode background generator.
+- **Rationale:** Guarantees that the practice pool is immediately usable for downstream policy retraining in P05/P08 without requiring expensive data re-generation.
+- **Supersedes:** None.
