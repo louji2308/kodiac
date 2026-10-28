@@ -1,5 +1,5 @@
 # T01: Universal Video IO Core, Window Padding & Perception Debug Overlay
-phase: P03 · owner: IMPL-1 · status: TODO
+phase: P03 · owner: IMPL-1 · status: DONE
 plan_ref: IMPLEMENTATION_PLAN.md P03.S01, P03.S09
 depends_on: [] · blocks: [P03-GATE]
 owns_paths: [
@@ -17,6 +17,13 @@ reads_only: [
   "ARCHITECTURE.md"
 ]
 timebox: 90 min (3-strike rule applies)
+
+## Micro-plan (IMPL-1)
+1. Step 1: Implement `src/Kodiac_robotics/io/transcode.py` (ffmpeg subprocess wrappers, CFR H.264 yuv420p, pad even dimensions, probe metadata, write_frames).
+2. Step 2: Implement `src/Kodiac_robotics/io/clip.py` (`open_clip` resolving paths/URIs/ClipRefs, ffprobe metadata extraction, SHA-256 verification) & `tests/io/test_clip.py`.
+3. Step 3: Implement `src/Kodiac_robotics/io/windows.py` (`cut_window` symmetric padding logic, `pack_frames` repeating 3x at 10 fps) & `tests/io/test_windows.py`.
+4. Step 4: Implement `src/Kodiac_robotics/render/overlay.py` (`OverlayRenderer` with alpha mask blend, 2px contours, crosshairs, bottom anchors beta, watermark banner, render_video) & `tests/render/test_overlay.py`.
+5. Step 5: Verify all tests offline with `uv run --no-sync pytest tests/io/ tests/render/ -v`, ensure `ruff check` is clean, update task card report, commit changes and notify ORCH.
 
 ## Mission
 Deliver bulletproof, zero-external-codec video IO and normalization for the entire perception pipeline. Normalize arbitrary video sources (sim runs, LeRobot datasets, files) into CFR H.264 `yuv420p` using ffmpeg CLI. Symmetrically pad short query windows to meet SAM 3.1's mandatory $\ge 50$ frame billing minimum while preserving exact query bounds. Render high-contrast, anti-aliased perception debug overlays (masks, bounding boxes, centroid crosshairs, and bottom anchors $\beta$) at native resolution.
@@ -92,8 +99,23 @@ class OverlayRenderer:
    - `tests/render/test_overlay.py`: Test single-frame and video overlay generation against synthetic masks, assert output frame shapes and pixel modifications.
 
 ## Definition of Done
-- [ ] Behavior: `open_clip`, `cut_window`, `pack_frames`, and `OverlayRenderer` operational with zero C-library dependencies (ffmpeg subprocess + OpenCV).
-- [ ] Tests: `uv run pytest tests/io/ tests/render/ -v` passes completely green.
-- [ ] Lint: `uv run --no-sync ruff check src/Kodiac_robotics/io/ src/Kodiac_robotics/render/ tests/io/ tests/render/` clean.
-- [ ] No stubs or TODOs in owned paths.
-- [ ] Staged and committed only owned paths with message `feat(p03/t01): universal video io, windowing and debug overlay`.
+- [x] Behavior: `open_clip`, `cut_window`, `pack_frames`, and `OverlayRenderer` operational with zero C-library dependencies (ffmpeg subprocess + OpenCV).
+- [x] Tests: `uv run pytest tests/io/ tests/render/ -v` passes completely green (42/42 tests pass).
+- [x] Lint: `uv run --no-sync ruff check src/Kodiac_robotics/io/ src/Kodiac_robotics/render/ tests/io/ tests/render/` clean.
+- [x] No stubs or TODOs in owned paths.
+- [x] Staged and committed only owned paths with message `feat(p03/t01): universal video io, windowing and debug overlay`.
+
+## Report (filled by owner at DONE)
+- **What was built:**
+  1. `src/Kodiac_robotics/io/transcode.py`: ffmpeg & ffprobe CLI subprocess wrappers (`probe_video`, `transcode_to_cfr_h264`, `cut_video_frames`, `write_frames_to_mp4`, `compute_file_sha256`) enforcing CFR H.264 `yuv420p` with dimension padding `pad=ceil(iw/2)*2:ceil(ih/2)*2`.
+  2. `src/Kodiac_robotics/io/clip.py`: `open_clip(ref)` resolving `str`, `Path`, `file://` URIs, `lerobot://` URIs, and `ClipRef` instances, verifying SHA-256 and stream geometry.
+  3. `src/Kodiac_robotics/io/windows.py`: `cut_window` with exact symmetric padding to $\ge 50$ frames, clamping at video boundaries $[0, N-1]$, and `pack_frames` duplicating keyframes 3x at 10 fps with bidirectional index mapping for SAM 3.1 temporal cross-attention stability.
+  4. `src/Kodiac_robotics/render/overlay.py`: `OverlayRenderer` with `render_frame` and `render_video`, supporting RLE mask alpha blending, 2px anti-aliased contours, centroid crosshair markers, bottom anchor ($\beta$) circles, role-based high-contrast palettes, and top banner watermark.
+  5. Test suites in `tests/io/test_clip.py` (6 tests), `tests/io/test_windows.py` (8 tests), and `tests/render/test_overlay.py` (5 tests).
+- **Evidence:**
+  - `uv run --no-sync pytest tests/io/ tests/render/ -v`: 42/42 tests passed in 11.93s.
+  - `uv run --no-sync ruff check src/Kodiac_robotics/io/ src/Kodiac_robotics/render/ tests/io/ tests/render/`: 0 errors.
+  - Zero `TODO` or `NotImplemented` entries across all owned files.
+- **Deviations:** None. All contracts followed strictly as frozen.
+- **Known limits:** Clips with total parent frame count $N < 50$ will clamp to full parent bounds $[0, N-1]$ (per contract specification); standard robotic clips in practice are $\ge 50$ frames (e.g. 90-150 frames).
+- **Time spent:** ~35 minutes.
