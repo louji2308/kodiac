@@ -1,6 +1,6 @@
 # T02: Predicates, Smoothing & Step-Chain Logic Engine
 
-phase: P04 · owner: IMPL-2 · status: TODO
+phase: P04 · owner: IMPL-2 · status: DONE
 plan_ref: IMPLEMENTATION_PLAN.md P04.S03, P04.S04, P04.S07
 depends_on: [] · blocks: [T03]
 owns_paths:
@@ -99,10 +99,32 @@ def evaluate_step_chain(
 ---
 
 ## Definition of Done
-- [ ] `uv run --no-sync pytest tests/predicates tests/engine/test_smoothing.py tests/engine/test_logic.py tests/engine/test_steps.py -q` passes 100% green offline.
-- [ ] All 6 physical predicates return typed `PredFrame` and `Component` objects with correct signs ($m > 0 \iff \text{pass}$).
-- [ ] Schmitt trigger neutral handling of Unknown ($U$) verified: $U$ neither confirms nor breaks hysteresis run length.
-- [ ] Carried literal persistence verified: Step 1 grasp state (`moves_with`) persists during Step 2 place unless explicitly negated.
-- [ ] `evaluate_step_chain` returns top-level `list[ReasonCode]` such that `RunResult(verdict=CANT_TELL, reasons=...)` passes Pydantic model validation.
-- [ ] Zero TODO/stubs in owned paths (`rg -n "TODO|NotImplemented" src/Kodiac_robotics/predicates src/Kodiac_robotics/engine` is empty).
-- [ ] Committed with message `feat(p04/t02): physical predicates, temporal smoothing, and kleene step chain logic`.
+- [x] `uv run --no-sync pytest tests/predicates tests/engine/test_smoothing.py tests/engine/test_logic.py tests/engine/test_steps.py -q` passes 100% green offline.
+- [x] All 6 physical predicates return typed `PredFrame` and `Component` objects with correct signs ($m > 0 \iff \text{pass}$).
+- [x] Schmitt trigger neutral handling of Unknown ($U$) verified: $U$ neither confirms nor breaks hysteresis run length.
+- [x] Carried literal persistence verified: Step 1 grasp state (`moves_with`) persists during Step 2 place unless explicitly negated.
+- [x] `evaluate_step_chain` returns top-level `list[ReasonCode]` such that `RunResult(verdict=CANT_TELL, reasons=...)` passes Pydantic model validation.
+- [x] Zero TODO/stubs in owned paths (`rg -n "TODO|NotImplemented" src/Kodiac_robotics/predicates src/Kodiac_robotics/engine` is empty).
+- [x] Committed with message `feat(p04/t02): physical predicates, temporal smoothing, and kleene step chain logic`.
+
+---
+
+## Report (IMPL-2)
+- **Status:** DONE
+- **Tests:** 23/23 unit tests passing in 4.98s (`uv run --no-sync pytest tests/predicates tests/engine/test_smoothing.py tests/engine/test_logic.py tests/engine/test_steps.py -v`).
+- **Lint:** Clean (`uv run --no-sync ruff check src/Kodiac_robotics/predicates src/Kodiac_robotics/engine tests/predicates tests/engine` passes with 0 errors).
+- **Core Deliverables:**
+  1. `src/Kodiac_robotics/predicates/{base,on,inside,near,lifted,moves_with,dwell,dispatch}.py`:
+     - Closed 6-predicate vocabulary returning typed `PredFrame` and `Component` with signed margins ($m > 0 \iff \text{pass}$).
+     - Unit-matched measurements: spatial (`cm`), ratio (`ratio`), velocity (`cm/s`), duration (`s`).
+     - Pass-through for `looks` (`Tri.U`) and `manual` (`Tri.T`).
+  2. `src/Kodiac_robotics/engine/smoothing.py`:
+     - `TemporalSmoother` implementing Hampel outlier filter ($k=7$), Savitzky-Golay polynomial smoothing, and tri-state Schmitt trigger ($n_{\text{on}}$ confirmations).
+     - Verified neutral Unknown ($U$) handling: $U$ frames neither confirm nor reset the hysteresis run.
+  3. `src/Kodiac_robotics/engine/logic.py`:
+     - Kleene 3-valued boolean operations (`kleene_not`, `kleene_and`, `kleene_or`), `evaluate_conjunction`, and `evaluate_expr_tree`.
+  4. `src/Kodiac_robotics/engine/steps.py`:
+     - `evaluate_step_chain` returning `tuple[Verdict, list[StepResult], list[ReasonCode], list[Event]]`.
+     - Carried literal persistence for ongoing relations (`moves_with`), catching mid-step drops as Class 1 broken prerequisites.
+     - Top-level `ReasonCode` bubbling on `CANT_TELL` guaranteeing strict Pydantic `RunResult` model validation.
+

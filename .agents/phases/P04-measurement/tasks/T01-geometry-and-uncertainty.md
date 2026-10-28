@@ -1,6 +1,6 @@
 # T01: Geometry & Uncertainty Engine Core
 
-phase: P04 · owner: IMPL-1 · status: TODO
+phase: P04 · owner: IMPL-1 · status: DONE
 plan_ref: IMPLEMENTATION_PLAN.md P04.S01, P04.S02, P04.S05, P04.S06
 depends_on: [] · blocks: [T03]
 owns_paths:
@@ -126,10 +126,37 @@ def apply_gates(
 ---
 
 ## Definition of Done
-- [ ] `uv run --no-sync pytest tests/geometry tests/uncertainty -q` passes 100% green offline.
-- [ ] Tier B scale gracefully demotes to Tier C on ill-conditioned synthetic tracks with `[GEOMETRY: TIER C]` badge.
-- [ ] Vectorized Monte Carlo evaluates 300 frames in $<50$ ms.
-- [ ] Gate G2 effector exclusion preserves 20% visibility floor; drops below 20% emit `OCCLUDED`.
-- [ ] `calibrate.py` raises `ValueError` if any training split episode ID is accessed.
-- [ ] Zero TODO/stubs left in owned paths (`rg -n "TODO|NotImplemented" src/Kodiac_robotics/geometry src/Kodiac_robotics/uncertainty` is empty).
-- [ ] Committed with message `feat(p04/t01): geometry anchors, scale tiers, vectorized mc, and evaluation gates`.
+- [x] `uv run --no-sync pytest tests/geometry tests/uncertainty -q` passes 100% green offline (24/24 passed in 1.78s).
+- [x] Tier B scale gracefully demotes to Tier C on ill-conditioned synthetic tracks with `[GEOMETRY: TIER C]` badge.
+- [x] Vectorized Monte Carlo evaluates 300 frames in $<50$ ms (< 5 ms measured).
+- [x] Gate G2 effector exclusion preserves 20% visibility floor; drops below 20% emit `OCCLUDED`.
+- [x] `calibrate.py` raises `ValueError` if any training split episode ID is accessed.
+- [x] Zero TODO/stubs left in owned paths (`rg -n "TODO|NotImplemented" src/Kodiac_robotics/geometry src/Kodiac_robotics/uncertainty` is empty).
+- [x] Committed with message `feat(p04/t01): geometry anchors, scale tiers, vectorized mc, and evaluation gates`.
+
+---
+
+## Report
+
+### Summary of Completed Work
+1. **Geometry Anchors (`src/Kodiac_robotics/geometry/anchors.py`):**
+   - Implemented `compute_anchors(mask, base_area_px)` returning `((cx, cy), bottom_anchor, top_anchor, area_px, occlusion_fraction)`.
+   - Bottom anchor calculated as median column of lowest 5% rows, top anchor as median column of highest 5% rows, with graceful fallback to bounding box when mask is empty.
+2. **Scale Models (`src/Kodiac_robotics/geometry/scale.py`):**
+   - Implemented `TierAScaleModel` for exact perspective back-projection using camera intrinsics $K$ and extrinsics $[R \mid t]$.
+   - Implemented `TierBScaleModel` solving the tabletop ground-plane least-squares equation $v_i = v_h + \tilde{H} \cdot k_i$. Checked pre-conditions $N_{\text{resting}} \ge 2$ and $\Delta v \ge 15$ px. Applied Tikhonov Ridge regularization when condition number $\kappa \in (30, 50]$, and automatic demotion to Tier C when $\kappa > 50$, residual $> 15\%$, pitch angle $\theta \notin [20^\circ, 70^\circ]$, or matrix solve raises `LinAlgError` (ADR-0009).
+   - Implemented `TierCScaleModel` with $2.5\times \sigma$ inflation and `[GEOMETRY: TIER C · UNCALIBRATED CAMERA]` badge.
+3. **Uncertainty Propagation & Calibration (`src/Kodiac_robotics/uncertainty/`):**
+   - `sigma.py`: Implemented robust `estimate_pixel_jitter` using second-difference MAD over static segments ($\sigma_{\text{px}} = \max(0.5, 1.4826 \cdot \text{MAD} / \sqrt{6})$).
+   - `montecarlo.py`: Vectorized NumPy Monte Carlo ($S=256$) error propagation with physical clipping ($k \ge 0.1$), completing 300 frames in $< 5$ ms.
+   - `calibrate.py`: Implemented `fit_inflation_lambda` strictly on calibration fit split (`ep_id < 100`, `split == 'calibration'`) with hard cryptographic assertions rejecting any training pool episodes (`ep_id >= 200` or `split == 'train'`).
+4. **Evaluation Gates G1–G6 (`src/Kodiac_robotics/uncertainty/gates.py`):**
+   - Implemented Gates G1–G6 with unit-matched uncertainty per SDM mandate (spatial cm, ratio, velocity, duration).
+   - Enforced ADR-0010 pair-specific effector exclusion strictly for active `moves_with(effector, target)` and container rims in `inside(A, B)`, guarded by a strict 20% observability floor ($a_{\text{vis}} / \hat{a} \ge 0.20$). Drops below 20% emit `ReasonCode.OCCLUDED`. Non-target objects are not exempt.
+   - Enforced Gate G6 `DEPTH_AMBIGUOUS` on Tier C for depth-critical components.
+
+### Test & Verification Evidence
+- `uv run --no-sync pytest tests/geometry tests/uncertainty -v` -> 24 passed in 1.78s (100% green).
+- `uv run --no-sync ruff check src/Kodiac_robotics/geometry src/Kodiac_robotics/uncertainty tests/geometry tests/uncertainty` -> All checks passed!
+- `uv run --no-sync ruff format --check src/Kodiac_robotics/geometry src/Kodiac_robotics/uncertainty tests/geometry tests/uncertainty` -> 14 files formatted.
+- `git grep -n -E "TODO|NotImplemented" src/Kodiac_robotics/geometry src/Kodiac_robotics/uncertainty` -> 0 matches.
