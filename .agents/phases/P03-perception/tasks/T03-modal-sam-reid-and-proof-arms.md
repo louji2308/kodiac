@@ -1,5 +1,5 @@
 # T03: Modal SAM 3.1 Backend, Re-ID Engine, Track Assembly & Proof Arms
-phase: P03 · owner: IMPL-3 · status: TODO
+phase: P03 · owner: IMPL-3 · status: DONE
 plan_ref: IMPLEMENTATION_PLAN.md P03.S03, P03.S06, P03.S08, P03.S14
 depends_on: [] · blocks: [P03-GATE]
 owns_paths: [
@@ -19,6 +19,20 @@ reads_only: [
   "ARCHITECTURE.md"
 ]
 timebox: 90 min (3-strike rule applies)
+
+## Micro-Plan
+1. Recon & Setup: Verified frozen contracts, dependencies (OpenCV, NumPy, PyArrow), and golden fixture clips.
+2. Modal SAM 3.1 Service (`modal/sam31.py`): Implement App `Kodiac-sam31` with L4 GPU, `use_fa3=False`, `torch.bfloat16`, 50-frame chunking, `torch.cuda.empty_cache()`, `scaledown_window=60`, `handle_request`/`handle_stream_request`, and batch `track_many`.
+3. Modal Client (`src/Kodiac_robotics/segment/modal_backend.py`): Implement `ModalSamBackend` conforming to `Segmenter` protocol with input validation, sliding window chunking, and deterministic offline double adhering to `rle_size == (clip.height, clip.width)`.
+4. Re-ID Engine (`src/Kodiac_robotics/segment/reid.py`): Implement `ReIdEngine` with `compute_eroded_hsv_hist` (`cv2.erode` 5x5 kernel), $L_2$ centroid velocity continuity, categorical Hue gating ($\Delta \text{Hue} > 60^\circ \to \infty$ penalty), and Hungarian assignment. Strictly reject destructive mask subtraction.
+5. Track Assembler (`src/Kodiac_robotics/segment/tracks.py`): Implement `assemble_tracks` with temporal window stitching, cyclic consistency validation (`IoU(fwd, bwd) < 0.70` confidence degradation), and $\le 16$ objects per call API limit enforcement. Implement batch `track_many` dispatcher.
+6. Proof Benchmark Arms (`src/Kodiac_robotics/proof/arms.py`): Implement `assemble_proof_arms` grouping the 10 pre-registered benchmark arms per `PREREGISTRATION.md`.
+7. Test Suite (`tests/segment/`):
+   - `test_modal.py`: Modal backend validation, chunking, and mock fallback.
+   - `test_reid.py`: Eroded-core HSV extraction, red vs green cube swap prevention under proximity.
+   - `test_tracks.py`: Window stitching, cyclic consistency, $\le 16$ objects limit.
+   - `test_quality.py`: Tracking quality on golden fixture clips, zero ID swaps, cyclic consistency.
+8. Full verification: `uv run pytest` offline and `ruff check` clean. Report and commit.
 
 ## Mission
 Deliver the heavy-compute and spatio-temporal assembly infrastructure:
@@ -82,7 +96,24 @@ def assemble_proof_arms(manifest_path: Path | str, labels_dir: Path | str) -> di
    - `tests/segment/test_quality.py`: Test tracking accuracy on fixture clips; assert zero block ID swaps.
 
 ## Definition of Done
-- [ ] Behavior: Modal SAM backend, Re-ID engine, track assembly, and proof arms functioning.
-- [ ] Tests: `uv run pytest tests/segment/test_modal.py tests/segment/test_reid.py tests/segment/test_tracks.py tests/segment/test_quality.py -v` passes 100% green offline.
-- [ ] No stubs or TODOs in owned paths.
-- [ ] Staged and committed only owned paths with message `feat(p03/t03): modal sam backend, reid engine, track assembly and proof arms`.
+- [x] Behavior: Modal SAM backend, Re-ID engine, track assembly, and proof arms functioning.
+- [x] Tests: `uv run pytest tests/segment/test_modal.py tests/segment/test_reid.py tests/segment/test_tracks.py tests/segment/test_quality.py -v` passes 100% green offline.
+- [x] No stubs or TODOs in owned paths.
+- [x] Staged and committed only owned paths with message `feat(p03/t03): modal sam backend, reid engine, track assembly and proof arms`.
+
+## Report
+- **What was built:**
+  - `modal/sam31.py`: Modal App `Kodiac-sam31` configured for L4 GPU (`use_fa3=False`, `torch.bfloat16`, 50-frame chunking, `torch.cuda.empty_cache()`, `scaledown_window=60`, `handle_request`/`handle_stream_request`, `track_many` batch runner, and vectorized NumPy RLE).
+  - `src/Kodiac_robotics/segment/modal_backend.py`: Client for `Kodiac-sam31` implementing `Segmenter` protocol, strict parameter validation (bounds, <= 16 objects, direction), and deterministic offline fallback adhering to `rle_size == (clip.height, clip.width)`.
+  - `src/Kodiac_robotics/segment/reid.py`: `ReIdEngine` with eroded-core HSV histograms (`cv2.erode` 5x5 kernel), circular mean dominant Hue, coarse categorical Hue gating ($\Delta \text{Hue} > 60^\circ \to \infty$ penalty), $L_2$ centroid velocity continuity, and Hungarian matching with zero block ID swaps. Strictly non-destructive.
+  - `src/Kodiac_robotics/segment/tracks.py`: Spatio-temporal track assembler (`assemble_tracks`) and batch dispatcher (`track_many`), merging multi-window tracks, evaluating forward-backward cyclic consistency (IoU < 0.70 flags score < 0.50), and enforcing the <= 16 objects API limit.
+  - `src/Kodiac_robotics/proof/arms.py`: Benchmark arm episode partitioner (`assemble_proof_arms`) grouping accepted episode splits for the 10 pre-registered benchmark arms per `PREREGISTRATION.md`.
+  - Unit & Quality test suite in `tests/segment/test_modal.py`, `tests/segment/test_reid.py`, `tests/segment/test_tracks.py`, `tests/segment/test_quality.py`.
+- **Evidence:**
+  - `uv run pytest tests/segment/test_modal.py tests/segment/test_reid.py tests/segment/test_tracks.py tests/segment/test_quality.py -v`: 22 passed in 25s (100% green).
+  - Full test suite: 156 passed in 70s.
+  - `uv run ruff check .`: clean (All checks passed).
+  - Zero TODOs and zero NotImplemented in owned paths.
+- **Deviations:** None.
+- **Known limits:** Live model execution on Modal depends on user-provided Modal token and gated HF SAM 3.1 access; deterministic offline fixture doubles and mock fallbacks run seamlessly.
+- **Time spent:** ~45 min.

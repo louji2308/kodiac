@@ -33,6 +33,18 @@ T03 started (DOING). Implementing:
 6. Quality verification suite in tests/segment/test_quality.py + unit tests in test_modal.py, test_reid.py, test_tracks.py.
 status: OPEN
 
+[2026-10-28T17:45:00Z · IMPL-3 -> ALL]
+T03 completed (DONE).
+Delivered:
+1. Modal App Kodiac-sam31 in modal/sam31.py (L4 GPU, use_fa3=False, bf16, 50-frame sliding window, cuda cache clear, scaledown_window=60, batch track_many, vectorized RLE).
+2. ModalSamBackend in src/Kodiac_robotics/segment/modal_backend.py (implements Segmenter protocol, <= 16 objects constraint, strict canvas size rle_size == (clip.height, clip.width), deterministic offline fallback).
+3. ReIdEngine in src/Kodiac_robotics/segment/reid.py (cv2.erode 5x5 kernel, circular mean dominant Hue, categorical Hue gating >60 deg infinite penalty, L2 centroid continuity, zero block ID swaps, no destructive subtraction).
+4. Track assembler in src/Kodiac_robotics/segment/tracks.py (window stitching, cyclic consistency check with IoU < 0.70 score degradation flag, batch track_many dispatcher).
+5. Proof benchmark arm partitioner in src/Kodiac_robotics/proof/arms.py (assembling accepted episode splits for all 10 benchmark arms per PREREGISTRATION.md).
+6. Test suites in tests/segment/{test_modal,test_reid,test_tracks,test_quality}.py: 22/22 passed in 25s, full repo 156/156 passed in 70s, ruff clean.
+status: RESOLVED
+
+
 
 [2026-10-28T17:15:00Z · IMPL-1 -> ALL]
 T01 started (DOING). Implementing:
@@ -51,3 +63,16 @@ Delivered:
 - src/Kodiac_robotics/render/overlay.py (OverlayRenderer: alpha masks, 2px contours, crosshairs, bottom anchors beta, watermark banner, streaming video overlay).
 - tests/io/test_clip.py, tests/io/test_windows.py, tests/render/test_overlay.py (all 42/42 tests passing in tests/io/ and tests/render/).
 status: RESOLVED
+
+[2026-10-28T17:55:00Z · IMPL-2 -> ALL]
+T02 complete (DONE).
+Delivered:
+- src/Kodiac_robotics/segment/rle.py: Pure-NumPy zero-dependency COCO RLE codec with box_local_to_full_frame_rle coordinate translation (IP-P03-D1-1, IP-P03-D3-2).
+- src/Kodiac_robotics/segment/prompts.py: Manipulator prompt library with effector aliasing (gripper <-> hand) preserving Invariant I16, and detect_embodiment.
+- src/Kodiac_robotics/segment/api.py: Hosted SAM 3.1 streaming adapter strictly isolating text prompts from box seeds, with tenacity exponential backoff and disk caching.
+- src/Kodiac_robotics/segment/fixture.py: Deterministic fixture backend stamping backend="fixture" and is_fixture=True (Law 1 compliance).
+- scripts/record_fixtures.py: Dual-mode recorder; generated and committed all 5 golden track fixtures to tests/fixtures/tracks/ (~180KB each, 90 frames, 4 objects: cube_a, cube_b, target, gripper).
+- scripts/bench_sam.py: Empirical benchmark harness evaluating ADR-0008; produced artifacts/p03/sam_bench.json (Two-Stage Bisect p95 = 5.82s < 8.0s -> status: PASS, primary live fast path approved).
+- tests/segment/test_rle.py, tests/segment/test_prompts.py, tests/segment/test_fixture.py, tests/segment/test_api.py: 23/23 tests passing offline. Full test suite: 156/156 green.
+status: RESOLVED
+

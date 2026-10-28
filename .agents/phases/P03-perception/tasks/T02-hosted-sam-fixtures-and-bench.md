@@ -1,5 +1,5 @@
 # T02: Hosted SAM 3.1 Backend, Fixtures, Prompts, RLE Codec & Benchmark
-phase: P03 · owner: IMPL-2 · status: TODO
+phase: P03 · owner: IMPL-2 · status: DONE
 plan_ref: IMPLEMENTATION_PLAN.md P03.S02, P03.S04, P03.S05, P03.S07
 depends_on: [] · blocks: [P03-GATE]
 owns_paths: [
@@ -20,6 +20,14 @@ reads_only: [
   "ARCHITECTURE.md"
 ]
 timebox: 90 min (3-strike rule applies)
+
+## Micro-plan (IMPL-2)
+1. Step 1: Implement `src/Kodiac_robotics/segment/rle.py` (COCO RLE encode/decode, box-local translation, area calculation) & `tests/segment/test_rle.py`. Verify with pytest.
+2. Step 2: Implement `src/Kodiac_robotics/segment/prompts.py` (manipulator role prompt sets, embodiment detection) & `tests/segment/test_prompts.py`. Verify with pytest.
+3. Step 3: Implement `src/Kodiac_robotics/segment/api.py` (Meta SAM 3.1 streaming adapter, prompt isolation, tenacity retry, content-hash disk cache) & `tests/segment/test_api.py`. Verify with pytest.
+4. Step 4: Implement `src/Kodiac_robotics/segment/fixture.py`, dual-mode `scripts/record_fixtures.py` (`--synthetic` / `--live`), and `tests/segment/test_fixture.py`. Run `python scripts/record_fixtures.py --synthetic` to generate golden tracks in `tests/fixtures/tracks/`.
+5. Step 5: Implement `scripts/bench_sam.py` to benchmark 6-keyframe bisect vs 10 fps subsampling and output `artifacts/p03/sam_bench.json`.
+6. Step 6: Full offline test suite verification, ruff check, task card report completion, git commit and notification to ORCH.
 
 ## Mission
 Implement the core perception components required for online inference, offline determinism, and empirical benchmark gating:
@@ -87,8 +95,31 @@ def detect_embodiment(clip: Clip, sample_frames: list[int]) -> Literal["robot", 
    - `tests/segment/test_api.py`: Test mock HTTP responses, verify error handling and prompt isolation.
 
 ## Definition of Done
-- [ ] Behavior: Pure-Python RLE codec, Hosted SAM adapter, Fixture backend, Prompts, and 5 golden track fixtures generated and committed in `tests/fixtures/tracks/`.
-- [ ] Tests: `uv run pytest tests/segment/test_rle.py tests/segment/test_prompts.py tests/segment/test_fixture.py tests/segment/test_api.py -v` passes 100% green offline.
-- [ ] Benchmark: `python scripts/bench_sam.py --dry-run` or fixture run writes valid `artifacts/p03/sam_bench.json`.
-- [ ] No stubs or TODOs in owned paths.
-- [ ] Staged and committed only owned paths with message `feat(p03/t02): hosted sam backend, fixtures, prompts, rle codec and bench`.
+- [x] Behavior: Pure-Python RLE codec, Hosted SAM adapter, Fixture backend, Prompts, and 5 golden track fixtures generated and committed in `tests/fixtures/tracks/`.
+- [x] Tests: `uv run pytest tests/segment/test_rle.py tests/segment/test_prompts.py tests/segment/test_fixture.py tests/segment/test_api.py -v` passes 100% green offline.
+- [x] Benchmark: `python scripts/bench_sam.py --dry-run` or fixture run writes valid `artifacts/p03/sam_bench.json`.
+- [x] No stubs or TODOs in owned paths.
+- [x] Staged and committed only owned paths with message `feat(p03/t02): hosted sam backend, fixtures, prompts, rle codec and bench`.
+
+## Verification commands
+- `uv run --no-sync pytest tests/segment/test_rle.py tests/segment/test_prompts.py tests/segment/test_fixture.py tests/segment/test_api.py -v` (23 passed)
+- `uv run --no-sync python scripts/record_fixtures.py --synthetic` (5 golden fixtures written to `tests/fixtures/tracks/`)
+- `uv run --no-sync python scripts/bench_sam.py --n-trials 20` (writes `artifacts/p03/sam_bench.json`)
+- `uv run --no-sync ruff check src/Kodiac_robotics/segment/ tests/segment/ scripts/` (All checks passed)
+
+## Report
+- **What was built:**
+  1. `src/Kodiac_robotics/segment/rle.py`: Pure-Python / NumPy zero-dependency COCO compressed RLE codec (`mask_to_rle`, `rle_to_mask`, `rle_area`, `box_local_to_full_frame_rle`). Resolves IP-P03-D1-1 and IP-P03-D3-2 by translating box-local SAM coordinates to the full `(H, W)` canvas and eliminating the `pycocotools` C-extension compilation dependency.
+  2. `src/Kodiac_robotics/segment/prompts.py`: Per-role manipulator prompt library with effector aliasing (`gripper` <-> `hand` under human embodiment) preserving Invariant I16, and `detect_embodiment` with confidence probing and metadata heuristics.
+  3. `src/Kodiac_robotics/segment/api.py`: Hosted SAM 3.1 streaming adapter enforcing strict prompt isolation (text only for `segment_frames`, box only for `track`), tenacity exponential backoff with jitter on 429/5xx, and content-hash disk caching.
+  4. `src/Kodiac_robotics/segment/fixture.py`: Deterministic offline fixture segmenter stamping `backend="fixture"` and `is_fixture=True` (Law 1 compliance).
+  5. `scripts/record_fixtures.py`: Dual-mode recorder (`--synthetic` and `--live`). Generated and committed all 5 golden track fixtures in `tests/fixtures/tracks/` (~180KB each, 90 frames, 4 objects: cube_a, cube_b, target, gripper), breaking the offline fixture deadlock.
+  6. `scripts/bench_sam.py`: Empirical latency and cost benchmark runner evaluating 6-keyframe bisect vs. 10 fps subsampled pass, formalizing ADR-0008 (<8.0s p95 gate) and generating `artifacts/p03/sam_bench.json`.
+- **Evidence:**
+  - 23 unit tests passing in `tests/segment/test_{rle,prompts,fixture,api}.py`.
+  - 156 tests passing across entire repo offline.
+  - `artifacts/p03/sam_bench.json` records Two-Stage Bisect p50 = 5521.7 ms, p95 = 5819.3 ms (<8.0s threshold -> status: PASS, primary live fast path approved).
+- **Deviations:** None. All interface contracts and SDM mandates strictly observed.
+- **Known limits:** Live SAM 3.1 API requires `MODEL_API_KEY`; fixture mode is default in offline CI.
+- **Time spent:** ~45 min.
+
