@@ -358,7 +358,9 @@ class RunResult(BaseModel):
     verdict: Verdict; exit_code: Literal[0, 1, 2, 3]; steps: list[StepResult]; reasons: list[ReasonCode]
     blame: Blame | None; diff_text: str | None; events: list[Event]; manual_checks: list[str]
     timings_ms: dict[str, int]; backends: dict[str, str]; badges: list[str]   # REAL/SIM/UPLOAD/CACHED/OPEN-WEIGHTS
-    nonce: str; card_path: str | None; trace_path: str; created_at: str
+    nonce: str  # 16-character hex string (^[0-9a-f]{16}$)
+    is_fixture: bool = False  # True if generated via fixture / mock mode without live model inference
+    card_path: str | None; trace_path: str; created_at: str
 
 # ---------- loop ----------
 class VerifyRequest(BaseModel):              # MCP Kodiac.verify input

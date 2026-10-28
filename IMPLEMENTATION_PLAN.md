@@ -109,9 +109,13 @@ credit coverage, and ManiSkill rendering. Discovering them on day 5 kills the de
 - **P01.S15 Gate & push.** Fill `GATE.md` with evidence. Commit and push (if 👤 has created the remote; otherwise record "push pending remote" as
   a blocker). Tag `p01-done` and `contracts-v1`.
 
-**Suggested task split.** IMPL-1: S04–S07 (`pyproject.toml`, `src/Kodiac_robotics/{contracts,config.py,cache.py}`, `tests/unit/`, CI) ·
-IMPL-2: S08–S10 (`src/Kodiac_robotics/cli.py` doctor, `scripts/smoke/`, `artifacts/p01/`) · IMPL-3: S11–S12, S14 (`modal/`,
-`docs/*` skeletons, SDM channel scripts in `scripts/sdm/`). ORCH: S01–S03, S13, S15.
+**Suggested task split (Two-stage gated DAG ⟲ changed in P01 ruling).**
+- Stage 1 (Sequential prerequisite): IMPL-1: S04–S07 (`pyproject.toml`, `src/Kodiac_robotics/{contracts,config.py,cache.py}`, `tests/unit/`, CI).
+- Stage 2 (Parallel execution once Stage 1 `uv sync` succeeds):
+  - IMPL-2: S08–S10 (`src/Kodiac_robotics/cli.py` doctor, `scripts/smoke/`, `artifacts/p01/`)
+  - IMPL-3: S11–S12, S14 (`modal/`, `docs/*` skeletons, SDM channel scripts in `scripts/sdm/`).
+- Stage 3: ORCH: S00–S03, S13, S15.
+*(Credential SLA: 1.0 h wait max before ST1–ST13 switch to `--mock` fixture mode with `status: PENDING_KEY`, `latency_ms: null`, `is_fixture: true`).*
 
 **Exit gate.**
 - [ ] CI green on GitHub (or locally if the remote is pending) · `ruff` clean · contract tests pass · `contracts-v1` tag.

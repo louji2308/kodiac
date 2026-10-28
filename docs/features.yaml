@@ -1,0 +1,308 @@
+# docs/features.yaml: Ground Truth Feature Shipped-Status
+# Source of truth for DOC-RECONCILE (at GATE) and the README shipped table
+
+- id: F01
+  name: Demo capture
+  tier: MVP
+  status: planned
+  evidence: null
+- id: F02
+  name: Speech -> step windows
+  tier: MVP
+  status: planned
+  evidence: null
+- id: F03
+  name: Spec compiler
+  tier: MVP
+  status: planned
+  evidence: null
+- id: F04
+  name: .green language + lock file
+  tier: MVP
+  status: planned
+  evidence: null
+- id: F05
+  name: Per-step provenance
+  tier: MVP
+  status: planned
+  evidence: null
+- id: F06
+  name: Compile-time spec linter
+  tier: MVP
+  status: planned
+  evidence: null
+- id: F07
+  name: Object type-check
+  tier: MVP
+  status: planned
+  evidence: null
+- id: F08
+  name: Demo self-test
+  tier: MVP
+  status: planned
+  evidence: null
+- id: F09
+  name: Text-compile mode
+  tier: MVP
+  status: planned
+  evidence: null
+- id: F10
+  name: Effector aliasing
+  tier: MVP
+  status: planned
+  evidence: null
+- id: F11
+  name: Universal ingest, fps-agnostic time
+  tier: MVP
+  status: planned
+  evidence: null
+- id: F12
+  name: Object tracking with stable IDs
+  tier: MVP
+  status: planned
+  evidence: null
+- id: F13
+  name: Two-stage git bisect fast path
+  tier: MVP
+  status: planned
+  evidence: null
+- id: F14
+  name: Dense backward window
+  tier: MVP
+  status: planned
+  evidence: null
+- id: F15
+  name: Scale model (px -> cm)
+  tier: MVP
+  status: planned
+  evidence: null
+- id: F16
+  name: on(A,B) + 2.5D depth check
+  tier: MVP
+  status: planned
+  evidence: null
+- id: F17
+  name: inside(A,B) + 2.5D rim-occlusion
+  tier: MVP
+  status: planned
+  evidence: null
+- id: F18
+  name: near(A,B)
+  tier: MVP
+  status: planned
+  evidence: null
+- id: F19
+  name: lifted(A)
+  tier: MVP
+  status: planned
+  evidence: null
+- id: F20
+  name: moves_with(E,A)
+  tier: MVP
+  status: planned
+  evidence: null
+- id: F21
+  name: dwell(A[,B])
+  tier: MVP
+  status: planned
+  evidence: null
+- id: F22
+  name: Smoothing & hysteresis
+  tier: MVP
+  status: planned
+  evidence: null
+- id: F23
+  name: +-sigma uncertainty + margin gate
+  tier: MVP
+  status: planned
+  evidence: null
+- id: F24
+  name: Occlusion & view gates
+  tier: MVP
+  status: planned
+  evidence: null
+- id: F25
+  name: Two-way contrastive crop judge
+  tier: Strong
+  status: planned
+  evidence: null
+- id: F26
+  name: Hard-case escalation
+  tier: Strong
+  status: planned
+  evidence: null
+- id: F27
+  name: Open-weights / private mode
+  tier: Strong
+  status: planned
+  evidence: null
+- id: F28
+  name: Verdict + reason codes + exit codes
+  tier: MVP
+  status: planned
+  evidence: null
+- id: F29
+  name: Evidence frames
+  tier: MVP
+  status: planned
+  evidence: null
+- id: F30
+  name: trace.jsonl + provenance viewer
+  tier: MVP
+  status: planned
+  evidence: null
+- id: F31
+  name: Step-chain transition finder
+  tier: MVP
+  status: planned
+  evidence: null
+- id: F32
+  name: Exact t* by backward refinement
+  tier: MVP
+  status: planned
+  evidence: null
+- id: F33
+  name: One-sentence summary bound to measurements
+  tier: MVP
+  status: planned
+  evidence: null
+- id: F34
+  name: Event-level reality diff
+  tier: MVP
+  status: planned
+  evidence: null
+- id: F35a
+  name: Blame target, real footage
+  tier: MVP
+  status: planned
+  evidence: null
+- id: F35b
+  name: Blame target, sim code
+  tier: MVP
+  status: planned
+  evidence: null
+- id: F36
+  name: Prefix salvage
+  tier: MVP
+  status: planned
+  evidence: null
+- id: F37
+  name: Corrective hint
+  tier: MVP
+  status: planned
+  evidence: null
+- id: F38
+  name: MCP tool Kodiac.verify
+  tier: MVP
+  status: planned
+  evidence: null
+- id: F39
+  name: Done-gate
+  tier: MVP
+  status: planned
+  evidence: null
+- id: F40
+  name: /goal recipe
+  tier: MVP
+  status: planned
+  evidence: null
+- id: F41
+  name: Sim harness
+  tier: MVP
+  status: planned
+  evidence: null
+- id: F42
+  name: 10 seeded physical bugs + fix-rate eval
+  tier: MVP
+  status: planned
+  evidence: null
+- id: F43
+  name: Headline: "Only the judge changed"
+  tier: MVP
+  status: planned
+  evidence: null
+- id: F44
+  name: Fair baselines
+  tier: MVP
+  status: planned
+  evidence: null
+- id: F45
+  name: Judge benchmark table
+  tier: MVP
+  status: planned
+  evidence: null
+- id: F46
+  name: Real-footage validation
+  tier: Strong
+  status: planned
+  evidence: null
+- id: F47
+  name: Proof chart
+  tier: MVP
+  status: planned
+  evidence: null
+- id: F48
+  name: Meta ablation ladder
+  tier: Strong
+  status: planned
+  evidence: null
+- id: F49
+  name: Audit of public robot datasets
+  tier: MVP
+  status: planned
+  evidence: null
+- id: F50
+  name: Failure-Norm Digest
+  tier: MVP
+  status: planned
+  evidence: null
+- id: F51
+  name: LeRobot-compatible verdict export
+  tier: MVP
+  status: planned
+  evidence: null
+- id: F52
+  name: Helpful community reports
+  tier: Strong
+  status: planned
+  evidence: null
+- id: F53
+  name: Hosted web app
+  tier: MVP
+  status: planned
+  evidence: null
+- id: F54
+  name: Live wall-clock timer, "<12 s"
+  tier: MVP
+  status: planned
+  evidence: null
+- id: F55
+  name: Camera-cover test + occlusion brush
+  tier: MVP
+  status: planned
+  evidence: null
+- id: F56
+  name: Instant Cached Replay
+  tier: MVP
+  status: planned
+  evidence: null
+- id: F57
+  name: Operations guard
+  tier: MVP
+  status: planned
+  evidence: null
+- id: F58
+  name: pip package + CLI
+  tier: MVP
+  status: planned
+  evidence: null
+- id: F59
+  name: 3-minute video
+  tier: MVP
+  status: planned
+  evidence: null
+- id: F60
+  name: README + write-up
+  tier: MVP
+  status: planned
+  evidence: null
