@@ -594,32 +594,42 @@ W101 non-visual → MANUAL · W102 step without provenance · W103 demo margin <
 Mask `M_o,t`, area `a`, bbox, centroid, **bottom anchor β** (median column of the lowest 5% of mask rows), top anchor, track score `s`.
 Expected unoccluded area `â` (scale-corrected from the last untouched frame) → occlusion fraction `occ = clip(1 − a/â, 0, 1)`.
 
-### 7.2 Scale model (KD-06)
+### 7.2 Scale model (KD-06, ADR-0009)
 - **Size priors** `W_o` (cm) from `.green` attributes, then a priors table, then a compile-time question. Each carries a σ_W of 3% / 10% / 20%.
 - Per-object scale `k_o,t = (ℓ_o,0 / W_o) · (ℓ_o,t / ℓ_o,0)` (px/cm); depth `z = f / k`.
 - **Tier A:** known K, [R|t] (sim exact) → back-project onto the support plane.
-- **Tier B (default):** ground-plane fit from ≥2 resting objects: `v_i − v_h = k_i · H̃` → `(v_h, H̃)`; f from the HFOV prior (70° ± 10°) → height `h = cos θ · (H̃ − (v − v_h)/k)`, lateral `X = (u − c_x)/k`, forward D from z.
-- **Tier C:** single reference; σ inflated so depth-critical components fall to CAN'T TELL honestly.
+- **Tier B (default, ADR-0009):** Two-Stage ground-plane fit from resting objects:
+  - *Pre-condition:* Require $N_{\text{resting}} \ge 2$ and vertical baseline $\Delta v_{\text{resting}} \ge 15$ px. If violated, auto-demote to Tier C. Wrap all solves in `LinAlgError` handlers.
+  - *Stage 1 (Unconstrained):* Solve unconstrained least squares: `v_i − v_h = k_i · H̃` → `(v_h, H̃)`. If condition number $\kappa \le 30$ and pitch $\theta \in [20^\circ, 70^\circ]$, accept unregularized fit.
+  - *Stage 2 (Tikhonov Regularization):* If $\kappa \in (30, 50]$, apply Ridge regularization pulling toward support aspect prior: $\mathbf{w} = (\mathbf{A}^T\mathbf{A} + \alpha \mathbf{I})^{-1}\mathbf{A}^T\mathbf{y}$ with $\alpha = 0.05 \cdot \text{trace}(\mathbf{A}^T\mathbf{A})$.
+  - *Demotion:* If $\kappa > 50$, residual variance $> 15\%$, or $\theta \notin [20^\circ, 70^\circ]$, demote to Tier C with $2.5\times \sigma$ inflation, append badge `[GEOMETRY: TIER C · UNCALIBRATED CAMERA]`, and trigger Gate G6 `depth_ambiguous`.
+- **Tier C:** single reference prior; σ inflated by $2.5\times$ so depth-critical components fall to CAN'T TELL honestly.
 - Anisotropy: depth-axis σ ≫ lateral σ. This shows up in the gates, not as false precision.
 
 ### 7.3 Predicates (component margins; positive = satisfied)
 - `on`: `m_xy = align_xy − ‖ΔXY‖`; `m_z = gap − |h_A,bottom − H_B|`; `m_ρ = τ_ρ − |√ρ_A − 1|` with `ρ_A = (ℓ_A,t/ℓ_A,0)²·(z_B⁺/z_A,0)²` (catches hovering in front).
-- `inside`: in-rim distance `m_1`; occlusion order (front_occluder vs behind_rim); depth consistency `m_3`; rim-crossing memory c4; object permanence.
+- `inside`: in-rim distance `m_1`; occlusion order (front_occluder vs behind_rim); depth consistency `m_3`; rim-crossing memory c4; object permanence (MVP-lite).
 - `near`: `m = max_cm − √(d_lat² + d_depth²)`.
 - `lifted`: `m = (h_A,t − h_A,0) − min_cm` (relative to rest; k from the unoccluded width).
 - `moves_with`: attach/detach state machine on `ρ_rel = ‖Δ_A − Δ_E‖` over `window_s`, with `n_on = max(2, round(0.1·fps))` confirmations; detach onset = `1 + max{t ≤ t_confirm : R(t) ≤ σ_R}`. Optional aperture event licenses the word "opened".
-- `dwell`: run-length of (speed ≤ max_speed ∧ relation) ≥ `for_s`.
+- `dwell`: run-length of (speed ≤ max_speed ∧ relation) ≥ `for_s`. Time-base conversion uses dynamic FPS: `window_frames = round(window_s * fps)`.
 
-### 7.4 Uncertainty & gates (F23–F24)
+### 7.4 Uncertainty & gates (F23–F24, ADR-0010)
 - `σ_px = max(0.5, 1.4826·MAD(Δ²x)/√6)` on static segments (Savitzky–Golay residual when moving).
-- Monte-Carlo with S = 256 over pixel noise, W, f, κ → `σ_m`. Calibrated inflation λ (fitted on sim GT so |m_true − m_est| ≤ σ ≈ 68%).
-- **Gates:** G1 not visible (s < 0.5) · G2 occluded > 40% by effector/unknown (excluding container→contents and the carried object) ·
-  G3 `|m| < σ_m` · G4 view blocked (luminance < 15/255, low Laplacian variance, > 60% uniform) · G5 appearance unresolved · G6 depth ambiguous (Tier C, σ > 0.5·threshold).
+- Decoupled dynamic 1D vectorized Monte Carlo with $S = 256$ over pixel noise, dynamic scale $(T,)$, and physical bounds ($k \ge 0.1, W \ge 0.2 W_{\text{nom}}$) in NumPy ($<8$ ms). Calibrated inflation λ fitted strictly on calibration fit split.
+- **Gates:**
+  - G1 not visible ($s < 0.5$).
+  - G2 occluded $> 40\%$ (ADR-0010): Pair-specific exclusion strictly for target in active `moves_with(effector, target)` relation and container rims in `inside(A, B)`. Mandatory **20% visibility floor** ($a_{\text{vis}} / \hat{a} \ge 0.20$); if $< 20\%$, Gate G2 MUST fire with `CAN'T TELL (occluded)`. Non-target scene objects occluded by effector are NOT exempt.
+  - G3 below noise floor (`|m| < σ_{\text{comp}}`): Evaluates **unit-matched uncertainty** per component (spatial $\sigma_m$ in cm, ratio $\sigma_\rho \approx 2\sigma_{\text{px}}/\ell_0$, velocity $\sigma_v = \sqrt{2}\sigma_m/\Delta t$, duration $\sigma_t = 1/\text{fps}$).
+  - G4 view blocked (luminance $< 15/255$, low Laplacian variance, $> 60\%$ uniform).
+  - G5 appearance unresolved (Re-ID degenerate).
+  - G6 depth ambiguous (Tier C or ill-conditioned, $\sigma > 0.5 \cdot \text{threshold}$).
 
 ### 7.5 Logic, steps, verdict
 - Kleene: `¬U=U, T∧U=U, F∧U=F, T∨U=T`. Smoothing: Hampel(7) → Savitzky–Golay(≈0.2 s) → Schmitt trigger (n_on); U frames neither confirm nor reset.
 - Achievement `a_k = min{t > a_{k−1} : C_k = T for n_on frames}`. **Carried literals** persist from `a_k` until the onset of the ¬L run that begins `C_j`'s achieving run (j = first later step containing ¬L), else until `a_{k+1}`. `Inv_{k+1}` excludes every literal whose negation appears in `C_{k+1}`. (Unit test: correct release + 0.2 s dwell → class 2 `dwell`, not class 1.) Steps after the first non-PASS step are not evaluated (printed "—"; `StepResult.verdict = None`).
 - Step PASS iff a sustained T run exists. FAIL iff F on every decided frame and no U run ≥ n_on could hide a T run (state conditions may FAIL on a settled end state). Else CAN'T TELL.
+- **Contract:** `evaluate_step_chain(...) -> tuple[Verdict, list[StepResult], list[ReasonCode], list[Event]]`. Bubbles up all decisive `ReasonCode`s from the first non-PASS step into top-level `RunResult.reasons`, enforcing `verdict == CANT_TELL ⇒ len(reasons) >= 1`.
 - **Overall verdict = the first non-PASS step's verdict.** MANUAL never changes it (`PASS (1 MANUAL check not verified)`).
 
 ---

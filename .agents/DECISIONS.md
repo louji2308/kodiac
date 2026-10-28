@@ -98,3 +98,27 @@ All rulings, architectural choices, and deviations are logged here chronological
   - Require dual-mode fixture recording (`scripts/record_fixtures.py --synthetic` / `--live`) to ensure 100% offline green CI without waiting for external API keys.
 - **Rationale:** Aligns hackathon narrative impact with rigorous engineering tripwires, preserving backward tracking as the core demo differentiator while ensuring a fail-safe fallback against network queueing and rate limits.
 - **Supersedes:** None.
+
+---
+
+### ADR-0009 · 2026-10-28 · P04 · Two-Stage Tabletop Ground-Plane Fit & Tier C Fallback
+- **Context:** On single-camera tabletop robot setups (DROID, SO-100, Franka Desk), camera tilt $\theta \in [20^\circ, 65^\circ]$ relative to the ground plane must be estimated from resting objects to convert 2D pixel coordinates to 3D metric coordinates ($X, D, h$ in cm). If resting objects have near-identical vertical coordinates ($\Delta v < 15$ px) or $N_{\text{resting}} < 2$, the unconstrained least-squares ground-plane equation is mathematically singular or ill-conditioned ($\kappa > 50$). However, artificially forcing shrinkage toward an arbitrary hardcoded prior (e.g. $\theta_0 = 40^\circ$) on high-angle ($65^\circ$) or low-angle ($20^\circ$) cameras distorts true physical metric scale, leading to false passes or false failures.
+- **Decision:**
+  1. *Pre-Condition Check:* Require $N_{\text{resting}} \ge 2$ and vertical baseline $\Delta v_{\text{resting}} \ge 15$ px before invoking matrix algebra. If $N_{\text{resting}} < 2$ or $\Delta v < 15$ px, immediately demote to Tier C without attempting matrix inversion. Wrap all matrix solves in `try ... except np.linalg.LinAlgError:`.
+  2. *Two-Stage Fit Pipeline:*
+     - Stage 1 (Unconstrained): Solve unconstrained least-squares first. If condition number $\kappa \le 30$ and estimated pitch $\theta \in [20^\circ, 70^\circ]$, accept the unregularized fit without bias.
+     - Stage 2 (Tikhonov Regularization): If $\kappa \in (30, 50]$, apply Tikhonov Ridge regularization pulling toward the table support aspect prior: $\mathbf{w} = (\mathbf{A}^T\mathbf{A} + \alpha \mathbf{I})^{-1}\mathbf{A}^T\mathbf{y}$ with $\alpha = 0.05 \cdot \text{trace}(\mathbf{A}^T\mathbf{A})$.
+  3. *Tier C Demotion & Honesty Gating:* If condition number $\kappa > 50$, residual variance exceeds $15\%$ of image height, estimated pitch $\theta \notin [20^\circ, 70^\circ]$, or matrix solve raises `np.linalg.LinAlgError`, immediately demote to Tier C ($k = \ell / W_o$ with $2.5\times \sigma$ inflation), append badge `[GEOMETRY: TIER C · UNCALIBRATED CAMERA]`, and trigger Gate G6 `depth_ambiguous` on depth-critical components (`on.gap`, `inside.depth`).
+- **Rationale:** Protects against mathematical singular matrix inversion crashes while preserving true camera tilt on well-conditioned views. Auto-demoting with an indelible badge and honest Gate G6 abstention upholds Invariants I3 ("Never guess when blind") and I15 ("Honesty affordances").
+- **Supersedes:** None.
+
+---
+
+### ADR-0010 · 2026-10-28 · P04 · Pair-Specific Effector Exclusion in Gate G2 with 20% Observability Floor
+- **Context:** During robotic manipulation (e.g. grasping a 4 cm block), robot gripper fingers close around the object, causing bounding box and mask overlap exceeding 40%. Under a naive Gate G2 (`OCCLUDED` when overlap $> 40\%$), every valid grasp would spuriously flip to `CAN'T TELL`, breaking the entire demo. However, a blanket exclusion of the effector would blindfold Gate G2: if the gripper completely covers the block from camera view (100% occlusion) or drops the block behind closed jaws, Kodiac would evaluate zero visible pixels and falsely declare `PASS`, violating Invariant I3 ("Never guess when blind"). Furthermore, a global effector exclusion would ignore situations where the gripper occludes other objects (e.g. the target pedestal or a secondary block).
+- **Decision:**
+  1. *Pair-Specific & Target-Specific Scoping:* Effector mask overlap exclusion from Gate G2 is strictly restricted to the declared target object in an active `moves_with(effector, target)` relation or grasp transition step. Container rims in `inside(A, B)` are similarly excluded. All non-target scene objects occluded $> 40\%$ by the gripper are NOT exempt and MUST trigger Gate G2 (`OCCLUDED`).
+  2. *Mandatory 20% Observability Floor:* The effector exclusion applies *if and only if* the target object retains at least 20% visible unoccluded area relative to its expected area ($a_{\text{vis}} / \hat{a} \ge 0.20$).
+  3. *Blindness Gating:* If $a_{\text{vis}} / \hat{a} < 0.20$, Gate G2 MUST fire with `CAN'T TELL` and reason code `OCCLUDED` (sub-reason: `target obscured by effector < 20% visible`). Kodiac never guesses physical metric state when optically blind.
+- **Rationale:** Resolves false-occlusion rejections during normal robot grasping while establishing a strict physical observability boundary. Upholds Prime Directive Law 1 and Invariant I3.
+- **Supersedes:** None.

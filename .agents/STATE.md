@@ -3,31 +3,22 @@
 ```yaml
 phase: P04
 phase_slug: P04-measurement
-stage: COUNCIL
+stage: RULING
 tracks:
   - phase: P03
-    stage: REVIEW
-    active_agents:
-      - role: R1 Verifier
-        model: Gemini 3.8 Flash
-      - role: R2 Judge's Eye
-        model: Gemini 3.8 Flash
+    stage: REVIEW_COMPLETE (Verdict: PASS SHIP-AS-IS, 0 S0, 0 S1, 2 S2, 2 S3)
   - phase: P04
-    stage: COUNCIL (Wave 1: R0/R1 Blind Positions)
+    stage: RULING (SDM evaluating SDM_PACKET.md)
     active_agents:
-      - role: D1 Architect
+      - role: Senior Decision Maker
         model: Gemini 3.8 Flash
-      - role: D2 Judge Advocate
-        model: Gemini 3.8 Flash
-      - role: D3 Red Team
-        model: Gemini 3.8 Flash
-updated: 2026-10-28T16:50:00Z
+updated: 2026-10-28T17:42:00Z
 updated_by: ORCH
 deadline:
   feature_freeze: 2026-11-04T04:59:00Z
   internal_submit: 2026-11-04T17:00:00Z
   official_submit: 2026-11-05T02:00:00Z
-  hours_left_to_submit: 167.5
+  hours_left_to_submit: 167.2
 background_jobs:
   - id: BG-A
     name: Modal pool tracking and baseline training
@@ -38,5 +29,5 @@ blockers:
   - Gated weights access (facebook/sam3.1) pending
   - PyPI package name Kodiac-robotics reservation pending
   - I16 closing-line confirmation pending
-next_action: Parallel execution of P03 Review (R1, R2) and P04 Council Wave 1 (D1, D2, D3)
+next_action: Await SDM Ruling, append ADR-0009/0010 to DECISIONS.md, then dispatch T01, T02, T03.
 ```

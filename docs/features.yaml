@@ -49,77 +49,77 @@
 - id: F10
   name: Effector aliasing
   tier: MVP
-  status: planned
-  evidence: null
+  status: shipped
+  evidence: tests/segment/test_prompts.py
 - id: F11
   name: Universal ingest, fps-agnostic time
   tier: MVP
-  status: in_progress
-  evidence: null
+  status: shipped
+  evidence: tests/io/test_transcode.py
 - id: F12
   name: Object tracking with stable IDs
   tier: MVP
-  status: in_progress
-  evidence: null
+  status: shipped
+  evidence: artifacts/p03/quality.json
 - id: F13
   name: Two-stage git bisect fast path
   tier: MVP
-  status: in_progress
-  evidence: null
+  status: shipped
+  evidence: artifacts/p03/sam_bench.json
 - id: F14
   name: Dense backward window
   tier: MVP
-  status: in_progress
-  evidence: null
+  status: shipped
+  evidence: artifacts/p03/sam_bench.json
 - id: F15
   name: Scale model (px -> cm)
   tier: MVP
-  status: planned
+  status: in_progress
   evidence: null
 - id: F16
   name: on(A,B) + 2.5D depth check
   tier: MVP
-  status: planned
+  status: in_progress
   evidence: null
 - id: F17
   name: inside(A,B) + 2.5D rim-occlusion
   tier: MVP
-  status: planned
+  status: in_progress
   evidence: null
 - id: F18
   name: near(A,B)
   tier: MVP
-  status: planned
+  status: in_progress
   evidence: null
 - id: F19
   name: lifted(A)
   tier: MVP
-  status: planned
+  status: in_progress
   evidence: null
 - id: F20
   name: moves_with(E,A)
   tier: MVP
-  status: planned
+  status: in_progress
   evidence: null
 - id: F21
   name: dwell(A[,B])
   tier: MVP
-  status: planned
+  status: in_progress
   evidence: null
 - id: F22
   name: Smoothing & hysteresis
   tier: MVP
-  status: planned
+  status: in_progress
   evidence: null
 - id: F23
   name: +-sigma uncertainty + margin gate
   tier: MVP
-  status: planned
+  status: in_progress
   evidence: null
 - id: F24
   name: Occlusion & view gates
   tier: MVP
-  status: planned
+  status: in_progress
   evidence: null
 - id: F25
   name: Two-way contrastive crop judge
@@ -139,7 +139,7 @@
 - id: F28
   name: Verdict + reason codes + exit codes
   tier: MVP
-  status: planned
+  status: in_progress
   evidence: null
 - id: F29
   name: Evidence frames
