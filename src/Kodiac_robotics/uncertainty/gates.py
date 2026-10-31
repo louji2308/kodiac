@@ -197,7 +197,7 @@ def apply_gates(
         if getattr(scale, "tier", None) == "C":
             is_depth_critical = any(
                 k in comp_name_lower for k in ("gap", "depth", "z", "inside.depth", "on.gap")
-            ) or (c.threshold > 0 and c.sigma > 0.5 * c.threshold)
+            )
             if is_depth_critical:
                 c.tri = Tri.U
                 c.reason = ReasonCode.DEPTH_AMBIGUOUS

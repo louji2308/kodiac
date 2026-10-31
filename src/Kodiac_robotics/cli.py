@@ -8,6 +8,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import warnings
 from pathlib import Path
 from typing import Any
 
@@ -19,6 +20,10 @@ from rich.table import Table
 
 from Kodiac_robotics import __version__
 from Kodiac_robotics.config import get_settings
+from Kodiac_robotics.contracts.core import Verdict
+from Kodiac_robotics.pipeline.run import run as execute_run
+
+warnings.filterwarnings("ignore", category=UserWarning)
 
 app = typer.Typer(
     name="Kodiac",
@@ -52,6 +57,177 @@ def main(
 def version() -> None:
     """Print the Kodiac version."""
     typer.echo(f"Kodiac {__version__}")
+
+
+@app.command(name="run")
+def run_command(
+    test_path: str = typer.Argument(
+        ...,
+        help="Path to .green test specification or JSON file.",
+    ),
+    clip_path: str = typer.Argument(
+        ...,
+        help="Path to video clip, lerobot:// URI, or file:// URI.",
+    ),
+    mode: str = typer.Option(
+        "full",
+        "--mode",
+        "-m",
+        help="Execution mode: full (default) or fast.",
+    ),
+    camera: str = typer.Option(
+        None,
+        "--camera",
+        "-c",
+        help="Camera calibration tier: tier_a, tier_b, tier_c.",
+    ),
+    json_output: bool = typer.Option(
+        False,
+        "--json",
+        help="Output purely valid JSON without ANSI or decorations.",
+    ),
+    render_card: bool = typer.Option(
+        False,
+        "--card",
+        help="Render 16:9 Verdict Card v1 PNG artifact.",
+    ),
+    output_dir: Path = typer.Option(
+        None,
+        "--output",
+        "-o",
+        help="Custom output directory for run artifacts (default: runs/<id>).",
+    ),
+) -> None:
+    """Executes a Green test over a video clip.
+
+    Evaluates perceptual tracking, metric scale models, uncertainty gates G1-G6,
+    and Kleene step chain logic. Returns exit codes: 0 (PASS), 1 (FAIL), 2 (CAN'T TELL), 3 (ERROR).
+    """
+    try:
+        run_res = execute_run(
+            test=test_path,
+            clip=clip_path,
+            mode=mode,  # type: ignore[arg-type]
+            backend="fixture",
+            render_card=render_card,
+            output_dir=output_dir,
+            camera=camera,  # type: ignore[arg-type]
+        )
+    except Exception as exc:
+        if json_output:
+            typer.echo(json.dumps({"error": str(exc), "exit_code": 3}))
+        else:
+            typer.echo(f"Error executing run: {exc}", err=True)
+        raise typer.Exit(code=3)
+
+    if json_output:
+        # Suppress Rich entirely; emit pure, valid JSON
+        typer.echo(run_res.model_dump_json(indent=2))
+        raise typer.Exit(code=run_res.exit_code)
+
+    is_tty = sys.stdout.isatty()
+    if not is_tty:
+        # Piped / Scripted: Emit clean plain-text one-liner
+        reasons_part = (
+            f" reasons=[{', '.join(r.value for r in run_res.reasons)}]"
+            if run_res.reasons
+            else ""
+        )
+        clip_name = Path(run_res.clip.uri).name
+        verdict_str = "CAN'T TELL" if run_res.verdict == Verdict.CANT_TELL else run_res.verdict.value
+        typer.echo(
+            f"Kodiac: {verdict_str} {run_res.test_name} on {clip_name} "
+            f"(exit {run_res.exit_code}, run_id={run_res.nonce[:12]}{reasons_part})"
+        )
+        raise typer.Exit(code=run_res.exit_code)
+
+    # Interactive TTY: Print aesthetic Rich status table & panel
+    console = Console()
+    console.print()
+
+    # Title & Verdict Banner
+    if run_res.verdict == Verdict.PASS:
+        pill_style = "bold white on green"
+        verdict_banner = f"[{pill_style}]  PASS  [/{pill_style}] (exit code 0)"
+    elif run_res.verdict == Verdict.FAIL:
+        pill_style = "bold white on red"
+        verdict_banner = f"[{pill_style}]  FAIL  [/{pill_style}] (exit code 1)"
+    else:
+        pill_style = "bold white on dark_orange"
+        reasons_str = f" · reasons: [{', '.join(r.value for r in run_res.reasons)}]"
+        verdict_banner = (
+            f"[{pill_style}]  CAN'T TELL  [/{pill_style}] (exit code 2){reasons_str}"
+        )
+
+    clip_name = Path(run_res.clip.uri).name
+    console.print(
+        Panel(
+            f"{verdict_banner}\n\n"
+            f"[bold cyan]Test:[/bold cyan] {run_res.test_name}   "
+            f"[bold cyan]Clip:[/bold cyan] {clip_name}   "
+            f"[bold cyan]Run ID:[/bold cyan] {run_res.run_id[:16]}",
+            title=f"[bold]Kodiac Run Evaluation v{__version__}[/bold]",
+            border_style="cyan",
+            box=box.ASCII,
+        )
+    )
+
+    # Steps Table
+    t = Table(
+        title="Execution Step Chain",
+        header_style="bold magenta",
+        title_justify="left",
+        box=box.ASCII,
+    )
+    t.add_column("Step", style="cyan", no_wrap=True)
+    t.add_column("Name", style="white", no_wrap=True)
+    t.add_column("Verdict", justify="center", no_wrap=True)
+    t.add_column("Time (s)", justify="right", style="cyan")
+    t.add_column("Frame", justify="right", style="cyan")
+    t.add_column("Decisive Telemetry", style="white")
+
+    for s in run_res.steps:
+        if s.verdict == Verdict.PASS:
+            v_styled = "[bold green]PASS[/bold green]"
+        elif s.verdict == Verdict.FAIL:
+            v_styled = "[bold red]FAIL[/bold red]"
+        elif s.verdict == Verdict.CANT_TELL:
+            v_styled = "[bold yellow]CAN'T TELL[/bold yellow]"
+        else:
+            v_styled = "[dim]NOT RUN[/dim]"
+
+        t_s_str = f"{s.t_s:.2f}" if s.t_s is not None else "—"
+        f_str = str(s.frame) if s.frame is not None else "—"
+
+        telemetry_parts = []
+        for c in s.decisive[:2]:
+            telemetry_parts.append(
+                f"{c.name}: {c.value:.2f}±{c.sigma:.2f}{c.unit} (thresh {c.threshold:.2f}, margin {c.margin:+.2f})"
+            )
+        telemetry_str = "; ".join(telemetry_parts) if telemetry_parts else "—"
+
+        t.add_row(f"#{s.index + 1}", s.name, v_styled, t_s_str, f_str, telemetry_str)
+
+    console.print(t)
+    console.print()
+
+    # Badges & Timings Panel
+    timings = run_res.timings_ms
+    timing_str = (
+        f"perception: {timings.get('segment_ms', 0)}ms · "
+        f"scale: {timings.get('scale_ms', 0)}ms · "
+        f"logic: {timings.get('eval_ms', 0)}ms · "
+        f"render: {timings.get('render_ms', 0)}ms · "
+        f"total: {timings.get('total_ms', 0)}ms"
+    )
+    badge_str = " ".join(f"[{b}]" for b in run_res.badges)
+    console.print(f"[dim]Badges:[/dim] {badge_str}")
+    console.print(f"[dim]Timings:[/dim] {timing_str}")
+    if run_res.card_path:
+        console.print(f"[dim]Verdict Card:[/dim] {run_res.card_path}")
+    console.print()
+
+    raise typer.Exit(code=run_res.exit_code)
 
 
 def run_offline_checks() -> list[dict[str, Any]]:

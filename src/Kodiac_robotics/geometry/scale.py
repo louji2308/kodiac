@@ -186,13 +186,21 @@ class TierCScaleModel:
         self.cx = self.img_w / 2.0
         self.f_nom = 0.785 * self.img_h
 
-        # Precompute initial resting bottom anchors
+        # Precompute initial resting bottom anchors and scene reference scale
         self.v0: dict[str, float] = {}
+        k_candidates: list[float] = []
         for name, track in tracks.items():
             if track.frames:
                 first_f = min(track.frames.keys())
-                _, (ub, vb), _, _, _ = compute_anchors(track.frames[first_f])
+                m = track.frames[first_f]
+                _, (ub, vb), _, _, _ = compute_anchors(m)
                 self.v0[name] = vb
+                decl = self.objects.get(name)
+                if not (decl and decl.role == "effector"):
+                    w_px = max(1.0, float(m.bbox_xyxy[2] - m.bbox_xyxy[0]))
+                    size_cm = decl.size_cm if (decl and decl.size_cm) else 4.0
+                    k_candidates.append(w_px / size_cm)
+        self.k_ref = float(np.mean(k_candidates)) if k_candidates else 15.0
 
     def to_table_frame(self, obj: str, frame: int) -> tuple[float, float, float, float]:
         """Returns table-frame coordinates (X_cm, D_cm, h_cm, sigma_cm) with 2.5x inflated uncertainty."""
@@ -204,14 +212,18 @@ class TierCScaleModel:
 
         mask = track.frames[frame]
         decl = self.objects.get(obj)
-        size_cm = decl.size_cm if (decl and decl.size_cm) else 4.0
+        role = decl.role if decl else "rigid"
 
         _, bottom_anchor, _, _, _ = compute_anchors(mask)
         u_b, v_b = bottom_anchor
 
-        bbox = mask.bbox_xyxy
-        w_px = max(1.0, float(bbox[2] - bbox[0]))
-        k = max(0.1, w_px / size_cm)
+        if role == "effector":
+            k = self.k_ref
+        else:
+            size_cm = decl.size_cm if (decl and decl.size_cm) else 4.0
+            bbox = mask.bbox_xyxy
+            w_px = max(1.0, float(bbox[2] - bbox[0]))
+            k = max(0.1, w_px / size_cm)
 
         v_base = self.v0.get(obj, v_b)
         h_cm = (v_base - v_b) / k

@@ -347,26 +347,24 @@ def evaluate_step_chain(
             decisive_frame = total_frames - 1
             t_s = round(decisive_frame / fps, 4)
 
-            # Determine if CANT_TELL or FAIL
-            has_unknown = False
+            # Determine whether decisive frame evaluates to Tri.U or Tri.F in Kleene logic
+            decisive_atom_values: dict[str, Tri] = {}
             reasons_found: list[ReasonCode] = []
-            for comp in decisive_components:
-                if comp.tri == Tri.U:
-                    has_unknown = True
-                if comp.reason is not None:
-                    reasons_found.append(comp.reason)
-
-            # Also check if any atom had Tri.U at the decisive frame
             for atom in step_atoms:
                 pf = _lookup_pred_frame(atom, decisive_frame, pred_frames_by_atom)
                 if pf is not None:
-                    if pf.tri == Tri.U:
-                        has_unknown = True
+                    decisive_atom_values[get_atom_key(atom)] = pf.tri
                     for c in pf.components:
                         if c.reason is not None and c.reason not in reasons_found:
                             reasons_found.append(c.reason)
+                else:
+                    decisive_atom_values[get_atom_key(atom)] = Tri.U
+                    if ReasonCode.NOT_VISIBLE not in reasons_found:
+                        reasons_found.append(ReasonCode.NOT_VISIBLE)
 
-            if has_unknown or reasons_found:
+            c_decisive = evaluate_expr_tree(step.expr, decisive_atom_values)
+
+            if c_decisive == Tri.U:
                 step_verdict = Verdict.CANT_TELL
                 overall_verdict = Verdict.CANT_TELL
                 if not reasons_found:

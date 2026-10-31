@@ -37,6 +37,7 @@ venv.bak/
 
 # Local cache & runs
 .cache/
+.Kodiac/
 runs/
 artifacts/
 *.rrd
