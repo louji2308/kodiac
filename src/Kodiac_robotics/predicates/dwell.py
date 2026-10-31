@@ -53,20 +53,25 @@ def evaluate_dwell(
     xa_t, da_t, ha_t, sa_t = coords_curr
     dt = 1.0 / max(fps, 1.0)
 
-    # 1. Instantaneous speed at current frame
-    if frame > 0:
-        coords_prev = get_object_coords(obj_a, tracks, scale, frame - 1, context)
-        if coords_prev is not None:
-            xa_p, da_p, ha_p, _ = coords_prev
+    # Dynamic time-base window for robust differential velocity estimation:
+    # window of 0.15s (at least 3 frames) to prevent instantaneous 1-frame jitter
+    window_frames = max(3, int(round(0.15 * fps)))
+    ref_f = max(0, frame - window_frames)
+    dt_win = max(dt, (frame - ref_f) / max(fps, 1.0))
+
+    if frame > 0 and dt_win > 0:
+        coords_ref = get_object_coords(obj_a, tracks, scale, ref_f, context)
+        if coords_ref is not None:
+            xa_p, da_p, ha_p, _ = coords_ref
             dist = euclidean_3d(xa_t, da_t, ha_t, xa_p, da_p, ha_p)
-            v_a = dist / dt
+            v_a = dist / dt_win
         else:
             v_a = 0.0
     else:
         v_a = 0.0
 
     m_speed = max_speed_cm_s - v_a
-    sigma_v = math.sqrt(2.0) * sa_t / dt
+    sigma_v = math.sqrt(2.0) * sa_t / dt_win
     c_speed = Component(
         name="dwell.speed",
         value=v_a,

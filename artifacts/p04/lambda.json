@@ -1,0 +1,5 @@
+{
+  "lambda": 1.25,
+  "split": "calibration_fit",
+  "n_episodes": 100
+}

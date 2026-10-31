@@ -102,6 +102,8 @@ def run(
     render_card: bool = False,
     output_dir: Path | None = None,
     camera: Literal["tier_a", "tier_b", "tier_c"] | None = None,
+    cam_K: np.ndarray | None = None,
+    cam_extrinsic: np.ndarray | None = None,
 ) -> RunResult:
     """Executes a Green test over a video clip.
 
@@ -175,7 +177,13 @@ def run(
             tracks=harmonized_tracks, objects=test_obj.objects, clip=clip_obj
         )
     else:
-        scale = fit_scale_model(clip=clip_obj, tracks=harmonized_tracks, objects=test_obj.objects)
+        scale = fit_scale_model(
+            clip=clip_obj,
+            tracks=harmonized_tracks,
+            objects=test_obj.objects,
+            cam_K=cam_K,
+            cam_extrinsic=cam_extrinsic,
+        )
 
     # Memoize scale.to_table_frame to ensure evaluation < 200ms
     orig_to_table = scale.to_table_frame
@@ -251,6 +259,11 @@ def run(
         if scene_occluded:
             break
 
+    eval_context = {
+        "object_sizes": {o.name: (o.size_cm or 4.0) for o in test_obj.objects},
+        "object_heights": {o.name: (o.size_cm or 4.0) for o in test_obj.objects},
+    }
+
     # Evaluate each atom across all frames
     for atom in all_atoms:
         atom_key = get_atom_key(atom)
@@ -259,7 +272,9 @@ def run(
 
         frames_list: list[PredFrame] = []
         for f in range(clip_obj.n_frames):
-            pf = evaluate_atom(atom, harmonized_tracks, scale, f, clip_obj.fps)
+            pf = evaluate_atom(
+                atom, harmonized_tracks, scale, f, clip_obj.fps, context=eval_context
+            )
 
             # Round precision to avoid floating point epsilon noise floor misfires
             for c in pf.components:

@@ -42,6 +42,7 @@ runs/
 artifacts/
 *.rrd
 *.parquet
+experiments/pool/episodes/
 
 # Private / Secrets
 docs/private/

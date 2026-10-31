@@ -1,0 +1,34 @@
+{
+  "phase": "P04",
+  "step": "P04.S12",
+  "split": "calibration_validate",
+  "n_episodes_evaluated": 100,
+  "n_decisive": 100,
+  "n_cant_tell": 0,
+  "coverage": 1.0,
+  "balanced_accuracy": 1.0,
+  "balanced_accuracy_ci_95": [
+    0.963,
+    1.0
+  ],
+  "tpr": 1.0,
+  "tnr": 1.0,
+  "false_pass_rate": 0.0,
+  "confusion_matrix": {
+    "TP": 33,
+    "TN": 67,
+    "FP": 0,
+    "FN": 0,
+    "CANT_TELL": 0
+  },
+  "per_gate_firing_counts": {
+    "G1_NOT_VISIBLE": 0,
+    "G2_OCCLUDED": 0,
+    "G3_BELOW_NOISE_FLOOR": 0,
+    "G4_VIEW_BLOCKED": 0,
+    "G5_APPEARANCE_UNRESOLVED": 0,
+    "G6_DEPTH_AMBIGUOUS": 0
+  },
+  "tripwire_zero_train_leakage_passed": true,
+  "gate_target_met": true
+}

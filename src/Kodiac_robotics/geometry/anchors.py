@@ -11,6 +11,8 @@ import numpy as np
 from Kodiac_robotics.contracts.core import ObjMask
 from Kodiac_robotics.segment.rle import _decode_counts, rle_to_mask
 
+_ANCHORS_CACHE: dict[tuple[str, int, str, tuple[float, float, float, float]], tuple[tuple[float, float], tuple[float, float], tuple[float, float], int]] = {}
+
 
 def compute_anchors(
     mask: ObjMask,
@@ -23,6 +25,16 @@ def compute_anchors(
     - top_anchor: (median column of highest 5% of mask rows, highest row).
     - occlusion_fraction: 0.0 if base_area_px is None else max(0.0, 1.0 - area_px / base_area_px).
     """
+    cache_key = (
+        mask.obj,
+        mask.frame,
+        mask.rle[:32] if mask.rle else "",
+        mask.bbox_xyxy,
+    )
+    if cache_key in _ANCHORS_CACHE:
+        (c_xy, b_anc, t_anc, a_px) = _ANCHORS_CACHE[cache_key]
+        occ = 0.0 if (base_area_px is None or base_area_px <= 0) else max(0.0, 1.0 - a_px / base_area_px)
+        return (c_xy, b_anc, t_anc, a_px, occ)
     bbox = mask.bbox_xyxy
     fallback_cx = float((bbox[0] + bbox[2]) / 2.0)
     fallback_cy = float((bbox[1] + bbox[3]) / 2.0)
@@ -84,5 +96,9 @@ def compute_anchors(
         occlusion_fraction = 0.0
     else:
         occlusion_fraction = float(np.clip(1.0 - float(area_px) / float(base_area_px), 0.0, 1.0))
+
+    if len(_ANCHORS_CACHE) > 50000:
+        _ANCHORS_CACHE.clear()
+    _ANCHORS_CACHE[cache_key] = ((cx, cy), bottom_anchor, top_anchor, area_px)
 
     return ((cx, cy), bottom_anchor, top_anchor, area_px, occlusion_fraction)

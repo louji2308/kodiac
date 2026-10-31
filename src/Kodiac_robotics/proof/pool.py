@@ -373,6 +373,7 @@ def generate_mock_episode(
     t_reach = int(T * 0.30)
     t_lift = int(T * 0.55)
     t_place = int(T * 0.85)
+    t_arrive = t_lift + int((t_place - t_lift) * 0.70)
 
     # Reach: downward movement, gripper open (+1.0)
     actions[:t_reach, 2] = -0.05 + rng.normal(0, 0.005, t_reach)
@@ -402,12 +403,145 @@ def generate_mock_episode(
     # Observation state: 32-dim vector (proprio: 9 + 9 + 7 + 1 = 26, objects: 7 + 7 = 14) -> e.g. 40-dim
     obs_dim = 32
     obs_state = np.zeros((T, obs_dim), dtype=np.float32)
+
+    cubeB_pos = np.array([0.05, 0.0, 0.50], dtype=np.float32)
+    cubeA_start = np.array([-0.05, 0.0, 0.50], dtype=np.float32)
+
     for t in range(T):
-        # Progressively update simulated EE pose and cube poses
-        obs_state[t, :7] = np.array([0.1 + 0.001 * t, 0.0, 0.2, 1.0, 0.0, 0.0, 0.0])  # EE pose
-        obs_state[t, 7] = actions[t, 6]  # Gripper position
-        obs_state[t, 8:15] = np.array([0.2, 0.0, 0.05, 1.0, 0.0, 0.0, 0.0])  # Cube A pose
-        obs_state[t, 15:22] = np.array([0.25, 0.0, 0.02, 1.0, 0.0, 0.0, 0.0])  # Cube B pose
+        obs_state[t, 15:18] = cubeB_pos
+        obs_state[t, 18:22] = np.array([1.0, 0.0, 0.0, 0.0], dtype=np.float32)
+
+        if oracle_success:
+            if t < t_reach:
+                ee_z = 0.58 - 0.08 * (t / max(1, t_reach))
+                ee_pos = np.array([-0.05, 0.0, ee_z], dtype=np.float32)
+                grip_cmd = 1.0
+                cubeA_pos = cubeA_start.copy()
+            elif t < t_lift:
+                frac = (t - t_reach) / max(1, (t_lift - t_reach))
+                z = 0.50 + 0.06 * frac
+                ee_pos = np.array([-0.05, 0.0, z], dtype=np.float32)
+                grip_cmd = -1.0
+                cubeA_pos = ee_pos.copy()
+            elif t < t_arrive:
+                frac = (t - t_lift) / max(1, (t_arrive - t_lift))
+                x = -0.05 + 0.10 * frac
+                z = 0.56 - 0.02 * frac
+                ee_pos = np.array([x, 0.0, z], dtype=np.float32)
+                grip_cmd = -1.0
+                cubeA_pos = ee_pos.copy()
+            elif t < t_place:
+                ee_pos = np.array([0.05, 0.0, 0.54], dtype=np.float32)
+                grip_cmd = -1.0
+                cubeA_pos = np.array([0.05, 0.0, 0.54], dtype=np.float32)
+            else:
+                frac = (t - t_place) / max(1, (T - t_place))
+                ee_z = 0.54 + 0.06 * frac
+                ee_pos = np.array([0.05, 0.0, ee_z], dtype=np.float32)
+                grip_cmd = 1.0
+                cubeA_pos = np.array([0.05, 0.0, 0.54], dtype=np.float32)
+        else:
+            if perturbation_type == "early_open" and onset_frame:
+                if t < t_reach:
+                    ee_z = 0.58 - 0.08 * (t / max(1, t_reach))
+                    ee_pos = np.array([-0.05, 0.0, ee_z], dtype=np.float32)
+                    grip_cmd = 1.0
+                    cubeA_pos = cubeA_start.copy()
+                elif t < onset_frame:
+                    frac = (t - t_reach) / max(1, (t_lift - t_reach))
+                    z = 0.50 + 0.06 * min(1.0, frac)
+                    ee_pos = np.array([-0.05, 0.0, z], dtype=np.float32)
+                    grip_cmd = -1.0
+                    cubeA_pos = ee_pos.copy()
+                else:
+                    frac = (t - t_lift) / max(1, (t_place - t_lift)) if t >= t_lift else 0.0
+                    ee_pos = np.array([-0.05 + 0.10 * frac, 0.0, 0.56], dtype=np.float32)
+                    grip_cmd = 1.0
+                    cubeA_pos = np.array([-0.05, 0.0, 0.50], dtype=np.float32)
+            elif perturbation_type == "low_lift":
+                if t < t_reach:
+                    ee_z = 0.58 - 0.08 * (t / max(1, t_reach))
+                    ee_pos = np.array([-0.05, 0.0, ee_z], dtype=np.float32)
+                    grip_cmd = 1.0
+                    cubeA_pos = cubeA_start.copy()
+                elif t < t_lift:
+                    frac = (t - t_reach) / max(1, (t_lift - t_reach))
+                    z = 0.50 + 0.005 * frac
+                    ee_pos = np.array([-0.05, 0.0, z], dtype=np.float32)
+                    grip_cmd = -1.0
+                    cubeA_pos = ee_pos.copy()
+                else:
+                    ee_pos = np.array([-0.05, 0.0, 0.505], dtype=np.float32)
+                    grip_cmd = -1.0
+                    cubeA_pos = ee_pos.copy()
+            elif perturbation_type == "xy_offset":
+                if t < t_reach:
+                    ee_z = 0.58 - 0.08 * (t / max(1, t_reach))
+                    ee_pos = np.array([-0.05, 0.0, ee_z], dtype=np.float32)
+                    grip_cmd = 1.0
+                    cubeA_pos = cubeA_start.copy()
+                elif t < t_lift:
+                    frac = (t - t_reach) / max(1, (t_lift - t_reach))
+                    z = 0.50 + 0.06 * frac
+                    ee_pos = np.array([-0.05, 0.0, z], dtype=np.float32)
+                    grip_cmd = -1.0
+                    cubeA_pos = ee_pos.copy()
+                elif t < t_place:
+                    frac = (t - t_lift) / max(1, (t_place - t_lift))
+                    x = -0.05 + 0.17 * frac
+                    z = 0.56 - 0.02 * frac
+                    ee_pos = np.array([x, 0.0, z], dtype=np.float32)
+                    grip_cmd = -1.0
+                    cubeA_pos = ee_pos.copy()
+                else:
+                    ee_pos = np.array([0.12, 0.0, 0.60], dtype=np.float32)
+                    grip_cmd = 1.0
+                    cubeA_pos = np.array([0.12, 0.0, 0.54], dtype=np.float32)
+            elif perturbation_type == "short_dwell":
+                if t < t_reach:
+                    ee_z = 0.58 - 0.08 * (t / max(1, t_reach))
+                    ee_pos = np.array([-0.05, 0.0, ee_z], dtype=np.float32)
+                    grip_cmd = 1.0
+                    cubeA_pos = cubeA_start.copy()
+                elif t < t_lift:
+                    frac = (t - t_reach) / max(1, (t_lift - t_reach))
+                    z = 0.50 + 0.06 * frac
+                    ee_pos = np.array([-0.05, 0.0, z], dtype=np.float32)
+                    grip_cmd = -1.0
+                    cubeA_pos = ee_pos.copy()
+                elif t < t_place:
+                    frac = (t - t_lift) / max(1, (t_place - t_lift))
+                    x = -0.05 + 0.10 * frac
+                    z = 0.56 - 0.02 * frac
+                    ee_pos = np.array([x, 0.0, z], dtype=np.float32)
+                    grip_cmd = -1.0
+                    cubeA_pos = ee_pos.copy()
+                else:
+                    knock_t = t_place + 3
+                    if t < knock_t:
+                        cubeA_pos = np.array([0.05, 0.0, 0.54], dtype=np.float32)
+                    else:
+                        slide_frac = (t - knock_t) / max(1, (T - knock_t))
+                        cubeA_pos = np.array([0.05 + 0.10 * slide_frac, 0.0, 0.50], dtype=np.float32)
+                    ee_pos = np.array([0.05, 0.0, 0.60], dtype=np.float32)
+                    grip_cmd = 1.0
+            else:
+                fail_t = onset_frame if onset_frame is not None else int(T * 0.5)
+                if t < fail_t:
+                    frac = t / max(1, fail_t)
+                    ee_pos = np.array([-0.05, 0.0, 0.50 + 0.04 * frac], dtype=np.float32)
+                    grip_cmd = -1.0
+                    cubeA_pos = ee_pos.copy()
+                else:
+                    ee_pos = np.array([0.0, 0.0, 0.58], dtype=np.float32)
+                    grip_cmd = 1.0
+                    cubeA_pos = cubeA_start.copy()
+
+        obs_state[t, :3] = ee_pos
+        obs_state[t, 3:7] = np.array([1.0, 0.0, 0.0, 0.0], dtype=np.float32)
+        obs_state[t, 7] = grip_cmd
+        obs_state[t, 8:11] = cubeA_pos
+        obs_state[t, 11:15] = np.array([1.0, 0.0, 0.0, 0.0], dtype=np.float32)
 
     # Known ManiSkill Camera calibration matrices
     cam_K = np.array(
@@ -477,12 +611,13 @@ def generate_mock_pool(
 
     for i in range(n_episodes):
         split: Literal["calibration", "train"] = "calibration" if i < n_cal else "train"
+        ep_idx = i if i < n_cal else (200 + (i - n_cal))
         is_pi0 = bool(rng.random() < pi0_ratio)
         pert = None if is_pi0 else rng.choice(perturbation_types)
         seed = int(base_seed + i * 17)
 
         record, _ = generate_mock_episode(
-            episode_idx=i,
+            episode_idx=ep_idx,
             split=split,
             is_pi0=is_pi0,
             perturbation_type=pert,

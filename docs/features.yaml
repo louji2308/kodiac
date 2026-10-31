@@ -49,78 +49,78 @@
 - id: F10
   name: Effector aliasing
   tier: MVP
-  status: shipped
+  status: done
   evidence: tests/segment/test_prompts.py
 - id: F11
   name: Universal ingest, fps-agnostic time
   tier: MVP
-  status: shipped
+  status: done
   evidence: tests/io/test_transcode.py
 - id: F12
   name: Object tracking with stable IDs
   tier: MVP
-  status: shipped
+  status: done
   evidence: artifacts/p03/quality.json
 - id: F13
   name: Two-stage git bisect fast path
   tier: MVP
-  status: shipped
+  status: done
   evidence: artifacts/p03/sam_bench.json
 - id: F14
   name: Dense backward window
   tier: MVP
-  status: shipped
+  status: done
   evidence: artifacts/p03/sam_bench.json
 - id: F15
   name: Scale model (px -> cm)
   tier: MVP
-  status: in_progress
-  evidence: null
+  status: done
+  evidence: tests/geometry/test_scale.py
 - id: F16
   name: on(A,B) + 2.5D depth check
   tier: MVP
-  status: in_progress
-  evidence: null
+  status: done
+  evidence: tests/predicates/test_predicates.py
 - id: F17
   name: inside(A,B) + 2.5D rim-occlusion
   tier: MVP
-  status: in_progress
-  evidence: null
+  status: done
+  evidence: tests/predicates/test_predicates.py
 - id: F18
   name: near(A,B)
   tier: MVP
-  status: in_progress
-  evidence: null
+  status: done
+  evidence: tests/predicates/test_predicates.py
 - id: F19
   name: lifted(A)
   tier: MVP
-  status: in_progress
-  evidence: null
+  status: done
+  evidence: tests/predicates/test_predicates.py
 - id: F20
   name: moves_with(E,A)
   tier: MVP
-  status: in_progress
-  evidence: null
+  status: done
+  evidence: tests/predicates/test_predicates.py
 - id: F21
   name: dwell(A[,B])
   tier: MVP
-  status: in_progress
-  evidence: null
+  status: done
+  evidence: tests/predicates/test_predicates.py
 - id: F22
   name: Smoothing & hysteresis
   tier: MVP
-  status: in_progress
-  evidence: null
+  status: done
+  evidence: tests/engine/test_smoothing.py
 - id: F23
   name: +-sigma uncertainty + margin gate
   tier: MVP
-  status: in_progress
-  evidence: null
+  status: done
+  evidence: artifacts/p04/validation.json
 - id: F24
   name: Occlusion & view gates
   tier: MVP
-  status: in_progress
-  evidence: null
+  status: done
+  evidence: tests/uncertainty/test_gates.py
 - id: F25
   name: Two-way contrastive crop judge
   tier: Strong
@@ -139,18 +139,18 @@
 - id: F28
   name: Verdict + reason codes + exit codes
   tier: MVP
-  status: in_progress
-  evidence: null
+  status: done
+  evidence: tests/cli/test_run_cli.py
 - id: F29
   name: Evidence frames
   tier: MVP
-  status: planned
-  evidence: null
+  status: done
+  evidence: tests/render/test_card.py
 - id: F30
   name: trace.jsonl + provenance viewer
   tier: MVP
-  status: planned
-  evidence: null
+  status: done
+  evidence: tests/pipeline/test_trace.py
 - id: F31
   name: Step-chain transition finder
   tier: MVP
