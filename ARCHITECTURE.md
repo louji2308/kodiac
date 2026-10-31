@@ -547,7 +547,7 @@ Browser ─► Modal CPU container (FastAPI + Gradio; concurrency 20; min_contai
 
 ## 6. The `.green` Language (normative)
 
-### 6.1 Grammar (Lark-style EBNF)
+### 6.1 Grammar (Lark-style EBNF) & Compiler Architecture
 ```ebnf
 file        : comment* objects_line params_line? ("steps:" NL)? step+
 objects_line: "objects:" "[" object ("," object)* "]" NL
@@ -560,7 +560,8 @@ expr        : and_expr ("or" and_expr)*
 and_expr    : not_expr ("and" not_expr)*
 not_expr    : "not" not_expr | atom
 atom        : predicate | looks | manual | "(" expr ")"
-predicate   : PRED "(" IDENT ("," IDENT)? ("," param)* ")"
+predicate   : PRED "(" pred_arg ("," pred_arg)* ")"
+pred_arg    : param | IDENT
 PRED        : "on" | "inside" | "near" | "lifted" | "moves_with" | "dwell"
 param       : PNAME CMP NUMBER            CMP: "=" | "<=" | ">="
 looks       : "looks" "(" IDENT "," STRING ("|" STRING)? ")"
@@ -568,6 +569,33 @@ manual      : "MANUAL" "(" STRING ")"
 provenance  : "#" QUOTED? ("[" TIME ("–"|"-") TIME "]")? FREE_TEXT?
 TIME        : (INT ":")? INT "." DIGIT
 ```
+> [!NOTE]
+> **Grammar Disambiguation (ADR-0011 / Council R3):** Defining `predicate: PRED "(" pred_arg ("," pred_arg)* ")"` prevents LALR shift/reduce collisions on 1-arg predicates with parameters (e.g. `lifted(cubeA, min_cm=2.0)` vs `on(cubeA, cubeB)`). Predicate arity, object identifier validation, and parameter directions are validated by a post-parse semantic visitor (`compiler/parser.py`), converting syntactic failures into actionable linter diagnostics (`E003`).
+
+#### Two-Stage Multi-Modal Compilation (ADR-0011)
+To satisfy Invariant I2 ("Show It Once") and eliminate LLM number hallucination (Invariant I6), `Kodiac test` operates in two decoupled stages:
+1. **Stage 1 (Symbolic Structure Extraction):** Muse Spark 1.3 extracts task topology, object roles, and step sequencing only, emitting symbolic parameter placeholders (`value = -1.0`). Spark is strictly forbidden from guessing numerical thresholds.
+2. **Stage 2 (Empirical Metric Calibration & Slack Fitting):** The measurement engine (`pipeline/run.py`) executes an unconstrained metric logging run over the demonstration video (Pass 1) to measure empirical extrema ($h_{\text{max}}, \Delta_{xy}, z_{\text{gap}}, v_{\text{settle}}$) via kinematic phase segmentation. `compiler/slack.py` derives calibrated tolerances with certified safety margins ($\text{margin} \ge 2\sigma$). `compiler/selftest.py` executes a read-only verification run asserting `Verdict == PASS`.
+
+#### Deterministic Fallback & Anti-Fabrication Badging (ADR-0012)
+If Muse Spark fails, times out (>8s), or `MODEL_API_KEY` is missing, `compiler/template_fallback.py` provides instant offline AST recovery gated on recognized manipulation verbs (`pick`, `lift`, `place`, `stack`, `insert`, `let go`, `release`, `dwell`). To satisfy Prime Directive Law 1 ("Never fake anything"):
+- AST header comment includes `[COMPILER: DETERMINISTIC TEMPLATE FALLBACK · LLM OFFLINE]`.
+- `Step.provenance.source` is set to `"compiler-default"`.
+- `GreenLock.model_ids["compiler"]` records `"template-fallback"`.
+- CLI prints an amber notice to `stderr`.
+
+#### Empirical Auto-Slack Fitting with Physical Sanity Caps (ADR-0013)
+`compiler/slack.py` calculates calibrated tolerances over the settled demonstration window:
+- `align_xy_cm` = $\max(1.5, \text{round}(\Delta_{xy} + 2.5\sigma, 1))$ (capped at $\le 4.0$ cm)
+- `gap_cm` = $\max(0.5, \text{round}(z_{\text{gap}} + 2.5\sigma, 1))$ (capped at $\le 2.0$ cm)
+- `min_cm` = $\max(1.0, \lfloor 0.6 \cdot h_{\text{max}} \rfloor)$ (capped at $\le 8.0$ cm)
+- `max_speed_cm_s` capped at $\le 2.5$ cm/s.  
+If demonstration measurements exceed any physical sanity cap, compilation fails with `E005` to prevent loose tests that poison downstream policy training (Invariant I8).
+
+#### Inter-Module Contracts & Lockfile Schema
+- `VoiceTurn`: Frozen Pydantic model (`transcript: str, t_start: float, t_end: float, source: str`) governing speech ingestion.
+- `GreenLock`: Top-level schema remains frozen; physical slack derivation tables are stored under `object_baselines["_slack_summary"]`.
+- Stream separation: Progress spinners, timers, and warnings route strictly to `stderr`, reserving `stdout` for clean `.green` file piping (Invariant I1).
 The source spec's example (with `steps:` and indented steps) **must parse verbatim** (golden test). The canonical printer emits 4 lines.
 
 ### 6.2 Predicate signatures & parameter directions

@@ -122,3 +122,46 @@ All rulings, architectural choices, and deviations are logged here chronological
   3. *Blindness Gating:* If $a_{\text{vis}} / \hat{a} < 0.20$, Gate G2 MUST fire with `CAN'T TELL` and reason code `OCCLUDED` (sub-reason: `target obscured by effector < 20% visible`). Kodiac never guesses physical metric state when optically blind.
 - **Rationale:** Resolves false-occlusion rejections during normal robot grasping while establishing a strict physical observability boundary. Upholds Prime Directive Law 1 and Invariant I3.
 - **Supersedes:** None.
+
+---
+
+### ADR-0011 · 2026-10-31 · P05 · Two-Stage Multi-Modal Compilation Architecture
+- **Context:** To satisfy Invariant I2 ("Show It Once") and Concept C3 in the 3-minute video (Beat 0:24–0:50), Kodiac must compile a single demonstration video and spoken instruction into an unassailable `.green` test. If an LLM (Muse Spark) is asked to generate numerical thresholds (`align_xy_cm <= 1.5`, `min_cm = 2.0`), it hallucinates arbitrary numbers from pre-training priors rather than observing what the demonstrator actually achieved. This violates Invariant I6 ("Measured, not guessed") and Invariant I17 ("Every claim backed by a test").
+- **Decision:**
+  1. *Stage 1 (Symbolic Structure Extraction):* Muse Spark 1.3 is prompted with a strict Pydantic JSON schema restricted to object roles, step sequencing, and predicate names (`on`, `inside`, `near`, `lifted`, `moves_with`, `dwell`, `looks`, `MANUAL`). Spark is strictly forbidden from generating numerical threshold floats; all parameter values are emitted as symbolic placeholders (`value = -1.0`).
+  2. *Stage 2 (Empirical Metric Calibration):* The measurement engine (`pipeline/run.py`) executes an unconstrained metric logging run over the demonstration video (Pass 1) to measure empirical physical extrema ($h_{\text{max}}$, $\Delta_{xy}$, $z_{\text{gap}}$, $v_{\text{settle}}$). `compiler/slack.py` populates the AST thresholds from these empirical measurements using certified safety margins ($\text{margin} \ge 2\sigma$).
+  3. *Read-Only Verification:* `compiler/selftest.py` executes a read-only verification run on the calibrated test against the demonstration clip, asserting `Verdict == PASS` and `margin >= 2σ`.
+- **Rationale:** Strictly separates structural natural language reasoning from empirical computer vision measurement, guaranteeing that physical thresholds are anchored 100% in physical reality.
+- **Supersedes:** None.
+
+---
+
+### ADR-0012 · 2026-10-31 · P05 · Deterministic Fallback Compiler with Anti-Fabrication Badging and Verb Gating
+- **Context:** Live demo environments, evaluators without `MODEL_API_KEY`, and automated test suites in offline sandboxes must be able to compile tests without network access or LLM timeouts. However, silently replacing an LLM compilation with a hardcoded template violates Prime Directive Law 1 ("Never fake anything"). Furthermore, blindly emitting a standard pick-and-place AST for completely unrelated user inputs produces a bogus test.
+- **Decision:**
+  1. *Verb Gating & Domain Validation:* `compiler/template_fallback.py` and `compiler/text_compile.py` are strictly gated on recognized robotics manipulation verbs (`pick`, `lift`, `place`, `stack`, `insert`, `let go`, `release`, `dwell`). If input text contains unrecognized or unsupported actions, compilation MUST fail with diagnostic `E003: unsupported manipulation action` or `E001: object not found`, rather than silently defaulting to a pick-and-place AST.
+  2. *Mandatory Anti-Fabrication Badging:* Whenever template compilation is engaged:
+     - The `.green` header comment MUST contain: `[COMPILER: DETERMINISTIC TEMPLATE FALLBACK · LLM OFFLINE]`.
+     - `Step.provenance.source` MUST be set to `"compiler-default"`.
+     - `GreenLock.model_ids["compiler"]` MUST be recorded as `"template-fallback"`.
+     - The CLI MUST print an amber notice to `stderr`: `⚠ [COMPILER: DETERMINISTIC TEMPLATE FALLBACK · LLM OFFLINE]`.
+- **Rationale:** Ensures 100% offline developer quickstart and CI reliability while guaranteeing complete transparency, preventing any misrepresentation of heuristic templates as live model outputs.
+- **Supersedes:** None.
+
+---
+
+### ADR-0013 · 2026-10-31 · P05 · Empirical Auto-Slack Derivation with Physical Sanity Caps
+- **Context:** Human webcam demonstrations inevitably contain hand jitter, minor wobbles, or slightly off-center placements. If fixed rigid thresholds are applied, valid demonstrations fail their own self-test (`E005`). Conversely, if auto-slack derivation is unbounded, an extremely sloppy human demonstration (e.g. dropping a block from 15 cm or placing it 8 cm off-center) will yield ridiculously loose thresholds (`align_xy_cm <= 9.5`, `gap_cm <= 16.0`). Downstream robot policies evaluated against such a loose test will pass even when dropping objects on the floor, destroying the headline proof ("+Y points of success", Invariant I8).
+- **Decision:**
+  1. *Statistical Tolerance Fitting:* `compiler/slack.py` derives thresholds using certified safety bounds over the settled demonstration state:
+     - `align_xy_cm` = $\max(1.5, \text{round}(\Delta_{xy} + 2.5\sigma, 1))$
+     - `gap_cm` = $\max(0.5, \text{round}(z_{\text{gap}} + 2.5\sigma, 1))$
+     - `min_cm` = $\max(1.0, \lfloor 0.6 \cdot h_{\text{max}} \rfloor)$
+  2. *Hard Physical Sanity Caps (Anti-Poisoning Filter):* Hard upper bounds are enforced on all calibrated thresholds:
+     - `align_xy_cm <= 4.0` cm
+     - `gap_cm <= 2.0` cm
+     - `min_cm <= 8.0` cm
+     - `max_speed_cm_s <= 2.5` cm/s
+  3. *Rejection of Sloppy Demonstrations:* If empirical demonstration measurements exceed any physical sanity cap, compilation MUST halt immediately with diagnostic `E005: demonstration exceeds physical sanity cap; re-record a valid demonstration`. No test specification or lockfile shall be generated.
+- **Rationale:** Guarantees that valid human demonstrations achieve `Verdict == PASS` with $\text{margin} \ge 2\sigma$ by mathematical construction, while strictly preventing sloppy demonstrations from generating degenerate test oracles that poison policy training.
+- **Supersedes:** None.

@@ -342,34 +342,41 @@ and text-compile mode.
 2. Turn-level timestamps only: is `ENDPOINTING` + pauses enough, or do we need MMS_FA?
 3. The threshold slack table: which formulas generalize from a human demo to robot attempts (different cameras)?
 
-**Steps.**
+**Steps (Governed by ADR-0011, ADR-0012, ADR-0013).**
 - **P05.S01 ⚡ Grammar, parser, printer** (`compiler/grammar.lark`, `compiler/parser.py`, `compiler/printer.py`): `ARCHITECTURE.md` §6.1;
+  `pred_arg: param | IDENT` to prevent LALR shift/reduce collisions; semantic visitor for arity/typing (E003);
   provenance binding; canonical 4-line printer; round-trip tests; **golden test: the source spec example parses verbatim**
   (`examples/stack_blocks.green`).
 - **P05.S02 ⚡ Linter** (`compiler/lint.py`): E001–E005, W101–W105; the non-visual keyword ontology (force, torque, weight, temperature,
-  sound, gently, firmly, slam, current); comparator directions per parameter.
-- **P05.S03 ⚡ ASR client** (`compiler/asr.py`): Muse Voice one-shot HTTP (cookbook `transcribe_recording` pattern), `ENDPOINTING`;
-  WAV extraction via ffmpeg; turns → clause windows; cached. Optional `compiler/align.py` with torchaudio `MMS_FA` (behind the `[proof]`/`[viz]` extra).
-- **P05.S04 Spark compiler** (`compiler/spark_compile.py`): structured output into a `GreenTest` skeleton (objects + steps + expressions,
-  **numeric params as placeholders**); a few-shot prompt with the three IDEA examples; role inference (container/articulated); one retry on schema
-  failure. Store the prompt in `compiler/prompts/compile_v1.md`.
+  sound, gently, firmly, slam, current) → `MANUAL("...")` (W101); comparator directions per parameter (E004).
+- **P05.S03 ⚡ ASR client** (`compiler/asr.py`): Muse Voice one-shot HTTP (`httpx`), `ENDPOINTING`; WAV extraction via ffmpeg/stdlib `wave`;
+  turns → `VoiceTurn` windows; cached. Optional `torchaudio` MMS_FA behind dynamic import guards.
+- **P05.S04 Spark compiler** (`compiler/spark_compile.py`): ADR-0011 structured output into a `GreenTest` skeleton (objects + steps + expressions,
+  **numeric params strictly as placeholders `value = -1.0`**; no threshold guessing); few-shot prompt with the three IDEA examples;
+  role inference (container/articulated); one retry on schema failure. Store prompt in `compiler/prompts/compile_v1.md`.
 - **P05.S05 Object type-check & baselines** (`compiler/typecheck.py`): SAM 3.1 segment on 2–3 demo keyframes per object prompt; E001/E002; record
-  A0, k0, scores, and the rim ellipse for containers (OpenCV `fitEllipse` on the upper boundary); effector alias resolution.
-- **P05.S06 Self-test & thresholds** (`compiler/selftest.py`, `compiler/slack.py`): run the engine (full path) on the demo with default
-  params → demo events → thresholds from the slack table (`min_cm = max(1.0, ⌊0.5·demo_lift⌋)`, `align_xy = max(1.5, 3σ)`, `for_s = 0.5`,
-  …) → re-run → require PASS with margin ≥ 2σ (E005/W103).
+  A0, k0, scores, and the rim ellipse for containers; effector alias resolution (`gripper` ↔ human hand via `detect_embodiment`).
+- **P05.S06 Self-test & thresholds** (`compiler/selftest.py`, `compiler/slack.py`): ADR-0011 / ADR-0013 two-pass calibration. Pass 1: unconstrained
+  metric logging measuring extrema ($h_{\text{max}}, \Delta_{xy}, z_{\text{gap}}, v_{\text{settle}}$) via kinematic phase segmentation (apex & settled terminal window).
+  Pass 2: statistical tolerance fitting ($\text{margin} \ge 2\sigma$) with physical sanity caps (`align_xy <= 4.0cm`, `gap <= 2.0cm`, `min_cm <= 8.0cm`, `v <= 2.5cm/s`).
+  Re-run read-only verification asserting PASS with margin ≥ 2σ; reject sloppy demos with E005.
 - **P05.S07 Lock file** (`compiler/lock.py`): `GreenLock` with test sha256, transcript, baselines, demo events (for `diff`), geometry tier, model IDs.
-- **P05.S08 Text-compile** (`compiler/text_compile.py`): `--from-text "<task>" --first-frame <clip>`; existence check only; the
-  defaults table or the oracle-matched table (`--profile stackcube`). **Verify it reproduces `examples/stackcube.green` exactly** (diff = empty).
-- **P05.S09 CLI `Kodiac test`** (`cli.py` test command): `--webcam` (OpenCV capture ≤20 s), `--video`, `--from-text`, `--out`; the terminal format in `ARCHITECTURE.md` §1.2.
+  Embed physical slack derivation records under `object_baselines["_slack_summary"]`.
+- **P05.S08 Text-compile & template fallback** (`compiler/text_compile.py`, `compiler/template_fallback.py`): ADR-0012 deterministic rule-based template
+  compiler gated on manipulation verbs (`pick`, `place`, `stack`, etc.) with Law 1 badging (`[COMPILER: DETERMINISTIC TEMPLATE FALLBACK]`, `source="compiler-default"`).
+  `--from-text "<task>" --first-frame <clip>`; verify it reproduces `examples/stackcube.green` exactly (diff = empty).
+- **P05.S09 CLI `Kodiac test`** (`cli.py` test command): `--webcam` (with 2.0s probe timeout), `--video`, `--from-text`, `--out`, `--backend fixture`.
+  Clean stream separation: interactive timers and warnings stream to `stderr`, `stdout` emits valid `.green` text.
 - **P05.S10 🎬 Human demo compile.** 👤 records `demos/stack_blocks_demo.mp4` (filming guide). The agent compiles it → a 4-line test → self-test PASS.
   Record the terminal take with VHS (`video/tapes/test.tape`) → `artifacts/p05/test_take.mp4`. Log in `VIDEO_NUMBERS.md`.
 - **P05.S11 🔁 Audit compile** (BG-B): text-compile tests for the task strings of the audit datasets chosen in P02 (cache per dataset+task);
   launch batch full-path runs on the selected episodes (Modal) → `experiments/audit/<dataset>/verdicts.parquet`.
 - **P05.S12 🔁 Kodiac arm training** (BG-A): once `Kodiac.parquet` is complete, launch Kodiac-arm training × 3 seeds.
 
-**Suggested task split.** IMPL-1: S01–S02, S07 (`compiler/{grammar.lark,parser.py,printer.py,lint.py,lock.py}`, `tests/compiler/**`) ·
-IMPL-2: S03–S04, S08 (`compiler/{asr.py,align.py,spark_compile.py,text_compile.py,prompts/**}`) · IMPL-3: S05–S06, S09 (`compiler/{typecheck.py,selftest.py,slack.py}`, `cli.py` test command).
+**Suggested task split (Strict Disjoint File Boundaries).**
+- **IMPL-1 (T01):** S01, S02, S07, S10 (`compiler/{grammar.lark,parser.py,printer.py,lint.py,lock.py}`, `tests/compiler/{test_parser.py,test_printer.py,test_lint.py,test_lock.py}`).
+- **IMPL-2 (T02):** S03, S04, S08 (`compiler/{asr.py,spark_compile.py,template_fallback.py,text_compile.py,prompts/**}`, `tests/compiler/{test_asr.py,test_spark_compile.py,test_text_compile.py}`, `tests/fixtures/audio/**`).
+- **IMPL-3 (T03):** S05, S06, S09, S11, S12 (`compiler/{typecheck.py,selftest.py,slack.py}`, `cli.py` test command, `tests/compiler/{test_typecheck.py,test_slack.py,test_selftest.py}`, `tests/cli/test_cli_test.py`, `video/tapes/test.tape`).
 
 **Exit gate.**
 - [ ] The spec example parses verbatim; print∘parse round-trip is the identity on all examples.

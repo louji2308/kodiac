@@ -4,47 +4,47 @@
 - id: F01
   name: Demo capture
   tier: MVP
-  status: planned
+  status: in_progress
   evidence: null
 - id: F02
   name: Speech -> step windows
   tier: MVP
-  status: planned
+  status: in_progress
   evidence: null
 - id: F03
   name: Spec compiler
   tier: MVP
-  status: planned
+  status: in_progress
   evidence: null
 - id: F04
   name: .green language + lock file
   tier: MVP
-  status: planned
+  status: in_progress
   evidence: null
 - id: F05
   name: Per-step provenance
   tier: MVP
-  status: planned
+  status: in_progress
   evidence: null
 - id: F06
   name: Compile-time spec linter
   tier: MVP
-  status: planned
+  status: in_progress
   evidence: null
 - id: F07
   name: Object type-check
   tier: MVP
-  status: planned
+  status: in_progress
   evidence: null
 - id: F08
   name: Demo self-test
   tier: MVP
-  status: planned
+  status: in_progress
   evidence: null
 - id: F09
   name: Text-compile mode
   tier: MVP
-  status: planned
+  status: in_progress
   evidence: null
 - id: F10
   name: Effector aliasing
