@@ -1,0 +1,57 @@
+// .green Language Grammar (EBNF for Lark)
+// Normative specification per ARCHITECTURE.md §6.1, ADR-0011, and ADR-0012
+
+?start: _NL* header_comments objects_line inter_comments params_line? inter_comments steps_header? (step | COMMENT _NL+)+ _NL*
+
+header_comments: (COMMENT _NL+)*
+inter_comments: (COMMENT _NL+)*
+COMMENT: /#[^\r\n]*/
+
+objects_line: "objects" ":" "[" [object_decl ("," object_decl)*] "]" _NL+
+object_decl: IDENT ["(" obj_attr ("," obj_attr)* ")"]
+obj_attr: attr_role
+        | attr_prompt
+        | attr_alias
+        | attr_size_cm
+        | attr_height_cm
+
+attr_role: "role" "=" ROLE
+attr_prompt: "prompt" "=" STRING
+attr_alias: ("alias" | "aliases") "=" "[" [STRING ("," STRING)*] "]"
+attr_size_cm: "size_cm" "=" NUMBER
+attr_height_cm: "height_cm" "=" NUMBER
+
+ROLE: "effector" | "rigid" | "container" | "articulated" | "surface"
+
+params_line: "params" ":" param ("," param)* _NL+
+steps_header: "steps" ":" _NL+
+
+step: INT "." IDENT ":" expr [COMMENT] _NL*
+
+expr: and_expr ("or" and_expr)*
+and_expr: not_expr ("and" not_expr)*
+not_expr: NOT not_expr | atom
+NOT: "not"
+atom: predicate | looks | manual | "(" expr ")"
+
+predicate: PRED "(" [pred_arg ("," pred_arg)*] ")"
+pred_arg: param | IDENT
+
+PRED: "on" | "inside" | "near" | "lifted" | "moves_with" | "dwell"
+param: IDENT CMP NUMBER
+CMP: "<=" | ">=" | "="
+
+looks: "looks" "(" IDENT "," STRING ["|" STRING] ")"
+manual: "MANUAL" "(" STRING ")"
+
+STRING: ESCAPED_STRING | /'([^\\']|\\.)*'/
+
+IDENT: /[a-zA-Z_][a-zA-Z0-9_]*/
+NUMBER: /-?\d+(\.\d+)?([eE][+-]?\d+)?/
+INT: /\d+/
+
+%import common.ESCAPED_STRING
+%import common.WS_INLINE
+%ignore WS_INLINE
+
+_NL: /(\r?\n[\t ]*)+/

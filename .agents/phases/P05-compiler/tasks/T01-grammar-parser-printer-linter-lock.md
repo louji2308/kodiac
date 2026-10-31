@@ -1,5 +1,5 @@
 # T01: Grammar, Parser, Canonical Printer, Linter, & Lockfile
-phase: P05 · owner: IMPL-1 · status: TODO
+phase: P05 · owner: IMPL-1 · status: DONE
 plan_ref: IMPLEMENTATION_PLAN.md P05.S01, P05.S02, P05.S07, P05.S10 · ADR-0011, ADR-0012, ADR-0013
 depends_on: [] · blocks: [T03]
 owns_paths:
@@ -77,12 +77,12 @@ def generate_lockfile(
 6. **Tests:** Author thorough tests in `tests/compiler/test_parser.py`, `tests/compiler/test_printer.py`, `tests/compiler/test_lint.py`, and `tests/compiler/test_lock.py`. Assert golden identity: `print_green(parse_green(open("examples/stackcube.green").read())) == open("examples/stackcube.green").read()`. Assert zero top-level imports of `torchaudio` or `openai`.
 
 ## Definition of Done
-- [ ] Golden round-trip identity on `examples/stackcube.green` and `examples/stack_blocks.green`.
-- [ ] Linter correctly detects E001–E005 and W101–W105 with structured `Diagnostic` instances.
-- [ ] `generate_lockfile` produces valid `GreenLock` matching frozen Pydantic schema in `contracts/core.py`.
-- [ ] `uv run --no-sync pytest tests/compiler/test_parser.py tests/compiler/test_printer.py tests/compiler/test_lint.py tests/compiler/test_lock.py -q` passes 100%.
-- [ ] Zero uninstalled package imports (`torchaudio`, `openai`).
-- [ ] Committed with message `feat(p05/t01): grammar, parser, canonical printer, linter and lockfile`.
+- [x] Golden round-trip identity on `examples/stackcube.green` and `examples/stack_blocks.green`.
+- [x] Linter correctly detects E001–E005 and W101–W105 with structured `Diagnostic` instances.
+- [x] `generate_lockfile` produces valid `GreenLock` matching frozen Pydantic schema in `contracts/core.py`.
+- [x] `uv run --no-sync pytest tests/compiler/test_parser.py tests/compiler/test_printer.py tests/compiler/test_lint.py tests/compiler/test_lock.py -q` passes 100%.
+- [x] Zero uninstalled package imports (`torchaudio`, `openai`).
+- [x] Committed with message `feat(p05/t01): grammar, parser, canonical printer, linter and lockfile`.
 
 ## Verification Commands
 ```bash
@@ -92,4 +92,26 @@ python -c "import src.Kodiac_robotics.compiler.parser as p, src.Kodiac_robotics.
 ```
 
 ## Report
-*(to be filled by IMPL-1 at DONE)*
+### Deliverables
+1. `src/Kodiac_robotics/compiler/grammar.lark`:
+   - Normative Lark EBNF grammar with LALR disambiguation `predicate: PRED "(" [pred_arg ("," pred_arg)*] ")"` and `pred_arg: param | IDENT`.
+   - Supports flat and indented step syntax with `steps:` keyword, multiple objects and attribute declarations, nested boolean logic, comments, and provenance.
+2. `src/Kodiac_robotics/compiler/parser.py`:
+   - Pre-processes input text, normalizes Unicode en-dashes (`–`, U+2013) and em-dashes (`—`) in timestamps, and handles multiline object brackets.
+   - Dual-mode parser: LALR with automatic Earley fallback.
+   - Transforms parse trees into typed `GreenTest` ASTs with post-parse semantic validation via `validate_semantics`.
+3. `src/Kodiac_robotics/compiler/printer.py`:
+   - Canonical 4-line serializer for `.green` specifications.
+   - Preserves column 12 step prefix alignment and column 91 provenance alignment.
+   - Achieves 100% bit-identical round-trip identity on `examples/stackcube.green` and `examples/stack_blocks.green`.
+4. `src/Kodiac_robotics/compiler/lint.py`:
+   - Diagnostic engine implementing errors `E001` (object not found), `E002` (ambiguous/duplicate object), `E003` (arity/role/predicate mismatch), `E004` (comparator against parameter direction), `E005` (demo fails own test or exceeds physical sanity caps).
+   - Warnings `W101` (tactile keyword -> recommend `MANUAL(...)`), `W102` (step without provenance), `W103` (demo margin < 2σ), `W104` (depth-critical on Tier C), `W105` (`or` disjunction used).
+   - Structured `Diagnostic` model with code, message, severity, step index, line, and column.
+5. `src/Kodiac_robotics/compiler/lock.py`:
+   - Cryptographic `GreenLock` sidecar generator with test SHA-256 calculation, transcript extraction, demo events, and geometry tier detection.
+   - Embeds physical slack derivation under `object_baselines["_slack_summary"]` preserving the frozen `GreenLock` schema per ADR-0013.
+6. Test suite (`tests/compiler/`):
+   - 28 unit tests across `test_parser.py`, `test_printer.py`, `test_lint.py`, and `test_lock.py` passing 100% in 3.48s.
+   - AST audit verifies zero top-level imports of `torchaudio` or `openai`.
+   - `ruff check` passes cleanly with zero warnings or errors.
