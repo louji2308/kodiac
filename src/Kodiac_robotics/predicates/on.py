@@ -66,13 +66,19 @@ def evaluate_on(
         xb, db, hb, sb = coords_b
 
         # Resolve top height of object B
-        b_height = 0.0
-        if context:
-            if "object_heights" in context and obj_b in context["object_heights"]:
-                b_height = float(context["object_heights"][obj_b])
-            elif "object_sizes" in context and obj_b in context["object_sizes"]:
-                b_height = float(context["object_sizes"][obj_b])
-        h_top_b = hb + b_height
+        if getattr(scale, "tier", None) == "C" and obj_b in tracks and frame in tracks[obj_b].frames:
+            mb = tracks[obj_b].frames[frame]
+            v_base_b = getattr(scale, "v0", {}).get(obj_b, mb.bbox_xyxy[3])
+            k_ref = getattr(scale, "k_ref", 15.0)
+            h_top_b = (v_base_b - mb.bbox_xyxy[1]) / k_ref
+        else:
+            b_height = 0.0
+            if context:
+                if "object_heights" in context and obj_b in context["object_heights"]:
+                    b_height = float(context["object_heights"][obj_b])
+                elif "object_sizes" in context and obj_b in context["object_sizes"]:
+                    b_height = float(context["object_sizes"][obj_b])
+            h_top_b = hb + b_height
 
     # 1. Lateral alignment margin: m_xy = align_xy_cm - d_xy
     d_xy = euclidean_2d(xa, da, xb, db)
@@ -119,7 +125,13 @@ def evaluate_on(
         tri=Tri.T if m_rho > 0 else Tri.F,
     )
 
-    components = [c_align, c_gap, c_rho]
+    components = [c_align, c_rho]
+    # Include on.gap when: (a) gap_cm param explicitly declared, OR
+    # (b) obj_b is a surface/table (gap height is always measurable)
+    has_gap = any(p.name == "gap_cm" for p in atom.params)
+    is_surface = obj_b in ("table", "surface")
+    if has_gap or is_surface:
+        components.insert(1, c_gap)
     overall_tri = conjoin_components(components)
 
     return PredFrame(

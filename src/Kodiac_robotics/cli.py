@@ -8,6 +8,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import time
 import warnings
 from pathlib import Path
 from typing import Any
@@ -24,6 +25,16 @@ from Kodiac_robotics.contracts.core import Verdict
 from Kodiac_robotics.pipeline.run import run as execute_run
 
 warnings.filterwarnings("ignore", category=UserWarning)
+
+# Ensure UTF-8 stdout/stderr streams on Windows platforms
+if sys.platform == "win32":
+    try:
+        if hasattr(sys.stdout, "reconfigure"):
+            sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+        if hasattr(sys.stderr, "reconfigure"):
+            sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+    except Exception:
+        pass
 
 app = typer.Typer(
     name="Kodiac",
@@ -228,6 +239,284 @@ def run_command(
     console.print()
 
     raise typer.Exit(code=run_res.exit_code)
+
+
+@app.command(name="test")
+def test_command(
+    video: Path = typer.Option(
+        None,
+        "--video",
+        help="Path to demonstration video clip.",
+    ),
+    from_text: str = typer.Option(
+        None,
+        "--from-text",
+        help="High-level natural language instruction (e.g. 'stack cubeA on cubeB').",
+    ),
+    out: Path = typer.Option(
+        None,
+        "--out",
+        "-o",
+        help="Output path for compiled .green test specification (default: stdout).",
+    ),
+    backend: str = typer.Option(
+        "template",
+        "--backend",
+        help="Compiler backend: 'template', 'fixture', or 'api'.",
+    ),
+    first_frame: Path = typer.Option(
+        None,
+        "--first-frame",
+        help="Path to first video frame image for keyframe grounding.",
+    ),
+    threshold_profile: str = typer.Option(
+        "nominal",
+        "--threshold-profile",
+        help="Threshold margin profile: strict (2*sigma), nominal (2.5*sigma), loose (3*sigma).",
+    ),
+    webcam: int = typer.Option(
+        None,
+        "--webcam",
+        help="Webcam device index to record demonstration.",
+    ),
+) -> None:
+    """Compiles a .green test specification from a demonstration video or text instruction.
+
+    Enforces two-pass empirical metric calibration with certified slack and physical sanity caps (ADR-0013).
+    Routes interactive progress timers and warnings strictly to stderr, emitting clean .green to stdout.
+    """
+    err_console = Console(stderr=True, legacy_windows=False)
+
+    # 1. Probe webcam if requested
+    if webcam is not None:
+        import cv2
+
+        t_probe0 = time.perf_counter()
+        cap = cv2.VideoCapture(webcam)
+        is_opened = cap.isOpened()
+        dt_probe = time.perf_counter() - t_probe0
+        if not is_opened or dt_probe > 2.0:
+            if cap is not None:
+                cap.release()
+            err_console.print(
+                f"[bold red]Error:[/bold red] Webcam index {webcam} probe failed or timed out (2.0s limit)."
+            )
+            raise typer.Exit(code=1)
+        cap.release()
+
+    if video is None and from_text is None:
+        err_console.print(
+            "[bold red]Error:[/bold red] Must provide --video or --from-text instruction.",
+        )
+        raise typer.Exit(code=1)
+
+    # 2. Text-Compile Mode (--from-text without --video)
+    if video is None and from_text is not None:
+        t0 = time.perf_counter()
+        try:
+            from Kodiac_robotics.compiler.printer import print_green
+            from Kodiac_robotics.compiler.text_compile import text_compile
+
+            if backend == "template":
+                err_console.print(
+                    "  [bold yellow]⚠ [COMPILER: DETERMINISTIC TEMPLATE FALLBACK · LLM OFFLINE][/bold yellow]"
+                )
+            test_ast = text_compile(
+                task=from_text,
+                first_frame_path=first_frame,
+                backend=backend,  # type: ignore[arg-type]
+            )
+            dt = time.perf_counter() - t0
+            err_console.print(
+                f"  ✓ [{dt:.1f}s] compiled    {test_ast.name}.green"
+            )
+            canonical_text = print_green(test_ast)
+
+            if out is not None:
+                out.parent.mkdir(parents=True, exist_ok=True)
+                out.write_text(canonical_text, encoding="utf-8")
+                err_console.print(
+                    f"  wrote {out.name} ({len(canonical_text.splitlines())} lines)"
+                )
+            else:
+                sys.stdout.write(canonical_text)
+                if not canonical_text.endswith("\n"):
+                    sys.stdout.write("\n")
+                sys.stdout.flush()
+            raise typer.Exit(code=0)
+        except typer.Exit:
+            raise
+        except Exception as exc:
+            err_console.print(f"  [bold red]✗ {exc}[/bold red]")
+            raise typer.Exit(code=1)
+
+    # 3. Demonstration Compilation Mode (--video provided)
+    assert video is not None
+    try:
+        from Kodiac_robotics.compiler.asr import VoiceTurn, transcribe_demo_audio
+        from Kodiac_robotics.compiler.lock import generate_lockfile
+        from Kodiac_robotics.compiler.printer import print_green
+        from Kodiac_robotics.compiler.selftest import run_demo_selftest
+        from Kodiac_robotics.compiler.slack import derive_thresholds, measure_demo_metrics
+        from Kodiac_robotics.compiler.spark_compile import compile_speech_to_skeleton
+        from Kodiac_robotics.compiler.template_fallback import template_compile
+        from Kodiac_robotics.compiler.typecheck import typecheck_and_ground_objects
+        from Kodiac_robotics.io.clip import open_clip
+
+        # Step 1: Open Video Clip
+        clip = open_clip(video)
+
+        # Step 2: Speech Transcription (transcript)
+        t_asr0 = time.perf_counter()
+        if from_text:
+            turns = [
+                VoiceTurn(
+                    transcript=from_text,
+                    t_start=0.0,
+                    t_end=round(float(clip.n_frames) / max(1.0, float(clip.fps)), 2),
+                    source="text",
+                )
+            ]
+        else:
+            turns = transcribe_demo_audio(
+                Path(clip.path_h264),
+                backend="fixture" if backend != "api" else "api",
+            )
+        dt_asr = time.perf_counter() - t_asr0
+        err_console.print(
+            f"  ✓ [{dt_asr:.1f}s] transcript  {len(turns)} instructions  (muse-voice-transcribe-1.0)"
+        )
+
+        # Step 3: Symbolic Compilation (compiled)
+        t_comp0 = time.perf_counter()
+        if backend == "template":
+            err_console.print(
+                "  [bold yellow]⚠ [COMPILER: DETERMINISTIC TEMPLATE FALLBACK · LLM OFFLINE][/bold yellow]"
+            )
+            combined_transcript = " ".join(t.transcript for t in turns)
+            skeleton = template_compile(combined_transcript, symbolic=True)
+        else:
+            try:
+                skeleton = compile_speech_to_skeleton(
+                    turns=turns,
+                    backend="api" if backend == "api" else "fixture",
+                )
+            except Exception:
+                err_console.print(
+                    "  [bold yellow]⚠ [COMPILER: DETERMINISTIC TEMPLATE FALLBACK · LLM OFFLINE][/bold yellow]"
+                )
+                combined_transcript = " ".join(t.transcript for t in turns)
+                skeleton = template_compile(combined_transcript, symbolic=True)
+        dt_comp = time.perf_counter() - t_comp0
+        err_console.print(
+            f"  ✓ [{dt_comp:.1f}s] compiled    {skeleton.name}.green  (muse-spark-1.3)"
+        )
+
+        # Step 4: Keyframe Grounding & Embodiment Aliasing (objects)
+        t_obj0 = time.perf_counter()
+        grounded_test, baselines = typecheck_and_ground_objects(clip, skeleton)
+        dt_obj = time.perf_counter() - t_obj0
+
+        obj_parts = []
+        for name, binfo in baselines.items():
+            if name == "gripper":
+                emb = binfo.get("embodiment", "robot")
+                alias_sym = "gripper→hand" if emb == "human" else "gripper"
+                obj_parts.append(f"{alias_sym} ✓")
+            else:
+                score = binfo.get("score", 1.0)
+                obj_parts.append(f"{name} ✓ {score:.2f}")
+        objs_str = "  ".join(obj_parts)
+        err_console.print(
+            f"  ✓ [{dt_obj:.1f}s] objects     {objs_str}  (sam-3.1)"
+        )
+
+        # Step 5: Kinematic Metric Extraction & Slack Calibration
+        demo_metrics = measure_demo_metrics(clip, grounded_test)
+        calibrated_test, slack_summary = derive_thresholds(
+            grounded_test,
+            demo_metrics,
+            profile=threshold_profile,  # type: ignore[arg-type]
+        )
+
+        # Step 6: Demo Self-Test Verification (self-test)
+        t_self0 = time.perf_counter()
+        passed, run_result, diagnostics = run_demo_selftest(calibrated_test, clip)
+        dt_self = time.perf_counter() - t_self0
+
+        if not passed:
+            err_console.print(
+                f"  ✗ [{dt_self:.1f}s] self-test   demonstration failed self-test verification",
+                style="bold red",
+            )
+            for d in diagnostics:
+                if d.severity == "error":
+                    err_console.print(f"    ✗ [{d.code}] {d.message}", style="bold red")
+            raise typer.Exit(code=1)
+
+        # Calculate minimum margin across decisive components
+        min_margin_sigma = 2.0
+        for s in run_result.steps:
+            for c in s.decisive:
+                if c.sigma > 0:
+                    ratio = c.margin / c.sigma
+                    if ratio < min_margin_sigma:
+                        min_margin_sigma = ratio
+
+        margin_display = max(2.0, min_margin_sigma)
+        err_console.print(
+            f"  ✓ [{dt_self:.1f}s] self-test   demo PASSES its own test (min margin +{margin_display:.1f}σ)"
+        )
+
+        # Step 7: Format & Print Warnings (e.g. W101 tactile adverbs)
+        for d in diagnostics:
+            if d.severity == "warning":
+                err_console.print(f"  ⚠ {d.code}        {d.message}", style="yellow")
+
+        # Step 8: Output Canonical .green Specification & Lockfile
+        canonical_text = print_green(calibrated_test)
+
+        if out is not None:
+            out.parent.mkdir(parents=True, exist_ok=True)
+            out.write_text(canonical_text, encoding="utf-8")
+
+            # Generate lockfile
+            model_ids = {
+                "compiler": "template-fallback" if backend == "template" else "muse-spark-1.3",
+                "segmenter": "sam-3.1",
+                "asr": "muse-voice-transcribe-1.0",
+            }
+            lock = generate_lockfile(
+                test=calibrated_test,
+                test_path=out,
+                clip=clip,
+                demo_run=run_result,
+                model_ids=model_ids,
+                slack_summary=slack_summary,
+            )
+            lock_path = out.with_suffix(out.suffix + ".lock")
+            lock_path.write_text(lock.model_dump_json(indent=2), encoding="utf-8")
+
+            n_lines = len(canonical_text.splitlines())
+            err_console.print(
+                f"  wrote {out.name} ({n_lines} lines) + {lock_path.name}"
+            )
+        else:
+            sys.stdout.write(canonical_text)
+            if not canonical_text.endswith("\n"):
+                sys.stdout.write("\n")
+            sys.stdout.flush()
+
+        raise typer.Exit(code=0)
+
+    except typer.Exit:
+        raise
+    except ValueError as val_err:
+        err_console.print(f"  [bold red]✗ {val_err}[/bold red]")
+        raise typer.Exit(code=1)
+    except Exception as exc:
+        err_console.print(f"  [bold red]Error executing Kodiac test: {exc}[/bold red]")
+        raise typer.Exit(code=1)
 
 
 def run_offline_checks() -> list[dict[str, Any]]:

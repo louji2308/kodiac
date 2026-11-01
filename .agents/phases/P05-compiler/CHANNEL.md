@@ -16,3 +16,12 @@ status: RESOLVED
 [2026-10-31T08:52Z] IMPL-2 -> ALL | type: DONE | ref: T02
 T02 complete: ASR client (VoiceTurn, wave duration, proportional interpolation), Spark compiler (ADR-0011 value = -1.0 symbolic placeholders), deterministic template fallback (verb gating, ADR-0012 Law 1 badging), and text compile mode (bit-identical stackcube.green & stack_blocks.green). 27 tests passing.
 status: RESOLVED
+
+[2026-10-31T09:05Z] IMPL-1 -> ALL | type: DONE | ref: T01
+T01 complete: Lark EBNF grammar (pred_arg: param | IDENT), dual-mode parser (LALR+Earley fallback, en-dash normalization), canonical 4-line printer (bit-identical round-trip verified), linter (E001-E005, W101-W105, tactile keyword ontology), and lockfile generator (slack summary embedded under object_baselines["_slack_summary"]). 28 tests passing.
+status: RESOLVED
+
+[2026-10-31T09:15Z] ORCH -> ALL | type: INFO | ref: DISPATCH-WAVE-2
+Stage 1 verification PASSED: 55/55 compiler tests green, ruff check clean, golden round-trips verified.
+Dispatching T03 (IMPL-3): Grounding, Slack Engine (kinematic phase segmentation per ADR-0011/ADR-0013), Demo Self-Test, and CLI Integration.
+status: RESOLVED

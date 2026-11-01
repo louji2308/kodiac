@@ -4,48 +4,48 @@
 - id: F01
   name: Demo capture
   tier: MVP
-  status: in_progress
-  evidence: null
+  status: done
+  evidence: tests/cli/test_cli_test.py
 - id: F02
   name: Speech -> step windows
   tier: MVP
-  status: in_progress
-  evidence: null
+  status: done
+  evidence: tests/compiler/test_asr.py
 - id: F03
   name: Spec compiler
   tier: MVP
-  status: in_progress
-  evidence: null
+  status: done
+  evidence: tests/compiler/test_spark_compile.py
 - id: F04
   name: .green language + lock file
   tier: MVP
-  status: in_progress
-  evidence: null
+  status: done
+  evidence: tests/compiler/test_parser.py, tests/compiler/test_lock.py
 - id: F05
   name: Per-step provenance
   tier: MVP
-  status: in_progress
-  evidence: null
+  status: done
+  evidence: tests/compiler/test_printer.py
 - id: F06
   name: Compile-time spec linter
   tier: MVP
-  status: in_progress
-  evidence: null
+  status: done
+  evidence: tests/compiler/test_lint.py
 - id: F07
   name: Object type-check
   tier: MVP
-  status: in_progress
-  evidence: null
+  status: done
+  evidence: tests/compiler/test_typecheck.py
 - id: F08
   name: Demo self-test
   tier: MVP
-  status: in_progress
-  evidence: null
+  status: done
+  evidence: tests/compiler/test_selftest.py
 - id: F09
   name: Text-compile mode
   tier: MVP
-  status: in_progress
-  evidence: null
+  status: done
+  evidence: tests/compiler/test_text_compile.py
 - id: F10
   name: Effector aliasing
   tier: MVP

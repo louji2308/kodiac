@@ -188,6 +188,7 @@ class TierCScaleModel:
 
         # Precompute initial resting bottom anchors and scene reference scale
         self.v0: dict[str, float] = {}
+        self.k0: dict[str, float] = {}
         k_candidates: list[float] = []
         for name, track in tracks.items():
             if track.frames:
@@ -199,7 +200,9 @@ class TierCScaleModel:
                 if not (decl and decl.role == "effector"):
                     w_px = max(1.0, float(m.bbox_xyxy[2] - m.bbox_xyxy[0]))
                     size_cm = decl.size_cm if (decl and decl.size_cm) else 4.0
-                    k_candidates.append(w_px / size_cm)
+                    k_obj = w_px / size_cm
+                    k_candidates.append(k_obj)
+                    self.k0[name] = k_obj
         self.k_ref = float(np.mean(k_candidates)) if k_candidates else 15.0
 
     def to_table_frame(self, obj: str, frame: int) -> tuple[float, float, float, float]:
@@ -211,27 +214,20 @@ class TierCScaleModel:
             raise KeyError(f"Frame {frame} not present in track for '{obj}'")
 
         mask = track.frames[frame]
-        decl = self.objects.get(obj)
-        role = decl.role if decl else "rigid"
 
         _, bottom_anchor, _, _, _ = compute_anchors(mask)
         u_b, v_b = bottom_anchor
 
-        if role == "effector":
-            k = self.k_ref
-        else:
-            size_cm = decl.size_cm if (decl and decl.size_cm) else 4.0
-            bbox = mask.bbox_xyxy
-            w_px = max(1.0, float(bbox[2] - bbox[0]))
-            k = max(0.1, w_px / size_cm)
+        k_ref = self.k_ref
+        k_obj = self.k0.get(obj, k_ref)
 
         v_base = self.v0.get(obj, v_b)
-        h_cm = (v_base - v_b) / k
-        x_cm = (u_b - self.cx) / k
-        d_cm = self.f_nom / k
+        h_cm = (v_base - v_b) / k_obj
+        x_cm = (u_b - self.cx) / k_ref
+        d_cm = self.f_nom / k_ref
 
         # 2.5x sigma inflation per ADR-0009
-        sigma_cm = 2.5 * max(0.2, float(self.sigma_px / k))
+        sigma_cm = 2.5 * max(0.2, float(self.sigma_px / k_obj))
 
         return (float(x_cm), float(d_cm), float(h_cm), float(sigma_cm))
 

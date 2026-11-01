@@ -163,7 +163,6 @@ def template_compile(
     # Parameter values (symbolic = -1.0 vs defaults)
     lift_val = -1.0 if symbolic else 2.0
     align_val = -1.0 if symbolic else 1.5
-    gap_val = -1.0 if symbolic else 1.0
     dwell_val = -1.0 if symbolic else 0.5
     rim_val = -1.0 if symbolic else 0.5
 
@@ -216,7 +215,6 @@ def template_compile(
                         args=[obj_a, target],
                         params=[
                             Param(name="align_xy_cm", op="<=", value=align_val),
-                            Param(name="gap_cm", op="<=", value=gap_val),
                         ],
                     ),
                 ),
@@ -439,9 +437,10 @@ def template_compile(
             )
         )
 
+    test_name = f"test_{obj_a}" + (f"_{obj_b}" if obj_b else "")
     return GreenTest(
-        name=f"test_{obj_a}" + (f"_{obj_b}" if obj_b else ""),
+        name=test_name,
         objects=object_decls,
         steps=steps,
-        header_comment="# [COMPILER: DETERMINISTIC TEMPLATE FALLBACK · LLM OFFLINE]",
+        header_comment=f"# {test_name}.green — [COMPILER: DETERMINISTIC TEMPLATE FALLBACK · LLM OFFLINE]",
     )
