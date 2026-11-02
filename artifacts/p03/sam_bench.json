@@ -1,6 +1,8 @@
 {
   "timestamp": "2026-10-28T16:22:03Z",
   "backend": "fixture (deterministic replay)",
+  "evidence_type": "fixture_replay",
+  "is_real_sam_latency": false,
   "clip": {
     "sha256": "6b28a831148885bfc67936b677fe5d0a0c1afef3fcb585500c427a97e0190b24",
     "n_frames": 90,
@@ -61,9 +63,10 @@
   },
   "adr_0008_ruling": {
     "selected_strategy": "two_stage_bisect",
-    "status": "PASS",
+    "status": "PROVISIONAL_UNVERIFIED (fixture latency; re-measure with live SAM before any <12 s claim)",
     "p95_locate_s": 5.819324021742382,
     "threshold_s": 8.0,
     "rationale": "Two-stage bisect p95 locate time (5.82s) satisfies the <= 8.0s empirical gate. Two-Stage Bisect is approved as the PRIMARY live locate fast path."
-  }
+  },
+  "caveat": "Fixture backend: timings are random draws from hard-coded normal distributions in scripts/bench_sam.py (the replayed calls are not what is recorded), not measured SAM latency. Do not cite as evidence for the <12 s budget."
 }

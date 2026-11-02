@@ -160,6 +160,7 @@ def run_benchmark(
 
     # Evaluate ADR-0008 Gate (< 8.0s p95 threshold)
     p95_locate_s = stats_two_stage["p95_ms"] / 1000.0
+    is_fixture = backend_kind != "api"
     if p95_locate_s <= 8.0:
         adr0008_decision = {
             "selected_strategy": "two_stage_bisect",
@@ -191,9 +192,16 @@ def run_benchmark(
             "rationale": "All live paths exceeded budget; serving cached replays by default.",
         }
 
+    if is_fixture:
+        adr0008_decision["status"] = (
+            "PROVISIONAL_UNVERIFIED (fixture latency; re-measure with live SAM before any <12 s claim)"
+        )
+
     bench_payload = {
         "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
         "backend": backend_name,
+        "evidence_type": "fixture_replay" if is_fixture else "live",
+        "is_real_sam_latency": not is_fixture,
         "clip": {
             "sha256": clip.sha256,
             "n_frames": clip.n_frames,
@@ -209,6 +217,12 @@ def run_benchmark(
         },
         "adr_0008_ruling": adr0008_decision,
     }
+    if is_fixture:
+        bench_payload["caveat"] = (
+            "Fixture backend: timings are random draws from hard-coded normal distributions "
+            "(the replayed calls are not what is recorded), not measured SAM latency. "
+            "Do not cite as evidence for the <12 s budget."
+        )
 
     out_path.parent.mkdir(parents=True, exist_ok=True)
     with open(out_path, "w", encoding="utf-8") as f:

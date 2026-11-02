@@ -263,6 +263,15 @@ def run_validation(
         "phase": "P04",
         "step": "P04.S12",
         "split": "calibration_validate",
+        "evidence_type": "synthetic_tracks_from_privileged_state",
+        "perception_in_loop": False,
+        "is_mock_sim": bool(val_df["is_mock"].all()) if "is_mock" in val_df else True,
+        "caveat": (
+            "Tracks are synthesised from the simulator's privileged state "
+            "(build_synthetic_tracks_from_obs), so this measures engine geometry on perfect "
+            "tracks, not perception; episodes come from the kinematic mock sim. Not evidence "
+            "of real-world accuracy or of false-PASS rate under real SAM tracks."
+        ),
         "n_episodes_evaluated": n_total,
         "n_decisive": n_decisive,
         "n_cant_tell": cant_tell,
