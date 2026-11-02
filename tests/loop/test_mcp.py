@@ -17,7 +17,14 @@ from typing import Any
 import numpy as np
 import pytest
 
-from Kodiac_robotics.contracts.core import Clip, ClipRef, ReasonCode, RunResult, StepResult, Verdict, VerifyRequest
+from Kodiac_robotics.contracts.core import (
+    Clip,
+    ReasonCode,
+    RunResult,
+    StepResult,
+    Verdict,
+    VerifyRequest,
+)
 from Kodiac_robotics.loop import mcp_server
 
 REPO = Path(__file__).resolve().parents[2]
@@ -200,6 +207,7 @@ def test_blame_and_hint_included_when_blame_module_provides_them(project: Path, 
 
     def fake_blame(result: RunResult, test: Any, pred_frames: Any, fps: float, **kw: Any) -> Blame:
         seen["spans"] = kw.get("spans")
+        seen["kw"] = sorted(kw)
         seen["fps"] = fps
         ft = FactTable(
             t_star_s=0.1, frame=3, fps=30.0, sigma_frames=0.5, step_index=2, step_name="place", literal="on(cubeA, cubeB)",
@@ -215,6 +223,7 @@ def test_blame_and_hint_included_when_blame_module_provides_them(project: Path, 
     assert out["blame"]["summary"].startswith("Cube A left")
     assert out["blame_status"] == "ok" and out["hint"]["variable"] == "gripper.open timing"
     assert len(seen["spans"]) == 1 and seen["spans"][0].code == "robot.gripper.open()"
+    assert {"spans", "code_locator", "hint_fn"} <= set(seen["kw"])
     assert "Hint: change gripper.open timing" in out["message"]
 
 
@@ -334,9 +343,8 @@ def test_tracks_from_state_covers_every_clip_frame_and_pads_short_state(tmp_path
 
 
 def test_load_pred_frames_roundtrip(tmp_path: Path) -> None:
-    from Kodiac_robotics.engine.trace import TraceWriter
-
     from Kodiac_robotics.contracts.core import Component, PredFrame, Tri
+    from Kodiac_robotics.engine.trace import TraceWriter
 
     comp = Component(name="on.align_xy", value=1.0, threshold=3.3, margin=2.3, sigma=0.2, unit="cm", tri=Tri.T)
     p = tmp_path / "trace.jsonl"

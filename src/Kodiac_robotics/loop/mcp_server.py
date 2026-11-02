@@ -201,13 +201,25 @@ def _try_blame(result: RunResult, test_obj: Any, trace_path: str, fps: float, sp
     try:
         from Kodiac_robotics.blame import blame_from_run
     except ImportError:
-        return None, "unavailable: Kodiac_robotics.blame.blame_from_run is not installed"
-    try:
-        pred_frames = load_pred_frames(trace_path)
         try:
-            blame = blame_from_run(result, test_obj, pred_frames, fps, spans=spans)
-        except TypeError:
-            blame = blame_from_run(result, test_obj, pred_frames, fps)
+            from Kodiac_robotics.blame.validate import blame_from_run
+        except ImportError:
+            return None, "unavailable: Kodiac_robotics.blame.blame_from_run is not installed"
+    kwargs: dict[str, Any] = {"spans": spans}
+    try:
+        from Kodiac_robotics.blame.codeloc import locate_code
+
+        kwargs["code_locator"] = lambda frame, component: locate_code(spans, frame, component)
+    except ImportError:
+        pass
+    try:
+        from Kodiac_robotics.blame.hint import make_hint
+
+        kwargs["hint_fn"] = make_hint
+    except ImportError:
+        pass
+    try:
+        blame = blame_from_run(result, test_obj, load_pred_frames(trace_path), fps, **kwargs)
     except Exception as exc:  # noqa: BLE001 - blame must never crash the tool
         logger.exception("blame_from_run failed")
         return None, f"failed: {type(exc).__name__}: {str(exc)[:200]}"
