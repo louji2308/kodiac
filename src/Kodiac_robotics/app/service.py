@@ -229,8 +229,9 @@ class GradeService:
         extra_badges = list(extra_badges)
         try:
             if rects:
-                occluded = occlude_video(clip.path_h264, work / "occluded.mp4", rects, clip.fps)
-                run_clip = open_clip(occluded)
+                stem = Path(clip.path_h264).stem
+                occluded = occlude_video(clip.path_h264, work / f"{stem}_occluded.mp4", rects, clip.fps)
+                run_clip = open_clip(occluded).model_copy(update={"ref": clip.ref})
                 extra_badges.append(OCCLUSION_APPLIED_BADGE)
                 occlusion_info = {
                     "rects": [list(r) for r in rects],

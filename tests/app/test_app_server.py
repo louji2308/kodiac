@@ -74,6 +74,8 @@ def test_occlusion_brush_forces_cant_tell_and_is_labelled(make_settings) -> None
     assert "[OCCLUDER APPLIED TO ALL FRAMES]" in body["badges"]
     assert "[OCCLUSION EMULATED ON CACHED MASKS]" in body["badges"]
     assert body["occlusion"]["max_covered_fraction"]["cube_b"] == pytest.approx(1.0)
+    assert body["run"]["clip"]["source_kind"] == "sim", "brushed curated clip must not be relabelled an upload"
+    assert body["run"]["clip"]["uri"] == "curated:correct_run"
 
 
 def test_bad_occlusion_payload_is_a_friendly_422(make_settings) -> None:
@@ -253,6 +255,26 @@ def test_failing_blame_hook_is_disclosed_not_swallowed(make_settings) -> None:
     body = c.post("/grade", data={"clip_id": "b01_early_release"}).json()
     assert body["run"]["verdict"] == "FAIL"
     assert any("unavailable" in n for n in body["notes"])
+
+
+def test_concurrent_judges_all_get_graded(make_settings) -> None:
+    from concurrent.futures import ThreadPoolExecutor
+
+    c = _client(make_settings, trust_proxy=True)
+
+    def one(i: int) -> tuple[int, str, str]:
+        r = c.post(
+            "/grade",
+            data={"clip_id": "b01_early_release", "test_id": "stackcube"},
+            headers={"X-Forwarded-For": f"192.0.2.{i}"},
+        )
+        body = r.json()
+        return r.status_code, body["run"]["verdict"], body["run"]["run_id"]
+
+    with ThreadPoolExecutor(max_workers=4) as pool:
+        results = list(pool.map(one, range(4)))
+    assert all(code == 200 and verdict == "FAIL" for code, verdict, _ in results)
+    assert len({rid for _, _, rid in results}) == 4
 
 
 def test_reaper_runs_through_service(make_settings) -> None:

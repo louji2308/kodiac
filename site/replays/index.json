@@ -1,0 +1,124 @@
+{
+  "stackcube__b01_early_release": {
+    "backend": "cached_replay",
+    "badges": [
+      "[FIXTURE REPLAY]",
+      "[REPLAY: CACHED SAM 3.1 TRACKS]",
+      "[GEOMETRY: TIER C \u00b7 UNCALIBRATED CAMERA]"
+    ],
+    "card_sha256": "bc3b9ac08bf6898f39c050b34cda546ed287e8bb952dafaf2fee77c8395e7e74",
+    "clip_label": "Premature gripper release at t=1.93s before green block (B1 FAIL)",
+    "created_at": "2026-11-02T03:54:54.522041+00:00",
+    "id": "stackcube__b01_early_release",
+    "is_fixture": true,
+    "note": "",
+    "result_sha256": "bcfe84010d66e6384324dfa2ea5c4712ca84503624a5a43ef36e97dd3a45db7f",
+    "run_total_ms": 1273,
+    "source_commit": "cb44d53",
+    "test_name": "stackcube",
+    "title": "Seeded bug B1: released too early",
+    "verdict": "FAIL"
+  },
+  "stackcube__b02_xy_misalignment": {
+    "backend": "cached_replay",
+    "badges": [
+      "[FIXTURE REPLAY]",
+      "[REPLAY: CACHED SAM 3.1 TRACKS]",
+      "[GEOMETRY: TIER C \u00b7 UNCALIBRATED CAMERA]"
+    ],
+    "card_sha256": "e8611bc33dbdf3c437f77cd55e23875bc1257cf556dec97e4fdf82d7919c6c19",
+    "clip_label": "Placement offset 4.5cm from target center (B2 FAIL)",
+    "created_at": "2026-11-02T03:54:56.416137+00:00",
+    "id": "stackcube__b02_xy_misalignment",
+    "is_fixture": true,
+    "note": "",
+    "result_sha256": "7348fd43421c268d32451a08fb639c9c5a7e683501a61d4283732a82b4d3105d",
+    "run_total_ms": 1098,
+    "source_commit": "cb44d53",
+    "test_name": "stackcube",
+    "title": "Seeded bug B2: placed off-centre",
+    "verdict": "FAIL"
+  },
+  "stackcube__b09_lift_failure": {
+    "backend": "cached_replay",
+    "badges": [
+      "[FIXTURE REPLAY]",
+      "[REPLAY: CACHED SAM 3.1 TRACKS]",
+      "[GEOMETRY: TIER C \u00b7 UNCALIBRATED CAMERA]"
+    ],
+    "card_sha256": "4347fb7d664cc5f669c778cd7ca567aca0fc96fa70880cc47463badb2049c26e",
+    "clip_label": "Insufficient lift clearance < 1.0cm (B9 FAIL)",
+    "created_at": "2026-11-02T03:54:58.407914+00:00",
+    "id": "stackcube__b09_lift_failure",
+    "is_fixture": true,
+    "note": "",
+    "result_sha256": "0966d6d0b60f57043d445a478c1875d2208b31df3425764d177eeaaf5ab5b57a",
+    "run_total_ms": 1293,
+    "source_commit": "cb44d53",
+    "test_name": "stackcube",
+    "title": "Seeded bug B9: lifted too little",
+    "verdict": "FAIL"
+  },
+  "stackcube__correct_run": {
+    "backend": "cached_replay",
+    "badges": [
+      "[FIXTURE REPLAY]",
+      "[REPLAY: CACHED SAM 3.1 TRACKS]",
+      "[GEOMETRY: TIER C \u00b7 UNCALIBRATED CAMERA]"
+    ],
+    "card_sha256": "3ba5554dcc4d740d61c9f28a16c169171fca518f2a0bb3333195f62fb61bd18d",
+    "clip_label": "Canonical 3-step pick-and-place success (PASS)",
+    "created_at": "2026-11-02T03:54:52.476116+00:00",
+    "id": "stackcube__correct_run",
+    "is_fixture": true,
+    "note": "Known limitation, shown as measured: the engine currently returns this verdict on the reference clip because the grasp predicate (moves_with) is below its noise floor on the recorded fixture tracks. It is not a PASS.",
+    "result_sha256": "1918b68c6f9592758f68827f7bfcb6d2010e7eaedb85c574a69ab8b6ae7b2501",
+    "run_total_ms": 2762,
+    "source_commit": "cb44d53",
+    "test_name": "stackcube",
+    "title": "Reference clip: the correct run",
+    "verdict": "FAIL"
+  },
+  "stackcube__correct_run_brushed": {
+    "backend": "cached_replay",
+    "badges": [
+      "[FIXTURE REPLAY]",
+      "[REPLAY: CACHED SAM 3.1 TRACKS]",
+      "[GEOMETRY: TIER C \u00b7 UNCALIBRATED CAMERA]",
+      "[OCCLUDER APPLIED TO ALL FRAMES]",
+      "[OCCLUSION EMULATED ON CACHED MASKS]"
+    ],
+    "card_sha256": "1a6871b276f1fa6260f662e69d3536766bd196f9f543d4231ecca9f410d7fa83",
+    "clip_label": "Canonical 3-step pick-and-place success (PASS)",
+    "created_at": "2026-11-02T03:55:05.620650+00:00",
+    "id": "stackcube__correct_run_brushed",
+    "is_fixture": true,
+    "note": "A rectangle painted over the target block on every frame; masks emulated on cached tracks.",
+    "result_sha256": "b5283aad7cac8d5e2397b3e043f829a98cfbd6adc4efd9c61e401bdd9a821b1f",
+    "run_total_ms": 613,
+    "source_commit": "cb44d53",
+    "test_name": "stackcube",
+    "title": "Occlusion brush painted over the target block",
+    "verdict": "CANT_TELL"
+  },
+  "stackcube__occluded_clip": {
+    "backend": "cached_replay",
+    "badges": [
+      "[FIXTURE REPLAY]",
+      "[REPLAY: CACHED SAM 3.1 TRACKS]",
+      "[GEOMETRY: TIER C \u00b7 UNCALIBRATED CAMERA]"
+    ],
+    "card_sha256": "ee3441b7fafaa23a811893c2d8f642ca11cb7d0f29f8a20e01bd1f42b78e2016",
+    "clip_label": "Scene view occluded > 40% during transport (CANT_TELL G2/G4)",
+    "created_at": "2026-11-02T03:55:01.330199+00:00",
+    "id": "stackcube__occluded_clip",
+    "is_fixture": true,
+    "note": "",
+    "result_sha256": "5e579687645ebcbf8c0de89c57db436530f56272b7f5bc962a0537db24380ed1",
+    "run_total_ms": 1855,
+    "source_commit": "cb44d53",
+    "test_name": "stackcube",
+    "title": "Scene occluded during transport",
+    "verdict": "CANT_TELL"
+  }
+}

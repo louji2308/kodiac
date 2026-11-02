@@ -254,7 +254,8 @@ def build_ui(api_base: str | None = None, client: "Client | None" = None) -> "gr
             f"Compiled in {_fmt_s(res['timer_ms'])} (deterministic template compiler)."
         )
 
-    with gr.Blocks(title="Kodiac: Robots can finally fail a test.", css=CSS) as demo:
+    with gr.Blocks(title="Kodiac: Robots can finally fail a test.") as demo:
+        gr.HTML(f"<style>{CSS}</style>")
         gr.Markdown(f"# Kodiac: {TAGLINE}\nTests, `git bisect` and `git blame` for robots. Zero login.")
         gr.Markdown(
             f"**Backend:** `{health['backend']}` · **Mode:** `{health['mode']}`. "

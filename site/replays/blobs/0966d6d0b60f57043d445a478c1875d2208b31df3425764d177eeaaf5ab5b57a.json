@@ -1,0 +1,112 @@
+{
+  "run_id": "6824bcbd42e6db95",
+  "test_name": "stackcube",
+  "test_sha256": "4fa6425abd5f66ed1d5078de8afb1696d8ea34fc779acfc3fffd151bde39ac25",
+  "config_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+  "clip": {
+    "uri": "curated:b09_lift_failure",
+    "source_kind": "sim",
+    "dataset": null,
+    "episode_index": null,
+    "camera": null
+  },
+  "verdict": "FAIL",
+  "exit_code": 1,
+  "steps": [
+    {
+      "index": 0,
+      "name": "grasp",
+      "verdict": "FAIL",
+      "t_s": 2.9667,
+      "frame": 89,
+      "decisive": [
+        {
+          "name": "moves_with.slip",
+          "value": 0.054495912806539426,
+          "threshold": 1.0,
+          "margin": 0.945504,
+          "sigma": 1.0,
+          "unit": "cm",
+          "tri": "U",
+          "reason": "below_noise_floor"
+        },
+        {
+          "name": "lifted.height",
+          "value": 0.0,
+          "threshold": 2.0,
+          "margin": -2.0,
+          "sigma": 0.707107,
+          "unit": "cm",
+          "tri": "F",
+          "reason": null
+        }
+      ],
+      "reasons": [
+        "below_noise_floor"
+      ],
+      "evidence": [
+        "step condition unmet by clip end (frame 89, t=2.9667s)"
+      ]
+    },
+    {
+      "index": 1,
+      "name": "place",
+      "verdict": null,
+      "t_s": null,
+      "frame": null,
+      "decisive": [],
+      "reasons": [],
+      "evidence": []
+    },
+    {
+      "index": 2,
+      "name": "release",
+      "verdict": null,
+      "t_s": null,
+      "frame": null,
+      "decisive": [],
+      "reasons": [],
+      "evidence": []
+    }
+  ],
+  "reasons": [],
+  "blame": null,
+  "diff_text": null,
+  "events": [
+    {
+      "step": 0,
+      "step_name": "grasp",
+      "kind": "failed",
+      "predicate": null,
+      "args": [],
+      "t_s": 2.9667,
+      "frame": 89,
+      "fps": 30.0,
+      "measurements": {},
+      "source": "attempt",
+      "verdict": "FAIL"
+    }
+  ],
+  "manual_checks": [],
+  "timings_ms": {
+    "segment_ms": 0,
+    "scale_ms": 1,
+    "eval_ms": 850,
+    "render_ms": 424,
+    "total_ms": 1293
+  },
+  "backends": {
+    "perception": "cached_replay",
+    "scale_tier": "C"
+  },
+  "badges": [
+    "[FIXTURE REPLAY]",
+    "[REPLAY: CACHED SAM 3.1 TRACKS]",
+    "[GEOMETRY: TIER C · UNCALIBRATED CAMERA]"
+  ],
+  "nonce": "6824bcbd42e6db95",
+  "is_fixture": true,
+  "card_path": "card.png",
+  "trace_path": "trace.jsonl",
+  "created_at": "2026-11-02T03:54:58.012475+00:00"
+}
