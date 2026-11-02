@@ -1,0 +1,103 @@
+{
+  "description": "SYNTHETIC drawer flush/ajar judge replay fixtures keyed by (crop sha256, question). Answers derive from the procedural scene's ground-truth label, NOT from any model.",
+  "entries": [
+    {
+      "answer": "yes",
+      "crop_sha256": "541ec76d978dc0117e9dc36d32341426c590db5e48c9ca523147bde4d7a7b7a3",
+      "provenance": "synthetic",
+      "question": "Is the drawer flush?",
+      "reason": "synthetic ground-truth label 'pos'; NOT model output",
+      "role": "primary"
+    },
+    {
+      "answer": "no",
+      "crop_sha256": "541ec76d978dc0117e9dc36d32341426c590db5e48c9ca523147bde4d7a7b7a3",
+      "provenance": "synthetic",
+      "question": "Is the drawer ajar?",
+      "reason": "synthetic ground-truth label 'pos'; NOT model output",
+      "role": "primary"
+    },
+    {
+      "answer": "no",
+      "crop_sha256": "c98b7d747a963ad96588697ffed9039fc9fd80f76deebae609becae3fb4f471f",
+      "provenance": "synthetic",
+      "question": "Is the drawer flush?",
+      "reason": "synthetic ground-truth label 'neg'; NOT model output",
+      "role": "primary"
+    },
+    {
+      "answer": "yes",
+      "crop_sha256": "c98b7d747a963ad96588697ffed9039fc9fd80f76deebae609becae3fb4f471f",
+      "provenance": "synthetic",
+      "question": "Is the drawer ajar?",
+      "reason": "synthetic ground-truth label 'neg'; NOT model output",
+      "role": "primary"
+    },
+    {
+      "answer": "cant_tell",
+      "crop_sha256": "8e9551dd7611170cad02f2f0c3e3377610ca5308d8f910a9af0167927d42ed18",
+      "provenance": "synthetic",
+      "question": "Is the drawer flush?",
+      "reason": "synthetic ground-truth label 'ambiguous'; NOT model output",
+      "role": "primary"
+    },
+    {
+      "answer": "cant_tell",
+      "crop_sha256": "8e9551dd7611170cad02f2f0c3e3377610ca5308d8f910a9af0167927d42ed18",
+      "provenance": "synthetic",
+      "question": "Is the drawer ajar?",
+      "reason": "synthetic ground-truth label 'ambiguous'; NOT model output",
+      "role": "primary"
+    },
+    {
+      "answer": "yes",
+      "crop_sha256": "8e9551dd7611170cad02f2f0c3e3377610ca5308d8f910a9af0167927d42ed18",
+      "provenance": "synthetic",
+      "question": "Is the drawer flush?",
+      "reason": "synthetic ground-truth label 'pos'; NOT model output",
+      "role": "escalator"
+    },
+    {
+      "answer": "no",
+      "crop_sha256": "8e9551dd7611170cad02f2f0c3e3377610ca5308d8f910a9af0167927d42ed18",
+      "provenance": "synthetic",
+      "question": "Is the drawer ajar?",
+      "reason": "synthetic ground-truth label 'pos'; NOT model output",
+      "role": "escalator"
+    },
+    {
+      "answer": "cant_tell",
+      "crop_sha256": "09023f4316e903772261d91a180f02c226b2f432be4cf561c0f24de54926af9b",
+      "provenance": "synthetic",
+      "question": "Is the drawer flush?",
+      "reason": "synthetic ground-truth label 'ambiguous'; NOT model output",
+      "role": "primary"
+    },
+    {
+      "answer": "cant_tell",
+      "crop_sha256": "09023f4316e903772261d91a180f02c226b2f432be4cf561c0f24de54926af9b",
+      "provenance": "synthetic",
+      "question": "Is the drawer ajar?",
+      "reason": "synthetic ground-truth label 'ambiguous'; NOT model output",
+      "role": "primary"
+    },
+    {
+      "answer": "cant_tell",
+      "crop_sha256": "09023f4316e903772261d91a180f02c226b2f432be4cf561c0f24de54926af9b",
+      "provenance": "synthetic",
+      "question": "Is the drawer flush?",
+      "reason": "synthetic ground-truth label 'ambiguous'; NOT model output",
+      "role": "escalator"
+    },
+    {
+      "answer": "cant_tell",
+      "crop_sha256": "09023f4316e903772261d91a180f02c226b2f432be4cf561c0f24de54926af9b",
+      "provenance": "synthetic",
+      "question": "Is the drawer ajar?",
+      "reason": "synthetic ground-truth label 'ambiguous'; NOT model output",
+      "role": "escalator"
+    }
+  ],
+  "is_fixture": true,
+  "schema": "kodiac-judge-fixture-v1"
+}
