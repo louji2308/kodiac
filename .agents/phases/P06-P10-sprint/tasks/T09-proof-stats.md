@@ -1,5 +1,5 @@
 # T09: Proof statistics, label consolidation, honest chart
-phase: P08 · owner: IMPL-9 (Opus 5.5 @ xhigh) · status: TODO
+phase: P08 · owner: IMPL-9 (Opus 5.5 @ xhigh) · status: DONE
 plan_ref: IMPLEMENTATION_PLAN.md P08.S01–S03, S05, S07 · ARCHITECTURE.md §1.4, §5.7 · experiments/PREREGISTRATION.md · IDEA §8, §12 (Invariant I8)
 depends_on: [] · blocks: [README table generator (T13), video numbers]
 owns_paths: [src/Kodiac_robotics/proof/labels.py, src/Kodiac_robotics/proof/stats.py, src/Kodiac_robotics/proof/chart.py, src/Kodiac_robotics/proof/ablation.py, scripts/check_prereg.py, tests/proof/test_labels.py, tests/proof/test_stats.py, tests/proof/test_chart.py, tests/proof/test_ablation.py, tests/fixtures/proof/**, experiments/results/README.md]
@@ -39,8 +39,66 @@ def ablation_ladder(rung_results: dict[str, dict]) -> dict   # R1..R5, phrased "
 - Do NOT create `experiments/results/headline.json` or any chart under `artifacts/p08/` with synthetic numbers; produce the real-state `NOT_MEASURED` JSON + chart only (via a committed command), written to `experiments/results/headline.json` and `artifacts/p08/proof_chart.{png,svg}` — these are the honest current state.
 
 ## Definition of Done
-- [ ] Tests pass (all the known-answer checks above, fail-closed headline, chart watermark pixel/SVG-text check); ruff clean; no `TODO|NotImplemented`; full suite green.
-- [ ] `check_prereg.py` runs against this repo and reports the real result.
-- [ ] Committed `feat(p08/t09): …` (use `git add -f` for the two small honest-state artifacts).
+- [x] Tests pass (all the known-answer checks above, fail-closed headline, chart watermark pixel/SVG-text check); ruff clean; no `TODO|NotImplemented`; full suite green.
+- [x] `check_prereg.py` runs against this repo and reports the real result.
+- [x] Committed `feat(p08/t09): …` (use `git add -f` for the two small honest-state artifacts).
 
 ## Report (filled by owner at DONE)
+
+### Micro-plan (IMPL-9, 2026-11-02)
+1. `labels.py`: load JudgeLabel rows (parquet/json/jsonl), validate via the frozen pydantic model, reject duplicate (judge, episode_id); carry provenance columns (`synthetic`, `is_mock`; unknown provenance ⇒ `is_mock=True`, fail closed). `apply_thresholds`: max-BA threshold fit on calibration rows only for score judges; CAN'T TELL ⇒ accept=False; `split` column from calib ids.
+2. `stats.py`: Wilson; per-judge metrics on the train split per PREREG §6 (Wilson for false-PASS/false-REJECT/coverage, 1,000-sample episode bootstrap for BA/AUROC, contamination per ARCH §5.7); exact McNemar + Holm; hierarchical bootstrap (seeds → episodes) and paired Δ CI; `headline()` with Welch t on seed means + Holm across baselines (PREREG §6), fail-closed status (`MEASURED` / `SYNTHETIC_TEST_ONLY` / `NOT_MEASURED`), provenance via `ArmSuccess`.
+3. `chart.py`: matplotlib renderer; bars/points only for `MEASURED`; hatched watermark for `SYNTHETIC_TEST_ONLY`; "NOT MEASURED: NO TRAINED ARMS YET" for anything else; SVG text kept as `<text>`. `python -m Kodiac_robotics.proof.chart --real-state` writes the honest current-state JSON + chart.
+4. `ablation.py`: R1..R5 ladder, per-rung status, "each stage adds" Δ specificity only between adjacent measured rungs.
+5. `scripts/check_prereg.py`: tag exists, ancestor + earlier than first label/result commit, prereg files unchanged since tag; PASS/FAIL + evidence.
+6. Seeded synthetic fixture generator under `tests/fixtures/proof/` (SYNTHETIC in names/columns) + known-answer tests.
+
+### What was built
+- **Commits:** `1161e38` (code, tests, fixtures, check script), `d6e810e` (results README + honest-state artifacts), `435a804` (artifacts regenerated at a HEAD that contains the generator; `git_head` 77aa8e7).
+- `proof/labels.py` provides:
+  - `load_labels`: JudgeLabel validation, duplicate rejection, provenance columns.
+  - `apply_thresholds`: max-BA τ fitted on the calibration split only, ties going to the higher τ; CAN'T TELL is forced to reject.
+  - `load_oracle`, `load_arm_evals`, `size_matched_control` (PREREG §4 arm 9), `fit_max_ba_threshold`.
+- `proof/stats.py` provides:
+  - `wilson_ci`, `holm_adjust`, `mcnemar_exact_p` (exact integer arithmetic), and pure-Python Welch t (p-value and CI via incomplete beta). scipy and sklearn are used only as test references.
+  - `judge_metrics`, `mcnemar_holm` (two families: correctness and false-PASS only).
+  - `hier_bootstrap_mean_ci`, `delta_ci` (paired by seed and eval-episode index).
+  - `headline()` with Welch on seed means + Holm across the PREREG baselines (primary), the hierarchical bootstrap as secondary, dose-response, `prereg_deviations`, and three statuses that fail closed.
+  - `ArmSuccess` / `FlaggedCI` carry provenance.
+- `proof/chart.py`: renderer + `python -m Kodiac_robotics.proof.chart --real-state`. `proof/ablation.py`: R1..R5 with Newcombe step CIs. `scripts/check_prereg.py`.
+
+### Evidence
+- `pytest tests/proof/test_{stats,labels,chart,ablation}.py`: **61 passed**. Full suite: **862 passed, 1 xfailed** (464 s). `ruff check` on owned paths is clean. A grep for `TODO|NotImplemented` in owned paths finds nothing.
+- Known answers:
+  - Wilson matches hand-computed values (0/67 → [0, 0.054226]; 33/100 → [0.24563, 0.42695]) and matches scipy to 1e-6.
+  - Exact McNemar matches `scipy.binomtest`, and the 1-vs-3 hand case gives 0.625.
+  - Holm matches the hand example.
+  - Welch t, p, and t-quantile match scipy. The CI excludes 0 exactly when p < 0.05.
+  - Bootstrap coverage on known-mean simulations is ≥ 90/100.
+  - AUROC equals `sklearn.roc_auc_score`.
+  - Newcombe 56/70 vs 48/80 gives [0.0524, 0.3339].
+  - Leakage test: changing training-row scores never moves τ.
+- `python scripts/check_prereg.py` returns **RESULT: PASS**. prereg-v1 (499d21a) is unchanged and strictly precedes the only results commit (d6e810e). One WARN: c2f7b07 committed `experiments/labels/{droid_slice,timing}_annotator_1.jsonl` before prereg-v1 (after prereg-v0). These are not pool judge labels.
+- **Real state:** `experiments/results/headline.json` has `status=NOT_MEASURED`, `Y_points=null`, and `is_mock=true`. Reasons: no trained arms, the pool is a 250-episode kinematic mock, and no judge labels exist. `artifacts/p08/proof_chart.{png,svg}` shows only the "NOT MEASURED: NO TRAINED ARMS YET" watermark.
+
+### Deviations
+- **Sandbox writes.** The venv Python can only write under `.cache/`. Fixtures and real-state artifacts were generated into `.cache/` with the committed commands (`make_synthetic_proof_fixtures.py OUT_DIR`, `--out-*` flags) and copied in unchanged. This is disclosed in `experiments/results/README.md`.
+- **Stats not covered by the PREREG.** McNemar and contamination are not in the PREREG; they follow ARCHITECTURE §5.7 and P08.S03. McNemar is reported as two fixed families.
+- **Seed count.** ≥ 2 seeds is allowed for `MEASURED` (P08.S04 fallback, as the card requires) against 3 registered. The shortfall is disclosed in `prereg_deviations`.
+- **Primary vs secondary CI.** The headline sentence uses the Welch CI (primary, consistent with the PREREG §6 test, and wider). The hierarchical bootstrap CI is reported as secondary.
+- **Tag naming.** The PREREG doc names `prereg-v0`, while the plan and card use `prereg-v1`. The script checks `--tag` (default v1) and prints the mismatch.
+
+### Known limits
+- The Newcombe step CI treats rungs as independent, which is conservative for paired rungs.
+- With 3 seeds the seed-level bootstrap is coarse; Welch with df≈2–4 is wide. That is honest but noisy.
+- `JudgeLabel` lacks provenance: INTERFACE-REQUEST posted in CHANNEL.md.
+- **Live fabrication risk outside my paths** (posted as S0/S1 candidates in CHANNEL.md):
+  - `proof/arms.py` invents judge accept sets when labels are missing.
+  - The judge doubles echo `oracle_success_hint`.
+
+### 3 ways this could embarrass us, and what I did about each
+1. **A chart that looks measured but isn't.** Data marks are drawn only for an unflagged `MEASURED` headline. Unknown or missing flags and unknown statuses fall back to watermarks; pixel and SVG tests cover this. Synthetic numbers never leave pytest tmp. The committed chart is the NOT MEASURED watermark.
+2. **Calibration→train leakage.** τ is fitted only on calibration rows (tested by perturbing training scores). Judge metrics use the training split only (tested: n = 200 of 250). Missing labels count against coverage in `n_missing`; they are never dropped.
+3. **p-hacking / forking paths.** Every metric's definition is fixed in code before any label exists, with PREREG § citations. Holm keeps degenerate tests in the family. The headline uses the more conservative Welch CI and says "not statistically significant" when Holm p ≥ 0.05. `check_prereg.py` fails if PREREGISTRATION.md or pool_config.yaml change after the tag.
+
+Time spent: ≈150 min (including the network-interrupt recovery).
