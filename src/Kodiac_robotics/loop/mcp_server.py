@@ -56,7 +56,13 @@ BADGE_MOCK = "[MOCK SIMULATION]"
 _CACHED_SAM_BADGE = "[REPLAY: CACHED SAM 3.1 TRACKS]"
 
 # obs_state column layout of the sim env (see scripts/validate_engine.py)
-_OBS_COLUMNS = (("gripper", slice(0, 3)), ("cubeA", slice(8, 11)), ("cubeB", slice(15, 18)))
+# (name, obs columns, z offset from the tracked point to the object's lowest point); the engine measures the
+# height of each object's bottom anchor, so cubes are projected from their base, not their centre.
+_OBS_COLUMNS = (
+    ("gripper", slice(0, 3), 0.0),
+    ("cubeA", slice(8, 11), -0.02),
+    ("cubeB", slice(15, 18), -0.02),
+)
 _OBJECT_SIZE_M = 0.04
 
 
@@ -108,7 +114,13 @@ def _local_tracks_from_state(
     from Kodiac_robotics.segment.rle import mask_to_rle
 
     with np.load(state_path) as npz:
-        obs = np.asarray(npz["obs_state"], dtype=np.float64)
+        if "ee_pos" in npz.files:  # sim.runner layout
+            obs = np.zeros((len(npz["ee_pos"]), 18), dtype=np.float64)
+            obs[:, 0:3] = np.asarray(npz["ee_pos"], dtype=np.float64)[:, :3]
+            obs[:, 8:11] = np.asarray(npz["cubeA_pose"], dtype=np.float64)[:, :3]
+            obs[:, 15:18] = np.asarray(npz["cubeB_pose"], dtype=np.float64)[:, :3]
+        else:  # legacy pool layout (scripts/validate_engine.py)
+            obs = np.asarray(npz["obs_state"], dtype=np.float64)
         cam_K = np.asarray(npz["cam_K"], dtype=np.float64)
         cam_extrinsic = np.asarray(npz["cam_extrinsic"], dtype=np.float64)
     if len(obs) == 0:
@@ -118,27 +130,30 @@ def _local_tracks_from_state(
     cx, cy = float(cam_K[0, 2]), float(cam_K[1, 2])
     tracks = {
         name: Track(obj=name, frames={}, backend="fixture", direction="forward", trace_id=f"sim-{name}")
-        for name, _ in _OBS_COLUMNS
+        for name, _, _ in _OBS_COLUMNS
     }
+    ext = cam_extrinsic
     for frame in range(n_frames):
         row = obs[min(frame, len(obs) - 1)]
-        for name, cols in _OBS_COLUMNS:
-            pos = row[cols]
-            zc = max(0.15, float(pos[2]))
-            u = fx * float(pos[0]) / zc + cx
-            v = fy * float(pos[1]) / zc + cy
-            side = max(12, int(fx * _OBJECT_SIZE_M / zc))
-            x1 = max(0, min(width - 1, int(u - side / 2)))
-            x2 = max(x1 + 1, min(width, int(u + side / 2)))
-            y1 = max(0, min(height - 1, int(v - side / 2)))
-            y2 = max(y1 + 1, min(height, int(v + side / 2)))
+        for name, cols, dz in _OBS_COLUMNS:
+            anchor = np.array([row[cols][0], row[cols][1], row[cols][2] + dz, 1.0])
+            p_cam = ext @ anchor
+            zc = max(0.05, float(p_cam[2]))
+            u = fx * float(p_cam[0]) / zc + cx
+            v_bottom = fy * float(p_cam[1]) / zc + cy
+            side_f = fx * _OBJECT_SIZE_M / zc  # exact apparent width: the scale model reads it from the box
+            side = max(2, int(round(side_f)))
+            x1 = max(0, min(width - 1, int(round(u - side / 2))))
+            x2 = max(x1 + 1, min(width, x1 + side))
+            y2 = max(1, min(height, int(round(v_bottom)) + 1))
+            y1 = max(0, y2 - side)
             canvas = np.zeros((height, width), dtype=np.uint8)
             canvas[y1:y2, x1:x2] = 1
             tracks[name].frames[frame] = ObjMask(
                 obj=name,
                 frame=frame,
                 score=0.98,
-                bbox_xyxy=(float(x1), float(y1), float(x2), float(y2)),
+                bbox_xyxy=(u - side_f / 2, float(y1), u + side_f / 2, float(y2)),
                 rle=mask_to_rle(canvas),
                 area_px=int((x2 - x1) * (y2 - y1)),
                 rle_size=(height, width),

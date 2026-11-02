@@ -381,8 +381,8 @@ def real_project(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     import shutil
 
     (tmp_path / "examples" / "sim").mkdir(parents=True)
-    shutil.copy(REPO / "examples" / "sim" / "pick_place.py", tmp_path / "examples" / "sim" / "pick_place.py")
-    shutil.copy(REPO / "examples" / "stackcube.green", tmp_path / "stackcube.green")
+    shutil.copyfile(REPO / "examples" / "sim" / "pick_place.py", tmp_path / "examples" / "sim" / "pick_place.py")
+    shutil.copyfile(REPO / "examples" / "stackcube.green", tmp_path / "stackcube.green")
     monkeypatch.chdir(tmp_path)
     return tmp_path
 
