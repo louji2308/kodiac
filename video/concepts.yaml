@@ -1,0 +1,10 @@
+# The 8 spoken concepts (IDEA.md section 10.1). Cap = 8. Each id must be tagged on >=1 beat in SCRIPT.md.
+concepts:
+  - {id: C1, text: "Robot success data is often wrong"}
+  - {id: C2, text: "Code has tests and git blame; robots have someone scrubbing video"}
+  - {id: C3, text: "Show it once and it becomes a test"}
+  - {id: C4, text: "The exact moment and the physical cause"}
+  - {id: C5, text: "The coding agent cannot say done until the test passes"}
+  - {id: C6, text: "Same robot, same data, only the judge changed"}
+  - {id: C7, text: "It says CAN'T TELL instead of guessing"}
+  - {id: C8, text: "The same test checks the demonstrations robots learn from"}
