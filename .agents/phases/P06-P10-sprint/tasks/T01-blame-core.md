@@ -1,5 +1,5 @@
 # T01: Blame core: transition finder, t* refinement, fact table, validated summary
-phase: P06 · owner: IMPL-1 (Opus 5.5 @ xhigh) · status: TODO
+phase: P06 · owner: IMPL-1 (Opus 5.5 @ xhigh) · status: DONE
 plan_ref: IMPLEMENTATION_PLAN.md P06.S03–S05 · ARCHITECTURE.md §5.4, §9, §4 (FactTable/Blame)
 depends_on: [] · blocks: [ORCH CLI blame wiring, T03 (consumes FactTable)]
 owns_paths: [src/Kodiac_robotics/blame/transitions.py, src/Kodiac_robotics/blame/tstar.py, src/Kodiac_robotics/blame/facts.py, src/Kodiac_robotics/blame/summary.py, src/Kodiac_robotics/blame/validate.py, src/Kodiac_robotics/blame/__init__.py, tests/blame/test_transitions.py, tests/blame/test_tstar.py, tests/blame/test_facts.py, tests/blame/test_summary.py, tests/blame/test_validate.py, tests/blame/__init__.py, artifacts/p06/blame_core_report.json]
@@ -49,3 +49,22 @@ Never label a template sentence `"muse-spark"`.
 - [ ] Committed `feat(p06/t01): …`.
 
 ## Report (filled by owner at DONE)
+[2026-11-02T03:55Z · IMPL-1]
+
+**Micro-plan (as executed):** recon fixtures through `pipeline.run` → transitions (3 classes, sustained-recovery rule) → t* (detach-onset, hinge breakpoint, softscore argmax; seeded parametric bootstrap) → facts (measured components only, trace_ids) → template + validator + injected-LLM retry → orchestrator → synthetic kinematic scenarios with known onsets + golden fixture drive → report artifact.
+
+**Built:** `blame/{transitions,tstar,facts,summary,validate}.py` (+ `blame/__init__.py` re-exports `blame_from_run`, `validate_summary`). Commits: b13a8b8, cfbb12e, 77aa8e7, f3d80a3.
+`blame_from_run(result, test, pred_frames, fps, **kw)` kwargs: `llm`, `spans`, `code_location`, `code_locator(frame, component)`, `hint_fn(ft)`, `reference_frames`, `dataset_index`, `action_chunk`, `n_boot`, `seed`. `transitions.load_trace_pred_frames(trace.jsonl)` reads PredFrames back from a run trace (the pipeline already writes them, so no pipeline change was needed).
+
+**Evidence:**
+- Tests: `tests/blame/test_{transitions,tstar,facts,summary,validate}.py` = 56 passed (13+8+8+12+15). Full suite: 862 passed, 1 xfailed (473 s). Ruff clean on owned paths. No TODO/NotImplemented.
+- Frame-exact t*: 4 hinge ramps (3 noise-free + 1 seeded-noise) exact, sigma >= 0.5 floor; detach-onset on the synthetic early release = ground truth frame 46, sigma 0.5.
+- Fabrication tests: fabricated number, mixed value/sigma from two facts, fabricated objects (`blue_bowl`, `bowl`, `mugB`), unlicensed `opened`/`hit`/`released`, wrong unit/time/frame, 2 sentences, >30 words, no ± pair: all rejected. Valid LLM sentence accepted as `muse-spark`; bad twice → template (llm called exactly twice); exception → template.
+- `artifacts/p06/blame_core_report.json` (regenerate: `KODIAC_WRITE_BLAME_REPORT=1 pytest tests/blame/test_validate.py -k fixture_and_synthetic_report`): `fixture_replay` rows (b01, b02, b09, correct_run) and `synthetic_kinematic` rows, each labelled.
+
+**Deviations:** (1) `Transition` carries a private `_softscore` attr (not a schema field) for the class-2 bootstrap. (2) For a `moves_with` T→F release, context facts are taken on the release pose t*−1 (each fact records its `frame`). (3) `blame_from_run` also returns None when no transition is attributable (all-U / clip ended before the step). (4) `dt_before_reference_s` needs an effector→target series (`facts.reference_pred_frames`, passed as `reference_frames`); the pipeline does not evaluate it, so it is omitted (and logged in evidence) unless the caller supplies it. (5) Order violations are only detected after the first step's achievement, to avoid trivially-true initial states.
+
+**Known limits / honesty:**
+1. Golden fixtures are Tier C: every clip, **including correct_run.mp4**, FAILs at `grasp` (moves_with.slip sigma 1.0 cm == threshold → gate G3 keeps it U; posted to CHANNEL as an S0 candidate). Blame says so ("step grasp never confirmed … stayed within noise") with a below-noise-floor warning; b09 gets "lift 0.0 ± 0.7 cm vs ≥ 2.0 cm". These clips are not hero evidence.
+2. Synthetic scenarios are hand-built kinematics through an exact fake scale: they validate the blame logic, not perception. Do not quote them as accuracy.
+3. Unmet t* on a flat plateau can be arbitrary (b09 fixture: frame 0, sigma 24 frames); the sentence prints t* ± sigma in seconds so this shows. Validator object/verb lists are conservative; a real Muse Spark was never called (no keys).
