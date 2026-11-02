@@ -106,6 +106,75 @@ def test_run_fixture_backend_badges_both_replay_labels() -> None:
         assert len(res.badges) == len(set(res.badges))
 
 
+def test_run_stored_track_replay_with_synthetic_perception_label() -> None:
+    """Tracks supplied with an explicit synthetic-from-sim-state label must not carry the cached-SAM replay badge."""
+    clip = open_clip("tests/fixtures/clips/b01_early_release.mp4")
+    fb = FixtureBackend()
+    preloaded_tracks = fb._load_tracks(clip)
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        out_dir = Path(tmpdir) / "run_replay_synth"
+        res = run(
+            test="examples/stackcube.green",
+            clip=clip,
+            tracks=preloaded_tracks,
+            perception_label="SYNTHETIC TRACKS FROM SIM STATE · NOT PERCEPTION",
+            output_dir=out_dir,
+        )
+
+        assert res.is_fixture is True
+        assert "[REPLAY: CACHED SAM 3.1 TRACKS]" not in res.badges
+        assert "[SYNTHETIC TRACKS FROM SIM STATE · NOT PERCEPTION]" in res.badges
+        assert res.backends.get("perception") == "synthetic_from_sim_state"
+        assert res.timings_ms["segment_ms"] == 0
+
+
+def test_run_dense_frames_full_set_matches_default_evaluation() -> None:
+    """dense_frames = all frames must reproduce the default full evaluation (bit-identical verdict)."""
+    clip = open_clip("tests/fixtures/clips/b01_early_release.mp4")
+    fb = FixtureBackend()
+    tracks = fb._load_tracks(clip)
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        out_dir = Path(tmpdir)
+        res_full = run(
+            test="examples/stackcube.green",
+            clip=clip,
+            tracks=tracks,
+            output_dir=out_dir / "run_dense_full",
+        )
+        res_dense = run(
+            test="examples/stackcube.green",
+            clip=clip,
+            tracks=tracks,
+            dense_frames=set(range(clip.n_frames)),
+            output_dir=out_dir / "run_dense_all",
+        )
+
+    assert res_full.verdict == Verdict.FAIL
+    assert res_dense.verdict == Verdict.FAIL
+    assert res_dense.verdict == res_full.verdict
+
+
+def test_run_dense_frames_untracked_frames_are_cant_tell() -> None:
+    """With dense_frames holding a single frame, temporal atoms lose their history -> CANT_TELL (fail closed)."""
+    clip = open_clip("tests/fixtures/clips/b01_early_release.mp4")
+    fb = FixtureBackend()
+    tracks = fb._load_tracks(clip)
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        res = run(
+            test="examples/stackcube.green",
+            clip=clip,
+            tracks=tracks,
+            dense_frames={int(clip.n_frames) - 1},
+            output_dir=Path(tmpdir) / "run_dense_one",
+        )
+
+        assert res.verdict == Verdict.CANT_TELL
+        assert ReasonCode.NOT_VISIBLE in res.reasons or ReasonCode.BELOW_NOISE_FLOOR in res.reasons
+
+
 def test_run_with_verdict_card_rendering() -> None:
     """render_card=True generates a 1280x720 card.png artifact."""
     with tempfile.TemporaryDirectory() as tmpdir:

@@ -179,6 +179,10 @@ def evaluate_step_chain(
         ]
 
         consecutive_t = 0
+        consecutive_non_f = 0
+        max_consecutive_non_f = 0
+        u_encountered = False
+        step_uncertain_reasons: list[ReasonCode] = []
         achievement_frame: int | None = None
         broken_carried: tuple[Atom, int, PredFrame] | None = None
         decisive_components: list[Component] = []
@@ -205,22 +209,36 @@ def evaluate_step_chain(
                 if pf is not None:
                     atom_values[get_atom_key(atom)] = pf.tri
                     frame_components.extend(pf.components)
+                    if pf.tri == Tri.U:
+                        u_encountered = True
+                        for comp in pf.components:
+                            if comp.reason is not None and comp.reason not in step_uncertain_reasons:
+                                step_uncertain_reasons.append(comp.reason)
                 else:
                     atom_values[get_atom_key(atom)] = Tri.U
+                    u_encountered = True
+                    if ReasonCode.NOT_VISIBLE not in step_uncertain_reasons:
+                        step_uncertain_reasons.append(ReasonCode.NOT_VISIBLE)
 
             c_val = evaluate_expr_tree(step.expr, atom_values)
             decisive_components = frame_components
 
             if c_val == Tri.T:
                 consecutive_t += 1
+                consecutive_non_f += 1
                 if consecutive_t >= n_on:
                     achievement_frame = t
                     break
             elif c_val == Tri.F:
                 consecutive_t = 0
+                consecutive_non_f = 0
             elif c_val == Tri.U:
-                # UNKNOWN is neutral in Schmitt trigger
-                pass
+                consecutive_t = 0
+                consecutive_non_f += 1
+                u_encountered = True
+
+            if consecutive_non_f > max_consecutive_non_f:
+                max_consecutive_non_f = consecutive_non_f
 
         # Handle Step Outcome
         if achievement_frame is not None:
@@ -364,11 +382,19 @@ def evaluate_step_chain(
 
             c_decisive = evaluate_expr_tree(step.expr, decisive_atom_values)
 
-            if c_decisive == Tri.U:
+            # ARCHITECTURE §7.5 & T13 Defect 2:
+            # Step PASS iff sustained T run exists. FAIL iff F on every decided frame and no U run >= n_on
+            # could hide a T run. Else CAN'T TELL.
+            if c_decisive == Tri.U or (max_consecutive_non_f >= n_on and u_encountered):
                 step_verdict = Verdict.CANT_TELL
                 overall_verdict = Verdict.CANT_TELL
-                if not reasons_found:
-                    reasons_found.append(ReasonCode.NOT_VISIBLE)
+                all_step_reasons = list(reasons_found)
+                for r in step_uncertain_reasons:
+                    if r not in all_step_reasons:
+                        all_step_reasons.append(r)
+                if not all_step_reasons:
+                    all_step_reasons.append(ReasonCode.NOT_VISIBLE)
+                reasons_found = all_step_reasons
                 top_level_reasons.extend(reasons_found)
             else:
                 step_verdict = Verdict.FAIL

@@ -1,0 +1,678 @@
+{
+  "artifact": "engine_discrimination_matrix",
+  "phase": "P04/P06",
+  "task": "T13",
+  "evidence_type": "synthetic_tracks_from_privileged_state",
+  "is_mock_sim": true,
+  "generated_at": "2026-11-02T12:32:50.115115+00:00",
+  "headline": "100% discrimination across canonical Franka Panda StackCube bug matrix (B01-B10 + clean) and held-out variants with 0 false-PASS",
+  "summary": {
+    "total_runs": 16,
+    "clean_runs": 3,
+    "clean_pass_rate": 1.0,
+    "bug_runs": 13,
+    "bug_fail_rate": 1.0,
+    "false_pass_count": 0,
+    "false_fail_count": 0,
+    "b04_short_dwell_verdict": "FAIL",
+    "b09_never_opens_verdict": "FAIL",
+    "b04_dwell_0.08s_verdict": "FAIL",
+    "b04_dwell_0.15s_verdict": "FAIL",
+    "b09_partial_open_verdict": "FAIL"
+  },
+  "runs": [
+    {
+      "name": "clean_seed0",
+      "variant": null,
+      "seed": 0,
+      "tier": "tier_a",
+      "oracle_success": true,
+      "expected_oracle": true,
+      "expected_verdict": "PASS",
+      "actual_verdict": "PASS",
+      "verdict_matches_expected": true,
+      "exit_code": 0,
+      "reasons": [],
+      "total_frames": 230,
+      "steps": [
+        {
+          "index": 0,
+          "name": "grasp",
+          "verdict": "PASS",
+          "frame": 70,
+          "t_s": 2.3333,
+          "reasons": []
+        },
+        {
+          "index": 1,
+          "name": "place",
+          "verdict": "PASS",
+          "frame": 160,
+          "t_s": 5.3333,
+          "reasons": []
+        },
+        {
+          "index": 2,
+          "name": "release",
+          "verdict": "PASS",
+          "frame": 196,
+          "t_s": 6.5333,
+          "reasons": []
+        }
+      ]
+    },
+    {
+      "name": "clean_seed1",
+      "variant": null,
+      "seed": 1,
+      "tier": "tier_a",
+      "oracle_success": true,
+      "expected_oracle": true,
+      "expected_verdict": "PASS",
+      "actual_verdict": "PASS",
+      "verdict_matches_expected": true,
+      "exit_code": 0,
+      "reasons": [],
+      "total_frames": 228,
+      "steps": [
+        {
+          "index": 0,
+          "name": "grasp",
+          "verdict": "PASS",
+          "frame": 70,
+          "t_s": 2.3333,
+          "reasons": []
+        },
+        {
+          "index": 1,
+          "name": "place",
+          "verdict": "PASS",
+          "frame": 158,
+          "t_s": 5.2667,
+          "reasons": []
+        },
+        {
+          "index": 2,
+          "name": "release",
+          "verdict": "PASS",
+          "frame": 194,
+          "t_s": 6.4667,
+          "reasons": []
+        }
+      ]
+    },
+    {
+      "name": "clean_seed2",
+      "variant": null,
+      "seed": 2,
+      "tier": "tier_a",
+      "oracle_success": true,
+      "expected_oracle": true,
+      "expected_verdict": "PASS",
+      "actual_verdict": "PASS",
+      "verdict_matches_expected": true,
+      "exit_code": 0,
+      "reasons": [],
+      "total_frames": 230,
+      "steps": [
+        {
+          "index": 0,
+          "name": "grasp",
+          "verdict": "PASS",
+          "frame": 70,
+          "t_s": 2.3333,
+          "reasons": []
+        },
+        {
+          "index": 1,
+          "name": "place",
+          "verdict": "PASS",
+          "frame": 160,
+          "t_s": 5.3333,
+          "reasons": []
+        },
+        {
+          "index": 2,
+          "name": "release",
+          "verdict": "PASS",
+          "frame": 196,
+          "t_s": 6.5333,
+          "reasons": []
+        }
+      ]
+    },
+    {
+      "name": "B01_early_release",
+      "variant": "B01",
+      "seed": 0,
+      "tier": "tier_a",
+      "oracle_success": false,
+      "expected_oracle": false,
+      "expected_verdict": "FAIL",
+      "actual_verdict": "FAIL",
+      "verdict_matches_expected": true,
+      "exit_code": 1,
+      "reasons": [],
+      "total_frames": 245,
+      "steps": [
+        {
+          "index": 0,
+          "name": "grasp",
+          "verdict": "PASS",
+          "frame": 70,
+          "t_s": 2.3333,
+          "reasons": []
+        },
+        {
+          "index": 1,
+          "name": "place",
+          "verdict": "FAIL",
+          "frame": 123,
+          "t_s": 4.1,
+          "reasons": []
+        },
+        {
+          "index": 2,
+          "name": "release",
+          "verdict": null,
+          "frame": null,
+          "t_s": null,
+          "reasons": []
+        }
+      ]
+    },
+    {
+      "name": "B02_xy_offset",
+      "variant": "B02",
+      "seed": 0,
+      "tier": "tier_a",
+      "oracle_success": false,
+      "expected_oracle": false,
+      "expected_verdict": "FAIL",
+      "actual_verdict": "FAIL",
+      "verdict_matches_expected": true,
+      "exit_code": 1,
+      "reasons": [],
+      "total_frames": 234,
+      "steps": [
+        {
+          "index": 0,
+          "name": "grasp",
+          "verdict": "PASS",
+          "frame": 70,
+          "t_s": 2.3333,
+          "reasons": []
+        },
+        {
+          "index": 1,
+          "name": "place",
+          "verdict": "FAIL",
+          "frame": 170,
+          "t_s": 5.6667,
+          "reasons": []
+        },
+        {
+          "index": 2,
+          "name": "release",
+          "verdict": null,
+          "frame": null,
+          "t_s": null,
+          "reasons": []
+        }
+      ]
+    },
+    {
+      "name": "B03_low_lift",
+      "variant": "B03",
+      "seed": 0,
+      "tier": "tier_a",
+      "oracle_success": false,
+      "expected_oracle": false,
+      "expected_verdict": "FAIL",
+      "actual_verdict": "FAIL",
+      "verdict_matches_expected": true,
+      "exit_code": 1,
+      "reasons": [],
+      "total_frames": 191,
+      "steps": [
+        {
+          "index": 0,
+          "name": "grasp",
+          "verdict": "FAIL",
+          "frame": 190,
+          "t_s": 6.3333,
+          "reasons": []
+        },
+        {
+          "index": 1,
+          "name": "place",
+          "verdict": null,
+          "frame": null,
+          "t_s": null,
+          "reasons": []
+        },
+        {
+          "index": 2,
+          "name": "release",
+          "verdict": null,
+          "frame": null,
+          "t_s": null,
+          "reasons": []
+        }
+      ]
+    },
+    {
+      "name": "B04_short_dwell",
+      "variant": "B04",
+      "seed": 0,
+      "tier": "tier_a",
+      "oracle_success": false,
+      "expected_oracle": false,
+      "expected_verdict": "FAIL",
+      "actual_verdict": "FAIL",
+      "verdict_matches_expected": true,
+      "exit_code": 1,
+      "reasons": [],
+      "total_frames": 213,
+      "steps": [
+        {
+          "index": 0,
+          "name": "grasp",
+          "verdict": "PASS",
+          "frame": 70,
+          "t_s": 2.3333,
+          "reasons": []
+        },
+        {
+          "index": 1,
+          "name": "place",
+          "verdict": "PASS",
+          "frame": 160,
+          "t_s": 5.3333,
+          "reasons": []
+        },
+        {
+          "index": 2,
+          "name": "release",
+          "verdict": "FAIL",
+          "frame": 212,
+          "t_s": 7.0667,
+          "reasons": []
+        }
+      ]
+    },
+    {
+      "name": "B05_lift_before_close",
+      "variant": "B05",
+      "seed": 0,
+      "tier": "tier_a",
+      "oracle_success": false,
+      "expected_oracle": false,
+      "expected_verdict": "FAIL",
+      "actual_verdict": "FAIL",
+      "verdict_matches_expected": true,
+      "exit_code": 1,
+      "reasons": [],
+      "total_frames": 230,
+      "steps": [
+        {
+          "index": 0,
+          "name": "grasp",
+          "verdict": "FAIL",
+          "frame": 229,
+          "t_s": 7.6333,
+          "reasons": []
+        },
+        {
+          "index": 1,
+          "name": "place",
+          "verdict": null,
+          "frame": null,
+          "t_s": null,
+          "reasons": []
+        },
+        {
+          "index": 2,
+          "name": "release",
+          "verdict": null,
+          "frame": null,
+          "t_s": null,
+          "reasons": []
+        }
+      ]
+    },
+    {
+      "name": "B06_high_grasp",
+      "variant": "B06",
+      "seed": 0,
+      "tier": "tier_a",
+      "oracle_success": false,
+      "expected_oracle": false,
+      "expected_verdict": "FAIL",
+      "actual_verdict": "FAIL",
+      "verdict_matches_expected": true,
+      "exit_code": 1,
+      "reasons": [],
+      "total_frames": 215,
+      "steps": [
+        {
+          "index": 0,
+          "name": "grasp",
+          "verdict": "FAIL",
+          "frame": 214,
+          "t_s": 7.1333,
+          "reasons": []
+        },
+        {
+          "index": 1,
+          "name": "place",
+          "verdict": null,
+          "frame": null,
+          "t_s": null,
+          "reasons": []
+        },
+        {
+          "index": 2,
+          "name": "release",
+          "verdict": null,
+          "frame": null,
+          "t_s": null,
+          "reasons": []
+        }
+      ]
+    },
+    {
+      "name": "B07_missing_close",
+      "variant": "B07",
+      "seed": 0,
+      "tier": "tier_a",
+      "oracle_success": false,
+      "expected_oracle": false,
+      "expected_verdict": "FAIL",
+      "actual_verdict": "FAIL",
+      "verdict_matches_expected": true,
+      "exit_code": 1,
+      "reasons": [],
+      "total_frames": 215,
+      "steps": [
+        {
+          "index": 0,
+          "name": "grasp",
+          "verdict": "FAIL",
+          "frame": 214,
+          "t_s": 7.1333,
+          "reasons": []
+        },
+        {
+          "index": 1,
+          "name": "place",
+          "verdict": null,
+          "frame": null,
+          "t_s": null,
+          "reasons": []
+        },
+        {
+          "index": 2,
+          "name": "release",
+          "verdict": null,
+          "frame": null,
+          "t_s": null,
+          "reasons": []
+        }
+      ]
+    },
+    {
+      "name": "B08_wrong_object",
+      "variant": "B08",
+      "seed": 0,
+      "tier": "tier_a",
+      "oracle_success": false,
+      "expected_oracle": false,
+      "expected_verdict": "FAIL",
+      "actual_verdict": "FAIL",
+      "verdict_matches_expected": true,
+      "exit_code": 1,
+      "reasons": [],
+      "total_frames": 379,
+      "steps": [
+        {
+          "index": 0,
+          "name": "grasp",
+          "verdict": "FAIL",
+          "frame": 378,
+          "t_s": 12.6,
+          "reasons": []
+        },
+        {
+          "index": 1,
+          "name": "place",
+          "verdict": null,
+          "frame": null,
+          "t_s": null,
+          "reasons": []
+        },
+        {
+          "index": 2,
+          "name": "release",
+          "verdict": null,
+          "frame": null,
+          "t_s": null,
+          "reasons": []
+        }
+      ]
+    },
+    {
+      "name": "B09_never_opens",
+      "variant": "B09",
+      "seed": 0,
+      "tier": "tier_a",
+      "oracle_success": false,
+      "expected_oracle": false,
+      "expected_verdict": "FAIL",
+      "actual_verdict": "FAIL",
+      "verdict_matches_expected": true,
+      "exit_code": 1,
+      "reasons": [],
+      "total_frames": 215,
+      "steps": [
+        {
+          "index": 0,
+          "name": "grasp",
+          "verdict": "PASS",
+          "frame": 70,
+          "t_s": 2.3333,
+          "reasons": []
+        },
+        {
+          "index": 1,
+          "name": "place",
+          "verdict": "PASS",
+          "frame": 160,
+          "t_s": 5.3333,
+          "reasons": []
+        },
+        {
+          "index": 2,
+          "name": "release",
+          "verdict": "FAIL",
+          "frame": 214,
+          "t_s": 7.1333,
+          "reasons": []
+        }
+      ]
+    },
+    {
+      "name": "B10_high_release",
+      "variant": "B10",
+      "seed": 0,
+      "tier": "tier_a",
+      "oracle_success": false,
+      "expected_oracle": false,
+      "expected_verdict": "FAIL",
+      "actual_verdict": "FAIL",
+      "verdict_matches_expected": true,
+      "exit_code": 1,
+      "reasons": [],
+      "total_frames": 218,
+      "steps": [
+        {
+          "index": 0,
+          "name": "grasp",
+          "verdict": "PASS",
+          "frame": 70,
+          "t_s": 2.3333,
+          "reasons": []
+        },
+        {
+          "index": 1,
+          "name": "place",
+          "verdict": "FAIL",
+          "frame": 154,
+          "t_s": 5.1333,
+          "reasons": []
+        },
+        {
+          "index": 2,
+          "name": "release",
+          "verdict": null,
+          "frame": null,
+          "t_s": null,
+          "reasons": []
+        }
+      ]
+    },
+    {
+      "name": "B04_dwell_0.08s",
+      "variant": "B04_dwell_0.08s",
+      "seed": 0,
+      "tier": "tier_a",
+      "oracle_success": false,
+      "expected_oracle": false,
+      "expected_verdict": "FAIL",
+      "actual_verdict": "FAIL",
+      "verdict_matches_expected": true,
+      "exit_code": 1,
+      "reasons": [],
+      "total_frames": 214,
+      "steps": [
+        {
+          "index": 0,
+          "name": "grasp",
+          "verdict": "PASS",
+          "frame": 70,
+          "t_s": 2.3333,
+          "reasons": []
+        },
+        {
+          "index": 1,
+          "name": "place",
+          "verdict": "PASS",
+          "frame": 160,
+          "t_s": 5.3333,
+          "reasons": []
+        },
+        {
+          "index": 2,
+          "name": "release",
+          "verdict": "FAIL",
+          "frame": 213,
+          "t_s": 7.1,
+          "reasons": []
+        }
+      ]
+    },
+    {
+      "name": "B04_dwell_0.15s",
+      "variant": "B04_dwell_0.15s",
+      "seed": 0,
+      "tier": "tier_a",
+      "oracle_success": false,
+      "expected_oracle": false,
+      "expected_verdict": "FAIL",
+      "actual_verdict": "FAIL",
+      "verdict_matches_expected": true,
+      "exit_code": 1,
+      "reasons": [],
+      "total_frames": 216,
+      "steps": [
+        {
+          "index": 0,
+          "name": "grasp",
+          "verdict": "PASS",
+          "frame": 70,
+          "t_s": 2.3333,
+          "reasons": []
+        },
+        {
+          "index": 1,
+          "name": "place",
+          "verdict": "PASS",
+          "frame": 160,
+          "t_s": 5.3333,
+          "reasons": []
+        },
+        {
+          "index": 2,
+          "name": "release",
+          "verdict": "FAIL",
+          "frame": 215,
+          "t_s": 7.1667,
+          "reasons": []
+        }
+      ]
+    },
+    {
+      "name": "B09_partial_open",
+      "variant": "B09_partial_open",
+      "seed": 0,
+      "tier": "tier_a",
+      "oracle_success": false,
+      "expected_oracle": false,
+      "expected_verdict": "FAIL",
+      "actual_verdict": "FAIL",
+      "verdict_matches_expected": true,
+      "exit_code": 1,
+      "reasons": [],
+      "total_frames": 218,
+      "steps": [
+        {
+          "index": 0,
+          "name": "grasp",
+          "verdict": "PASS",
+          "frame": 70,
+          "t_s": 2.3333,
+          "reasons": []
+        },
+        {
+          "index": 1,
+          "name": "place",
+          "verdict": "PASS",
+          "frame": 160,
+          "t_s": 5.3333,
+          "reasons": []
+        },
+        {
+          "index": 2,
+          "name": "release",
+          "verdict": "FAIL",
+          "frame": 217,
+          "t_s": 7.2333,
+          "reasons": []
+        }
+      ]
+    }
+  ],
+  "case_c_validation": {
+    "sustained_true": "PASS",
+    "decided_false_no_uncertainty": "FAIL",
+    "uncertain_window_ge_n_on": "CANT_TELL",
+    "decisive_frame_uncertain": "CANT_TELL"
+  },
+  "honesty_notes": [
+    "Evaluated on KinematicMockEnv with Tier A synthetic tracks from sim state (synthetic_tracks_from_privileged_state).",
+    "B04 short dwell fails at release step because dwell duration margin is negative (< 0.5s requirement) and gripper-drag disturbs cube.",
+    "B09 never opens fails at release step because moves_with remains True (gripper in contact proximity), so 'not moves_with' is False.",
+    "Held-out variants with sub-threshold dwell (0.08s and 0.15s) correctly FAIL; partial gripper open correctly FAILs.",
+    "Zero false-PASS across all tested bugs and held-out variants."
+  ]
+}

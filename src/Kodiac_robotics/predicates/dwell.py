@@ -43,6 +43,7 @@ def evaluate_dwell(
         raise ValueError(f"dwell predicate requires at least 1 argument (obj_a), got: {args}")
 
     obj_a = args[0]
+    obj_b = args[1] if len(args) >= 2 else None
     for_s = get_param_value(atom.params, "for_s", 0.5)
     max_speed_cm_s = get_param_value(atom.params, "max_speed_cm_s", 1.0)
 
@@ -72,6 +73,11 @@ def evaluate_dwell(
         )
         v_step = d / dt
         if v_step <= max_speed_cm_s:
+            if obj_b is not None:
+                from Kodiac_robotics.predicates.on import evaluate_on
+                on_prev = evaluate_on(Atom(kind="pred", name="on", args=[obj_a, obj_b]), tracks, scale, prev_f, fps, context)
+                if on_prev.tri != Tri.T:
+                    break
             still_frames += 1
             curr_coords = p_coords
             prev_f -= 1
@@ -130,6 +136,10 @@ def evaluate_dwell(
     )
 
     components = [c_speed, c_dur]
+    if obj_b is not None:
+        from Kodiac_robotics.predicates.on import evaluate_on
+        on_curr = evaluate_on(Atom(kind="pred", name="on", args=[obj_a, obj_b]), tracks, scale, frame, fps, context)
+        components.extend(on_curr.components)
     overall_tri = conjoin_components(components)
 
     return PredFrame(

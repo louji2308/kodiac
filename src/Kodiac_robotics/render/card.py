@@ -60,6 +60,25 @@ def _load_font(size: int, bold: bool = False) -> ImageFont.ImageFont | ImageFont
         return ImageFont.load_default()
 
 
+def collect_proof_badges(run: RunResult, clip: Clip) -> list[str]:
+    """Proof badges: source tag + perception tag. `[sam-3.1]` only for real SAM backends; synthetic tracks get an
+    explicit non-perception label."""
+    all_badges: list[str] = [f"[{clip.ref.source_kind.upper()}]"]
+    perception_backend = str(run.backends.get("perception") or "").strip().lower()
+    if perception_backend in ("api", "modal") or "sam" in perception_backend:
+        perception_badge = "[sam-3.1]"
+    elif "synthetic" in perception_backend:
+        perception_badge = "[SYNTHETIC TRACKS FROM SIM STATE · NOT PERCEPTION]"
+    else:
+        perception_badge = "[REPLAY: CACHED SAM 3.1 TRACKS]"
+    if perception_badge not in all_badges:
+        all_badges.append(perception_badge)
+    for b in run.badges:
+        if b not in all_badges:
+            all_badges.append(b)
+    return all_badges
+
+
 def render_verdict_card_v1(
     run: RunResult,
     clip: Clip,
@@ -73,7 +92,9 @@ def render_verdict_card_v1(
     - Decisive frame overlay with categorical mask contours and bottom centroid crosshairs.
     - Telemetry panel with measured numbers (value +/- sigma, threshold, margin, unit).
     - Step timeline strip: green PASS, red FAIL, amber CAN'T TELL.
-    - Badges: [REAL]/[SIM], [sam-3.1], [REPLAY: CACHED SAM 3.1 TRACKS], [GEOMETRY: TIER C · UNCALIBRATED CAMERA].
+    - Badges: [REAL]/[SIM] source, [sam-3.1] only when the perception backend is a SAM backend, otherwise the
+      perception label (e.g. [SYNTHETIC TRACKS FROM SIM STATE · NOT PERCEPTION]), [REPLAY: CACHED SAM 3.1 TRACKS],
+      [GEOMETRY: TIER C · UNCALIBRATED CAMERA].
     - Safe font fallback hierarchy.
     """
     out_p = Path(output_path).resolve()
@@ -235,14 +256,7 @@ def render_verdict_card_v1(
     cur_y += 12
 
     # Collect all badges
-    all_badges: list[str] = []
-    # Source badge
-    src_kind = clip.ref.source_kind.upper()
-    all_badges.append(f"[{src_kind}]")
-    all_badges.append("[sam-3.1]")
-    for b in run.badges:
-        if b not in all_badges:
-            all_badges.append(b)
+    all_badges: list[str] = collect_proof_badges(run, clip)
 
     badge_x = right_x + 16
     for b in all_badges:
@@ -364,4 +378,4 @@ def render_verdict_card_v1(
     return out_p
 
 
-__all__ = ["render_verdict_card_v1"]
+__all__ = ["render_verdict_card_v1", "collect_proof_badges"]

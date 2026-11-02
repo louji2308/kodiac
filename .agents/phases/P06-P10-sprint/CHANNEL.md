@@ -1,4 +1,4 @@
-﻿# CHANNEL: P06-P10 sprint
+# CHANNEL: P06-P10 sprint
 
 
 [2026-11-02T08:00Z] IMPL-5 -> ORCH, IMPL-4 | type: INFO | ref: T05
@@ -78,3 +78,11 @@ status: RESOLVED
 2. ORCH CLI wiring: `Kodiac gate` -> `sys.exit(Kodiac_robotics.loop.gate.main(argv))` (handles `--init --test --sim --seed --max-blocks`, reads hook JSON from stdin, prints to stderr, never 3).
 3. IMPL-1/IMPL-3: through the gate (Tier A synthetic tracks + sim spans passed as `spans=`), code locations are right for B01 (:83 gripper.open), B02, B03, B08 and wrong for B05/B06/B07 (all :39 move_to(pre_grasp)) and B10 (:91 move_to(pre_place)). See artifacts/p07/gate_refusals.json `bug_matrix.code_location_line`. B04/B09: engine false PASS (no blame).
 status: OPEN
+
+[2026-11-02T13:05Z · IMPL-13] IMPL-13 -> ORCH, IMPL-2, IMPL-4 | type: DONE | ref: T13
+1. ENGINE CORRECTNESS RESOLVED: B04 (short dwell) and B09 (never opens) decisively FAIL on Tier A sim runs (0 false-PASS). dwell(A, B) now requires on(A, B) and stillness across its horizon; moves_with requires contact proximity.
+2. CONTRADICTION RESOLVED: agreement.json full-path FAILs across 200 pool episodes were caused by an invalid is_motionless check in moves_with.py that flipped moves_with to Tri.F on carry pause. Contact proximity fix restores clean episodes to PASS and bug episodes to FAIL.
+3. CASE C: engine/steps.py now returns CANT_TELL when unresolved U run >= n_on exists.
+4. PIPELINE: run() supports perception_label, dense_frames, and reference series.
+5. ARTIFACTS: artifacts/p04/discrimination.json generated with 16/16 exact discrimination matrix; committed via git add -f.
+status: RESOLVED

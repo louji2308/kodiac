@@ -19,7 +19,7 @@ from Kodiac_robotics.contracts.core import (
     Tri,
     Verdict,
 )
-from Kodiac_robotics.render.card import render_verdict_card_v1
+from Kodiac_robotics.render.card import collect_proof_badges, render_verdict_card_v1
 
 
 def _create_mock_run_result(verdict: Verdict) -> tuple[RunResult, Clip, np.ndarray]:
@@ -83,3 +83,37 @@ def test_render_verdict_card_v1_dimensions_and_output(verdict: Verdict) -> None:
         with Image.open(saved) as img:
             assert img.size == (1280, 720)
             assert img.format == "PNG"
+
+
+def test_proof_badges_sam_backend_claims_sam() -> None:
+    """A SAM perception backend stamps [sam-3.1]; synthetic / cached-replay backends must not claim SAM."""
+    run_sam, clip, _frame = _create_mock_run_result(Verdict.FAIL)
+    run_sam = run_sam.model_copy(update={"backends": {"perception": "api"}})
+
+    badges = collect_proof_badges(run_sam, clip)
+    assert "[sam-3.1]" in badges
+    assert "[SYNTHETIC TRACKS FROM SIM STATE · NOT PERCEPTION]" not in badges
+
+
+def test_proof_badges_synthetic_backend_does_not_claim_sam() -> None:
+    """Tracks labelled synthetic-from-sim-state must show the non-perception badge, never [sam-3.1]."""
+    run_syn, clip, _frame = _create_mock_run_result(Verdict.FAIL)
+    run_syn = run_syn.model_copy(
+        update={
+            "badges": ["[SYNTHETIC TRACKS FROM SIM STATE · NOT PERCEPTION]", "[MOCK SIMULATION]"],
+            "backends": {"perception": "synthetic_from_sim_state", "sim": "kinematic_mock"},
+        }
+    )
+
+    badges = collect_proof_badges(run_syn, clip)
+    assert "[SYNTHETIC TRACKS FROM SIM STATE · NOT PERCEPTION]" in badges
+    assert "[sam-3.1]" not in badges
+
+
+def test_proof_badges_cached_replay_backend_keeps_cached_label() -> None:
+    """Stored SAM tracks (cached_replay) keep the replay badge."""
+    run_c, clip, _frame = _create_mock_run_result(Verdict.FAIL)
+
+    badges = collect_proof_badges(run_c, clip)
+    assert "[REPLAY: CACHED SAM 3.1 TRACKS]" in badges
+    assert "[sam-3.1]" not in badges

@@ -12,20 +12,23 @@ import secrets
 import time
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Literal
+from typing import Iterable, Literal
 
 import cv2
 import numpy as np
 
 from Kodiac_robotics.contracts.core import (
+    Atom,
     Clip,
     ClipRef,
+    Component,
     GreenTest,
     PredFrame,
     ReasonCode,
     RunResult,
     ScaleModel,
     Track,
+    Tri,
     Verdict,
 )
 from Kodiac_robotics.engine.steps import evaluate_step_chain
@@ -40,6 +43,20 @@ from Kodiac_robotics.segment.fixture import ROLE_ALIASES, FixtureBackend
 from Kodiac_robotics.uncertainty.gates import apply_gates
 
 logger = logging.getLogger(__name__)
+
+
+def _dense_frame_supported(atom: Atom, frame: int, dense_frames: set[int], fps: float) -> bool:
+    """Mirror of ``pipeline.bisect._support_ok`` for the ``dense_frames`` fast-path switch.
+
+    Temporal predicates (``moves_with`` window, ``dwell`` stillness horizon) read frames before ``frame``; those
+    frames must lie inside the dense set, otherwise the frame is treated as untracked/UNKNOWN.
+    """
+    from Kodiac_robotics.pipeline import (
+        bisect as _bisect,  # deferred import: pipeline.bisect imports pipeline.run
+    )
+
+    back = _bisect._support_frames(atom, fps)
+    return all(g in dense_frames for g in range(max(0, frame - back), frame + 1))
 
 
 def _harmonize_track_keys(
@@ -104,11 +121,17 @@ def run(
     camera: Literal["tier_a", "tier_b", "tier_c"] | None = None,
     cam_K: np.ndarray | None = None,
     cam_extrinsic: np.ndarray | None = None,
+    perception_label: str | None = None,
+    dense_frames: set[int] | None = None,
 ) -> RunResult:
     """Executes a Green test over a video clip.
 
-    - If tracks is provided: sets is_fixture=True, adds badge '[REPLAY: CACHED SAM 3.1 TRACKS]',
-      bypasses segmenters, and evaluates directly.
+    - If tracks is provided: sets is_fixture=True, adds the perception badge (``[REPLAY: CACHED SAM 3.1 TRACKS]`` for
+      stored SAM tracks by default, or ``perception_label`` e.g. ``SYNTHETIC TRACKS FROM SIM STATE · NOT PERCEPTION`` for
+      tracks projected from a privileged sim state), bypasses segmenters, and evaluates directly.
+    - If ``dense_frames`` is given (two-stage bisect fast path): only frames inside the set are evaluated densely;
+      frames outside it (and frames whose predicate history leaves the set) evaluate to UNKNOWN (Tri.U, no components).
+      ``None`` (default) evaluates every frame: today's behaviour is kept bit-identical.
     - Measures per-stage timings (segment_ms, scale_ms, eval_ms, render_ms, total_ms).
     - Generates 16-hex nonce run_id.
     - Writes run artifacts: runs/<id>/result.json, runs/<id>/trace.jsonl, and .Kodiac/last_verdict.json.
@@ -135,8 +158,8 @@ def run(
     if tracks is not None:
         # Direct stored-track replay
         is_fixture = True
-        badges.append("[REPLAY: CACHED SAM 3.1 TRACKS]")
-        backends_map["perception"] = "cached_replay"
+        badges.append(f"[{perception_label}]" if perception_label else "[REPLAY: CACHED SAM 3.1 TRACKS]")
+        backends_map["perception"] = "synthetic_from_sim_state" if perception_label else "cached_replay"
         resolved_tracks = dict(tracks)
         segment_ms = 0
     else:
@@ -211,11 +234,37 @@ def run(
     t_eval0 = time.perf_counter()
 
     # Pre-extract all atoms across steps
-    all_atoms = []
+    all_atoms: list[Atom] = []
     for step in test_obj.steps:
         from Kodiac_robotics.engine.steps import _extract_atoms
 
         all_atoms.extend(_extract_atoms(step.expr))
+
+    pred_frames_by_atom: dict[str, list[PredFrame]] = {}
+    all_triggered_reasons: set[ReasonCode] = set()
+
+    # Effector -> place-target reference series (blame: dt_before_reference_s / reference_xy_cm).
+    # For every relational atom (moves_with(effector, obj)) we also evaluate the effector->container relation
+    # (on(effector, target)) so the blame fact table has the xy-distance series it consumes.
+    if all_atoms:
+        _rel_map: dict[str, str] = {}
+        for _a in all_atoms:
+            if _a.kind == "pred" and _a.name in ("on", "inside") and len(_a.args) >= 2:
+                _rel_map[str(_a.args[0])] = str(_a.args[1])
+        _seen_refs: set[str] = set()
+        for _a in all_atoms:
+            if _a.kind != "pred" or _a.name != "moves_with" or len(_a.args) < 2:
+                continue
+            _eff, _obj = str(_a.args[0]), str(_a.args[1])
+            _tgt = _rel_map.get(_obj)
+            if _tgt is None:
+                continue
+            _ref = Atom(kind="pred", name="on", args=[_eff, _tgt])
+            _key = get_atom_key(_ref)
+            if _key in pred_frames_by_atom or _key in _seen_refs:
+                continue
+            _seen_refs.add(_key)
+            all_atoms.append(_ref)
 
     # Extract raw frame for Gate G4 view blocked checks if available
     raw_first_frame: np.ndarray | None = None
@@ -227,9 +276,6 @@ def run(
         cap.release()
     except Exception:
         pass
-
-    pred_frames_by_atom: dict[str, list[PredFrame]] = {}
-    all_triggered_reasons: set[ReasonCode] = set()
 
     # Check overall scene occlusion on declared non-effector objects
     scene_occluded = False
@@ -245,7 +291,8 @@ def run(
             break
         f0 = min(tr.frames.keys())
         a0 = max(1, tr.frames[f0].area_px)
-        for f_idx in range(clip_obj.n_frames):
+        frame_iter: Iterable[int] = sorted(dense_frames) if dense_frames is not None else range(clip_obj.n_frames)
+        for f_idx in frame_iter:
             if f_idx not in tr.frames:
                 scene_occluded = True
                 break
@@ -274,6 +321,28 @@ def run(
 
         frames_list: list[PredFrame] = []
         for f in range(clip_obj.n_frames):
+            if dense_frames is not None and (f not in dense_frames or not _dense_frame_supported(atom, f, dense_frames, clip_obj.fps)):
+                frames_list.append(
+                    PredFrame(
+                        frame=f,
+                        atom_key=atom_key,
+                        tri=Tri.U,
+                        components=[
+                            Component(
+                                name=f"{atom.name or 'atom'}.untracked",
+                                value=0.0,
+                                threshold=0.0,
+                                margin=0.0,
+                                sigma=0.0,
+                                unit="cm",
+                                tri=Tri.U,
+                                reason=ReasonCode.NOT_VISIBLE,
+                            )
+                        ],
+                        trace_id="tr_fast_untracked",
+                    )
+                )
+                continue
             pf = evaluate_atom(
                 atom, harmonized_tracks, scale, f, clip_obj.fps, context=eval_context
             )

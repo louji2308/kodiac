@@ -29,9 +29,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-from Kodiac_robotics.contracts.core import Clip, ClipRef, ObjMask, ReasonCode, Track, Verdict
+from Kodiac_robotics.contracts.core import Clip, ClipRef, ReasonCode, Track, Verdict
 from Kodiac_robotics.pipeline.run import run
-from Kodiac_robotics.segment.rle import mask_to_rle
 
 
 def _extract_numeric_id(ep_str: str) -> int:
@@ -57,57 +56,22 @@ def wilson_score_interval(k: int, n: int, confidence: float = 0.95) -> tuple[flo
 def build_synthetic_tracks_from_obs(
     obs: np.ndarray,
     cam_K: np.ndarray,
+    cam_extrinsic: np.ndarray | None = None,
     h_img: int = 480,
     w_img: int = 640,
 ) -> dict[str, Track]:
     """Build synthetic 2D perception tracks projected from 3D state coordinates."""
-    T = len(obs)
-    fx = float(cam_K[0, 0])
-    fy = float(cam_K[1, 1])
-    cx = float(cam_K[0, 2])
-    cy = float(cam_K[1, 2])
+    from Kodiac_robotics.loop.gate import synthetic_tracks_from_state
 
-    tracks = {
-        "cubeA": Track(obj="cubeA", frames={}, backend="fixture", direction="forward", trace_id="tA"),
-        "cubeB": Track(obj="cubeB", frames={}, backend="fixture", direction="forward", trace_id="tB"),
-        "gripper": Track(obj="gripper", frames={}, backend="fixture", direction="forward", trace_id="tg"),
+    state = {
+        "cam_K": cam_K,
+        "cam_extrinsic": cam_extrinsic if cam_extrinsic is not None else np.eye(4, dtype=np.float64),
+        "camera_known": True,
+        "cubeA_pose": obs[:, 8:11],
+        "cubeB_pose": obs[:, 15:18],
+        "ee_pos": obs[:, 0:3],
     }
-
-    object_specs = [
-        ("cubeA", slice(8, 11), 0.04),
-        ("cubeB", slice(15, 18), 0.04),
-        ("gripper", slice(0, 3), 0.04),
-    ]
-
-    for t in range(T):
-        for name, pos_idx, size_m in object_specs:
-            pos = obs[t, pos_idx]
-            zc = max(0.15, float(pos[2]))
-            u = float(fx * pos[0] / zc + cx)
-            v = float(fy * pos[1] / zc + cy)
-            w_px = max(12, int(fx * size_m / zc))
-
-            x1 = max(0, min(w_img - 1, int(u - w_px / 2)))
-            x2 = max(x1 + 1, min(w_img, int(u + w_px / 2)))
-            y1 = max(0, min(h_img - 1, int(v - w_px / 2)))
-            y2 = max(y1 + 1, min(h_img, int(v + w_px / 2)))
-
-            canvas = np.zeros((h_img, w_img), dtype=np.uint8)
-            canvas[y1:y2, x1:x2] = 1
-            area = int((x2 - x1) * (y2 - y1))
-
-            mask = ObjMask(
-                obj=name,
-                frame=t,
-                score=0.98,
-                bbox_xyxy=(float(x1), float(y1), float(x2), float(y2)),
-                rle=mask_to_rle(canvas),
-                area_px=area,
-                rle_size=(h_img, w_img),
-            )
-            tracks[name].frames[t] = mask
-
-    return tracks
+    return synthetic_tracks_from_state(state, height=h_img, width=w_img)
 
 
 def run_validation(
@@ -188,7 +152,7 @@ def run_validation(
         cam_extrinsic = npz["cam_extrinsic"]
 
         # Build synthetic tracks from privileged simulation trajectory
-        tracks = build_synthetic_tracks_from_obs(obs, cam_K)
+        tracks = build_synthetic_tracks_from_obs(obs, cam_K, cam_extrinsic)
 
         clip_obj = Clip(
             ref=ClipRef(uri=str(state_path), source_kind="sim"),

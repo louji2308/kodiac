@@ -84,25 +84,17 @@ def evaluate_moves_with(
         delta_hb,
     )
 
-    # Check if both objects are currently stationary (at rest) over recent 3-frame window.
-    # Two motionless objects cannot be in an active coupled motion: moves_with evaluates to False.
-    short_ref = max(0, frame - 3)
-    coords_short_a = get_object_coords(obj_a, tracks, scale, short_ref, context)
-    coords_short_b = get_object_coords(obj_b, tracks, scale, short_ref, context)
-    if coords_short_a is not None and coords_short_b is not None and frame > 0:
-        short_da = euclidean_3d(xa_t, da_t, ha_t, coords_short_a[0], coords_short_a[1], coords_short_a[2])
-        short_db = euclidean_3d(xb_t, db_t, hb_t, coords_short_b[0], coords_short_b[1], coords_short_b[2])
-        is_motionless = (short_da < 0.3 and short_db < 0.3)
-    else:
-        mag_a = euclidean_3d(delta_xa, delta_da, delta_ha, 0.0, 0.0, 0.0)
-        mag_b = euclidean_3d(delta_xb, delta_db, delta_hb, 0.0, 0.0, 0.0)
-        is_motionless = (mag_a < 0.5 and mag_b < 0.5)
+    # Contact proximity: moves_with requires that objects are in grasp/contact proximity (default <= 4.0 cm).
+    # If physically separated, they cannot be in an active coupled hold/motion.
+    dist_curr = euclidean_3d(xa_t, da_t, ha_t, xb_t, db_t, hb_t)
+    contact_max_cm = get_param_value(atom.params, "contact_max_cm", 4.0)
 
     m = slip_cm - rho_rel
     sigma_slip = math.sqrt(2.0) * math.hypot(sa_t, sb_t)
 
-    tri_val = Tri.F if is_motionless else (Tri.T if m > 0 else Tri.F)
-    effective_margin = -max(1.5, 2.5 * sigma_slip) if is_motionless else m
+    is_contact = dist_curr <= contact_max_cm
+    tri_val = Tri.T if (m > 0 and is_contact) else Tri.F
+    effective_margin = m if is_contact else min(m, contact_max_cm - dist_curr)
 
     c_slip = Component(
         name="moves_with.slip",
