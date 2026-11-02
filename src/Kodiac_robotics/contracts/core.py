@@ -474,6 +474,9 @@ class JudgeLabel(BaseModel):
     latency_ms: int
     cost_usd: float
     calibration_threshold: float | None = None
+    # Provenance (fail-closed defaults): a label is mock unless its producer says otherwise.
+    is_mock: bool = True
+    evidence_type: Literal["live", "fixture", "synthetic"] | None = None
 
 
 # ==============================================================================

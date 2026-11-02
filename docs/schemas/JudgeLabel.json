@@ -67,6 +67,28 @@
       ],
       "default": null,
       "title": "Calibration Threshold"
+    },
+    "is_mock": {
+      "default": true,
+      "title": "Is Mock",
+      "type": "boolean"
+    },
+    "evidence_type": {
+      "anyOf": [
+        {
+          "enum": [
+            "live",
+            "fixture",
+            "synthetic"
+          ],
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Evidence Type"
     }
   },
   "required": [
