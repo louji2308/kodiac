@@ -1,6 +1,11 @@
 --- a/examples/sim/pick_place.py
 +++ b/examples/sim/pick_place.py
-@@ -43,3 +43,3 @@
-     # Step 4: Lift
--    robot.arm.lift(distance=0.12)
-+    robot.arm.lift(distance=0.005)  # BUG B03: Low lift (insufficient obstacle clearance)
+@@ -22,7 +22,7 @@
+ from Kodiac_robotics.sim.video import save_sim_run  # noqa: E402
+
+
+-def execute_pick_place(robot: RobotController, bug_id: str | None = None) -> bool:
++def execute_pick_place(robot: RobotController, bug_id: str | None = "B03") -> bool:  # BUG B03 (low_lift): injected via patched default
+     """Execute pick-and-place sequence with optional bug injection."""
+     state = robot.env.privileged_state()
+     cubeA_pos = list(state.cubeA_pose[:3])

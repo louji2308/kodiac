@@ -1,8 +1,11 @@
 --- a/examples/sim/pick_place.py
 +++ b/examples/sim/pick_place.py
-@@ -28,3 +28,3 @@
-     # Step 1: Pre-grasp approach above Cube A
-     # ---------------------------------------------------------
--    pre_grasp = [cubeA_pos[0], cubeA_pos[1], cubeA_pos[2] + 0.12]
-+    pre_grasp = [0.25, -0.10, cubeA_pos[2] + 0.12]  # BUG B08: Navigates to wrong location
-     robot.arm.move_to(pre_grasp)
+@@ -22,7 +22,7 @@
+ from Kodiac_robotics.sim.video import save_sim_run  # noqa: E402
+
+
+-def execute_pick_place(robot: RobotController, bug_id: str | None = None) -> bool:
++def execute_pick_place(robot: RobotController, bug_id: str | None = "B08") -> bool:  # BUG B08 (wrong_object): injected via patched default
+     """Execute pick-and-place sequence with optional bug injection."""
+     state = robot.env.privileged_state()
+     cubeA_pos = list(state.cubeA_pose[:3])

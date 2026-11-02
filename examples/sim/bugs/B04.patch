@@ -1,6 +1,11 @@
 --- a/examples/sim/pick_place.py
 +++ b/examples/sim/pick_place.py
-@@ -70,3 +70,3 @@
-     # Step 8: Dwell and allow physical settling
--    robot.wait(duration_s=0.6)
-+    robot.wait(duration_s=0.03)  # BUG B04: Short dwell, fails settling velocity check
+@@ -22,7 +22,7 @@
+ from Kodiac_robotics.sim.video import save_sim_run  # noqa: E402
+
+
+-def execute_pick_place(robot: RobotController, bug_id: str | None = None) -> bool:
++def execute_pick_place(robot: RobotController, bug_id: str | None = "B04") -> bool:  # BUG B04 (short_dwell): injected via patched default
+     """Execute pick-and-place sequence with optional bug injection."""
+     state = robot.env.privileged_state()
+     cubeA_pos = list(state.cubeA_pose[:3])

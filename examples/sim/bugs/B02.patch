@@ -1,8 +1,11 @@
 --- a/examples/sim/pick_place.py
 +++ b/examples/sim/pick_place.py
-@@ -58,3 +58,3 @@
-     # Step 6: Lower to placement pose
-     # ---------------------------------------------------------
--    place_pose = [cubeB_pos[0], cubeB_pos[1], cubeB_pos[2] + 0.04]
-+    place_pose = [cubeB_pos[0] + 0.05, cubeB_pos[1], cubeB_pos[2] + 0.04]  # BUG B02: 5cm XY offset
-     robot.arm.move_to(place_pose)
+@@ -22,7 +22,7 @@
+ from Kodiac_robotics.sim.video import save_sim_run  # noqa: E402
+
+
+-def execute_pick_place(robot: RobotController, bug_id: str | None = None) -> bool:
++def execute_pick_place(robot: RobotController, bug_id: str | None = "B02") -> bool:  # BUG B02 (xy_offset): injected via patched default
+     """Execute pick-and-place sequence with optional bug injection."""
+     state = robot.env.privileged_state()
+     cubeA_pos = list(state.cubeA_pose[:3])

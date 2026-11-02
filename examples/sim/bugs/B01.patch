@@ -1,10 +1,11 @@
 --- a/examples/sim/pick_place.py
 +++ b/examples/sim/pick_place.py
-@@ -50,6 +50,7 @@
-     # Step 5: Transfer above Cube B
-     # ---------------------------------------------------------
-     pre_place = [cubeB_pos[0], cubeB_pos[1], cubeB_pos[2] + 0.12]
-+    robot.gripper.open(steps=15)  # BUG B01: Early release during transit
-     robot.arm.move_to(pre_place)
- 
-     # ---------------------------------------------------------
+@@ -22,7 +22,7 @@
+ from Kodiac_robotics.sim.video import save_sim_run  # noqa: E402
+
+
+-def execute_pick_place(robot: RobotController, bug_id: str | None = None) -> bool:
++def execute_pick_place(robot: RobotController, bug_id: str | None = "B01") -> bool:  # BUG B01 (early_release): injected via patched default
+     """Execute pick-and-place sequence with optional bug injection."""
+     state = robot.env.privileged_state()
+     cubeA_pos = list(state.cubeA_pose[:3])

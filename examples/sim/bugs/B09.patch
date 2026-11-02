@@ -1,7 +1,11 @@
 --- a/examples/sim/pick_place.py
 +++ b/examples/sim/pick_place.py
-@@ -65,3 +65,3 @@
-     # Step 7: Open gripper to release
-     # ---------------------------------------------------------
--    robot.gripper.open(steps=15)
-+    pass  # BUG B09: Never opens gripper (drags cube away during retract)
+@@ -22,7 +22,7 @@
+ from Kodiac_robotics.sim.video import save_sim_run  # noqa: E402
+
+
+-def execute_pick_place(robot: RobotController, bug_id: str | None = None) -> bool:
++def execute_pick_place(robot: RobotController, bug_id: str | None = "B09") -> bool:  # BUG B09 (never_opens): injected via patched default
+     """Execute pick-and-place sequence with optional bug injection."""
+     state = robot.env.privileged_state()
+     cubeA_pos = list(state.cubeA_pose[:3])

@@ -1,8 +1,11 @@
 --- a/examples/sim/pick_place.py
 +++ b/examples/sim/pick_place.py
-@@ -40,4 +40,4 @@
-     # Step 3: Gripper close & Step 4: Lift
-     # ---------------------------------------------------------
--    robot.gripper.close(steps=15)
-     robot.arm.lift(distance=0.12)
-+    robot.gripper.close(steps=15)  # BUG B05: Lift before close
+@@ -22,7 +22,7 @@
+ from Kodiac_robotics.sim.video import save_sim_run  # noqa: E402
+
+
+-def execute_pick_place(robot: RobotController, bug_id: str | None = None) -> bool:
++def execute_pick_place(robot: RobotController, bug_id: str | None = "B05") -> bool:  # BUG B05 (lift_before_close): injected via patched default
+     """Execute pick-and-place sequence with optional bug injection."""
+     state = robot.env.privileged_state()
+     cubeA_pos = list(state.cubeA_pose[:3])
