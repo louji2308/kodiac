@@ -28,10 +28,10 @@ def run_fast(test: GreenTest | Path, clip: Clip, segmenter: Segmenter, *, k_keyf
 6. Latency: stage timings measured with `time.perf_counter`. Fixture latency is NOT real SAM latency; label `"latency_kind": "fixture_replay_not_sam"`. Do not write any latency into `docs/VIDEO_NUMBERS.md`.
 
 ## Definition of Done
-- [ ] `tests/pipeline/test_bisect.py`: plan determinism; window ≥ 50 frames and inside clip bounds incl. failure at frame 0 and at the last frame; guard G-budget/G-miss/G-pass each triggered by a crafted case; PASS never from keyframes alone; fast vs full verdict agrees on all golden fixtures (or the disagreement is documented in the report with the root cause).
-- [ ] `artifacts/p06/agreement.json` produced by `scripts/agreement.py` (command in the report), honestly labelled.
-- [ ] No `TODO|NotImplemented`; ruff clean on owned paths; full suite green.
-- [ ] Committed `feat(p06/t02): …`.
+- [x] `tests/pipeline/test_bisect.py`: plan determinism; window ≥ 50 frames and inside clip bounds incl. failure at frame 0 and at the last frame; guard G-budget/G-miss/G-pass each triggered by a crafted case; PASS never from keyframes alone; fast vs full verdict agrees on all golden fixtures (or the disagreement is documented in the report with the root cause).
+- [x] `artifacts/p06/agreement.json` produced by `scripts/agreement.py` (command in the report), honestly labelled.
+- [x] No `TODO|NotImplemented`; ruff clean on owned paths; full suite green.
+- [x] Committed `feat(p06/t02): …`.
 
 ## Report (filled by owner at DONE)
 ### Micro-plan (IMPL-2, recon findings first)
@@ -47,3 +47,51 @@ def run_fast(test: GreenTest | Path, clip: Clip, segmenter: Segmenter, *, k_keyf
   short-clip rule (bisect bills ≥100 frames, so clips ≤100 frames go direct).
 - `scripts/agreement.py`: golden clips × a fixed spec family (both specs + every step/atom of stackcube) in default and forced-bisect
   mode, plus pool calibration episodes with tracks projected from privileged state (labelled, not perception).
+
+### Report [2026-11-02 · IMPL-2] status: DONE
+**Commits:** 972e270 (fast path + guards + dense evaluator + tests) · 080ab6e (dwell proxy fix, dense carried-literal windows,
+agreement script) · 4a22911 (agreement.json + stricter target rule).
+
+**Built:** `pipeline/bisect.py::run_fast` (frozen contract; `BisectPlan`, `FastRun`). Stage 1 = K = max(6, ⌈dur/2.5 s⌉)
+keyframes in one `segment_frames` call → static proxies (real predicates for on/inside/near/lifted; bbox contact for moves_with;
+keyframe-to-keyframe stillness for dwell) → prefix-max progress. Stage 1.5 = single-frame halving on the carried literal's
+contact proxy while the bracket is > 50 frames. Stage 2 = one window with `cut_window` padding arithmetic (`pad_window`, pinned to
+`cut_window` by test), seeds = masks on the window's last frame (one image probe if not already observed), `direction="backward"`.
+Guards: G-alias (effector resolved via KD-18 alias prompts; carried flicker → earliest bracket), G-miss (object lost at a
+keyframe → full; anchor unverified/late → extend back 50 frames ≤ 2× → full; contradiction → full), G-budget (call cap; clips
+≤ 100 frames go direct because bisect bills ≥ 100), G-pass (dense verification windows; PASS only from dense frames). Every
+fallback runs `pipeline.run.run`. `RunResult.backends` carries `mode`, `latency_kind`, `seed`, SAM calls, billed units.
+
+**Two real bugs found by the agreement run, fixed and regression-tested:** (1) the dwell proxy used `on(A,B)`, but `dwell.py` only
+checks that A stays still. Result: 5 forced-golden PASS→FAIL flips. (2) Carried `moves_with` was watched only at keyframes, but
+the engine breaks at its first dense F (any pause makes it F). Result: pool t*±2 was 50% (e.g. t* 106 vs 54). Fix: the dense
+window now spans from the step that introduces a checked carried literal (guard `carry-window:dense_from_step`).
+
+**Evidence** (`python scripts/agreement.py`, BRIEF TEMP env, 340 s; `artifacts/p06/agreement.json`):
+| block | evidence_type | n | verdict | t*±2 | fallback | target_met |
+|---|---|---|---|---|---|---|
+| pool calibration (headline) | synthetic_tracks_from_privileged_state, is_mock | 200 | 100% [98.1–100] | 100% (200) | 0% | **false** |
+| golden, bisect forced | fixture_replay_synthetic_tracks | 45 | 100% | 100% (31) | 56% | false (n<100) |
+| golden, default policy | fixture_replay_synthetic_tracks | 45 | 100% (by construction: direct pass) | 100% | 100% | false |
+All latencies: `latency_kind: fixture_replay_not_sam` (in-process replay; no SAM timing exists). Nothing goes to VIDEO_NUMBERS.
+
+**Why target_met=false:** the full path FAILs all 200 pool episodes, including 66 oracle successes, so no PASS case exists to
+test PASS-preservation (an engine/sim-track issue, not the bisect). The golden blocks have n=45 < 100.
+Tests: `tests/pipeline/test_bisect.py` 38 passed; full suite 932 passed, 13 skipped, 1 xfailed (490 s); ruff clean.
+
+**Deviations:** (a) dense windows are evaluated by `_evaluate_dense` (mirror of run.py:170-333 restricted to dense frames),
+because `run.run` flips sparse tracks to CANT_TELL. INTERFACE-REQUEST in CHANNEL.md, and the mirror is pinned to `run.run` on all
+5 goldens. (b) Short-clip direct rule (G-budget). (c) The window's start is anchored at the introducing step when a carried
+literal is checked, so "≤ 50-frame window" holds only without carried literals. (d) Segmenter keys use snake_case labels
+(`cubeA`→`cube_a`), because `FixtureBackend.track` cannot resolve `cubeA` (fixture.py:164 passes no prompts).
+
+**Known limits / 3 ways this could embarrass us:**
+1. *Quoting fixture timings as SAM speed.* Every RunResult and agreement block is labelled `fixture_replay_not_sam`, and no
+   number is written to VIDEO_NUMBERS. Live latency is unmeasured.
+2. *"100% agreement" read as perception accuracy.* Both data sources run full and fast on identical synthetic tracks. Pool tracks
+   are projected from privileged state; golden tracks are synthetic fixtures. Blocks are never pooled, and `target_met` is false
+   with the reasons written into the JSON.
+3. *"Bisect saves cost."* Untrue on the available data: pool bills 168.5 vs 150.7 frames for one dense pass
+   (`fast_bills_more_than_one_dense_pass: true`), and forced-golden falls back 56% (Tier C noise floor makes moves_with U; IMPL-1
+   reports the same). Savings need clips ≥ ~10 s, which we don't have. Also: proxy misses of a short achievement between
+   keyframes stay possible, and only 20 of the 200 pool npz files are git-tracked.
