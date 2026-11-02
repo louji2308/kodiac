@@ -1,0 +1,8 @@
+--- demo
++++ attempt
+@@ 1 matched, 2 demo-only/diverging, 2 attempt-only/diverging (tier C; camera-relative directions) @@
+  [0] grasp: grasped moves_with(gripper, cubeA) @ 2.10 s (demo 2.00 s); moves_with.slip 0.4 ± 0.1 cm
+- [1] place: settled on(cubeA, cubeB) @ 4.10 s (frame 123); on.align_xy 0.8 ± 0.2 cm; on.gap 0.1 ± 0.1 cm
+- [2] release: achieved dwell(cubeA, cubeB) @ 5.00 s (frame 150); dwell.duration 0.60 ± 0.03 s
++ [1] place: failed @ 3.80 s (frame 114)
++ [1] place: released moves_with(gripper, cubeA) @ 3.80 s (frame 114); moves_with.slip 4.7 ± 0.3 cm

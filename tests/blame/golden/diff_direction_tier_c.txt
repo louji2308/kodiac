@@ -1,0 +1,6 @@
+--- demo
++++ attempt
+@@ 0 matched, 1 demo-only/diverging, 1 attempt-only/diverging (tier C; camera-relative directions) @@
+- [1] place: settled on(cubeA, cubeB) @ 4.10 s (frame 123); on.offset_dx 0.2 ± 0.2 cm; on.offset_dy 0.1 ± 0.2 cm
++ [1] place: settled on(cubeA, cubeB) @ 4.30 s (frame 129); on.offset_dx 4.6 ± 0.3 cm camera-left; on.offset_dy 2.4 ± 0.3 cm camera-up
+  ^ outside 2 sigma: on.offset_dx, on.offset_dy
