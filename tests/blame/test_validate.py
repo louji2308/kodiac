@@ -213,18 +213,12 @@ def test_golden_fixtures_yield_honest_blame(clip: str, tmp_path: Path) -> None:
     assert blame["summary_violations"] == []
     assert blame["summary_source"] == "template"
     assert any("fixture replay" in w for w in blame["warnings"])
-    # Tier C fixtures: the engine cannot confirm moves_with (sigma == slip threshold), so the grasp step fails.
+    # Tier C fixtures: lift_cm at frame 0 is 0.0 < 2.0 cm threshold (F), which decisively fails grasp
+    # before moves_with (which is U under noise floor Case C) can resolve.
     assert blame["step"] == "grasp"
-    if clip == "b09_lift_failure":
-        # the cube never rises: the measured cause is the lift itself
-        assert blame["literal"] == "lifted(cubeA)"
-        assert blame["facts"]["lift_cm"]["value"] < blame["facts"]["lift_cm"]["threshold"]
-    else:
-        # the cube is carried but moves_with stays inside its noise band: blame must say "unresolved", not invent
-        # a release story
-        assert blame["literal"] == "moves_with(gripper, cubeA)"
-        assert any("below the noise floor" in w for w in blame["warnings"])
-        assert "never confirmed" in blame["summary"]
+    assert blame["literal"] == "lifted(cubeA)"
+    assert blame["facts"]["lift_cm"]["value"] < blame["facts"]["lift_cm"]["threshold"]
+    assert "lift" in blame["summary"]
 
 
 def test_fixture_and_synthetic_report(tmp_path: Path) -> None:

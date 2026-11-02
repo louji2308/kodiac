@@ -57,6 +57,48 @@ def test_cli_run_occluded_cant_tell(runner: CliRunner) -> None:
         assert "occluded" in res.stdout
 
 
+def test_cli_run_b01_cant_tell_when_moves_with_only(runner: CliRunner) -> None:
+    """Under Tier C Case C, moves_with below noise floor forces U -> CAN'T TELL (exit code 2) when not masked by F."""
+    with tempfile.TemporaryDirectory() as tmpdir:
+        green_path = Path(tmpdir) / "moves_only.green"
+        green_path.write_text(
+            "objects: [gripper, cubeA(size_cm=4)]\n1. grasp: moves_with(gripper, cubeA)\n",
+            encoding="utf-8",
+        )
+        res = runner.invoke(
+            app,
+            [
+                "run",
+                str(green_path),
+                "tests/fixtures/clips/b01_early_release.mp4",
+                "--output",
+                tmpdir,
+            ],
+        )
+        assert res.exit_code == 2
+        assert "CAN'T TELL" in res.stdout
+        assert "below_noise_floor" in res.stdout
+
+
+def test_cli_run_camera_tier_option(runner: CliRunner) -> None:
+    """--camera option allows specifying camera calibration tier explicitly."""
+    with tempfile.TemporaryDirectory() as tmpdir:
+        res = runner.invoke(
+            app,
+            [
+                "run",
+                "examples/stackcube.green",
+                "tests/fixtures/clips/b01_early_release.mp4",
+                "--camera",
+                "tier_a",
+                "--output",
+                tmpdir,
+            ],
+        )
+        assert res.exit_code == 1
+        assert "FAIL" in res.stdout
+
+
 def test_cli_run_json_output(runner: CliRunner) -> None:
     """--json emits purely valid JSON that validates against RunResult."""
     with tempfile.TemporaryDirectory() as tmpdir:

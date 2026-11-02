@@ -131,11 +131,12 @@ def test_selftest_fail_on_broken_demonstration(
     multi_step_stackcube_test: GreenTest,
     b01_clip: Clip,
 ) -> None:
-    """Failing demonstration produces passed=False, Verdict.FAIL, and E005 diagnostic."""
+    """Broken demonstration produces passed=False, non-PASS verdict (CANT_TELL under Case C), and E005 diagnostic."""
     passed, run_result, diagnostics = run_demo_selftest(multi_step_stackcube_test, b01_clip)
 
     assert passed is False
-    assert run_result.verdict == Verdict.FAIL
+    assert run_result.verdict in (Verdict.FAIL, Verdict.CANT_TELL)
+    assert run_result.verdict == Verdict.CANT_TELL
     assert any(d.code == "E005" for d in diagnostics)
 
 
