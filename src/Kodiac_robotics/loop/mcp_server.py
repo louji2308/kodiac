@@ -91,17 +91,22 @@ def tracks_from_state(
 ) -> tuple[dict[str, Any], Any, Any]:
     """Project privileged sim state into per-frame boxes (synthetic tracks, NOT perception).
 
-    Prefers `sim.runner.tracks_from_state` when T04's runner provides it, so `verify` and the
-    done-gate perceive identically.
+    Uses `loop.gate.tracks_from_state` (T04) for state files written by `sim.runner`, so `verify`
+    and the done-gate perceive identically. Falls back to a local equivalent that pads/truncates
+    to the clip's frame count when the gate helper is absent, the layout is older, or the row
+    count differs from the video.
     """
-    try:
-        from Kodiac_robotics.sim import runner as sim_runner
+    import numpy as np
 
-        shared = getattr(sim_runner, "tracks_from_state", None)
+    try:
+        from Kodiac_robotics.loop.gate import tracks_from_state as gate_tracks
     except ImportError:
-        shared = None
-    if shared is not None:
-        return shared(state_path, n_frames=n_frames, height=height, width=width)
+        gate_tracks = None
+    if gate_tracks is not None:
+        with np.load(state_path) as npz:
+            runner_layout = "cubeA_pose" in npz.files and len(npz["cubeA_pose"]) == n_frames
+        if runner_layout:
+            return gate_tracks(state_path, n_frames=n_frames, height=height, width=width)
     return _local_tracks_from_state(state_path, n_frames=n_frames, height=height, width=width)
 
 
