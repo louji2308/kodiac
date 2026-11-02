@@ -50,7 +50,7 @@ from Kodiac_robotics.contracts.core import (
     Tri,
     Verdict,
 )
-from Kodiac_robotics.engine.logic import evaluate_expr_tree, kleene_not
+from Kodiac_robotics.engine.logic import evaluate_expr_tree
 from Kodiac_robotics.engine.steps import (
     _extract_atoms,
     _extract_negated_atom_keys,
@@ -62,7 +62,13 @@ from Kodiac_robotics.geometry.scale import TierCScaleModel, fit_scale_model
 from Kodiac_robotics.pipeline.loader import load_green_test
 from Kodiac_robotics.pipeline.run import _harmonize_track_keys
 from Kodiac_robotics.pipeline.run import run as run_full
-from Kodiac_robotics.predicates.base import conjoin_components, get_atom_key, get_param_value
+from Kodiac_robotics.predicates.base import (
+    conjoin_components,
+    euclidean_3d,
+    get_atom_key,
+    get_object_coords,
+    get_param_value,
+)
 from Kodiac_robotics.predicates.dispatch import evaluate_atom
 from Kodiac_robotics.render.card import render_verdict_card_v1
 from Kodiac_robotics.uncertainty.gates import apply_gates
@@ -292,8 +298,40 @@ def contact_proxy(tracks: dict[str, Track], a: str, b: str, frame: int) -> Tri:
     return Tri.T if touching else Tri.F
 
 
+def stillness_proxy(
+    atom: Atom,
+    tracks: dict[str, Track],
+    scale: ScaleModel,
+    frame: int,
+    prev_frame: int | None,
+    fps: float,
+    ctx: dict[str, Any],
+) -> Tri:
+    """Static stand-in for ``dwell(A, ...)``: dwell.py only asks that A stays still for ``for_s`` (later args unused),
+    so the proxy asks whether A moved less than ``max_speed_cm_s * dt + 2 sigma`` since the previous keyframe."""
+    if prev_frame is None:
+        return Tri.U
+    a = atom.args[0]
+    cur = get_object_coords(a, tracks, scale, frame, ctx)
+    prev = get_object_coords(a, tracks, scale, prev_frame, ctx)
+    if cur is None or prev is None:
+        return Tri.U
+    dt = (frame - prev_frame) / max(fps, 1e-6)
+    if dt < get_param_value(atom.params, "for_s", 0.5):
+        return Tri.U
+    moved = euclidean_3d(cur[0], cur[1], cur[2], prev[0], prev[1], prev[2])
+    allowed = get_param_value(atom.params, "max_speed_cm_s", 1.0) * dt + 2.0 * math.hypot(cur[3], prev[3])
+    return Tri.T if moved <= allowed else Tri.F
+
+
 def _proxy_atom(
-    atom: Atom, tracks: dict[str, Track], scale: ScaleModel, frame: int, fps: float, ctx: dict[str, Any]
+    atom: Atom,
+    tracks: dict[str, Track],
+    scale: ScaleModel,
+    frame: int,
+    prev_frame: int | None,
+    fps: float,
+    ctx: dict[str, Any],
 ) -> Tri:
     if atom.kind == "looks":
         return Tri.U
@@ -302,11 +340,7 @@ def _proxy_atom(
     if atom.name == "moves_with":
         return contact_proxy(tracks, atom.args[0], atom.args[1], frame)
     if atom.name == "dwell":
-        if len(atom.args) >= 2:
-            rest = Atom(kind="pred", name="on", args=list(atom.args[:2]))
-            return evaluate_atom(rest, tracks, scale, frame, fps, ctx).tri
-        lifted = Atom(kind="pred", name="lifted", args=[atom.args[0]])
-        return kleene_not(evaluate_atom(lifted, tracks, scale, frame, fps, ctx).tri)
+        return stillness_proxy(atom, tracks, scale, frame, prev_frame, fps, ctx)
     return evaluate_atom(atom, tracks, scale, frame, fps, ctx).tri
 
 
@@ -349,10 +383,15 @@ def step_proxies(
     scale = _fit_scale(clip, harmonized, test, run_kwargs)
     ctx = _eval_context(test)
     out: dict[int, list[Tri]] = {}
-    for f in frames:
+    ordered = sorted(frames)
+    for i, f in enumerate(ordered):
+        prev = ordered[i - 1] if i > 0 else None
         row: list[Tri] = []
         for step in test.steps:
-            values = {get_atom_key(a): _proxy_atom(a, harmonized, scale, f, clip.fps, ctx) for a in _extract_atoms(step.expr)}
+            values = {
+                get_atom_key(a): _proxy_atom(a, harmonized, scale, f, prev, clip.fps, ctx)
+                for a in _extract_atoms(step.expr)
+            }
             row.append(evaluate_expr_tree(step.expr, values))
         out[f] = row
     return out
@@ -378,6 +417,29 @@ def _carried_atoms(steps: list[Step], anchor: int, failing: int) -> list[Atom]:
             if k not in negated and k not in {get_atom_key(x) for x in out}:
                 out.append(a)
     return out
+
+
+def _carry_start(steps: list[Step], anchor: int, failing: int) -> int | None:
+    """Earliest step <= anchor that introduces a carried literal the engine checks in some step in (j, failing].
+
+    engine/steps.py checks every carried literal on EVERY frame of a later step's search unless that step negates it,
+    and breaks at the first F. Keyframes cannot locate that first F, so the dense window must start before the
+    achievement of this step for t* to be exact.
+    """
+    for j in range(anchor + 1):
+        for atom in _extract_positive_relational_atoms(steps[j].expr):
+            key = get_atom_key(atom)
+            if any(key not in _extract_negated_atom_keys(steps[t].expr) for t in range(j + 1, failing + 1)):
+                return j
+    return None
+
+
+def _checks_carried(steps: list[Step], t: int) -> bool:
+    """Does the search of step t check a literal carried from an earlier step?"""
+    negated = _extract_negated_atom_keys(steps[t].expr)
+    return any(
+        get_atom_key(a) not in negated for st in steps[:t] for a in _extract_positive_relational_atoms(st.expr)
+    )
 
 
 def _support_frames(atom: Atom, fps: float) -> int:
@@ -830,27 +892,28 @@ def run_fast(
     harmonized_kf = _harmonize_track_keys(ctx.obs.tracks(), test_obj)
     ctx.timings["stage1_ms"] = (time.perf_counter() - t1) * 1000.0
 
+    def bracket_start(j: int) -> int:
+        sj = seen[j]
+        assert sj is not None
+        prev = max([f for f in kfs if f < sj] + [0])
+        return prev - BRACKET_PAD_FRAMES - _early_limit(test_obj.steps[j], clip.fps)
+
+    def bracket_end(j: int) -> int:
+        sj = seen[j]
+        assert sj is not None
+        return sj + BRACKET_PAD_FRAMES
+
     # ---- G-pass: every step's proxy held -> dense verification windows ----------------------------------------------
     if k == n_steps:
         t2 = time.perf_counter()
-        windows: list[tuple[int, int]] = []
-        for j in range(n_steps):
-            sj = seen[j]
-            assert sj is not None
-            prev = max([f for f in kfs if f < sj] + [0])
-            lead = BRACKET_PAD_FRAMES + _early_limit(test_obj.steps[j], clip.fps)
-            windows.append(pad_window(prev - lead, sj + BRACKET_PAD_FRAMES, n))
-        # Carried literals between two verification windows are only seen at keyframes: a keyframe break there is
-        # not something a PASS may paper over.
-        for j in range(n_steps - 1):
-            lo, hi = seen[j], seen[j + 1]
-            assert lo is not None and hi is not None
-            gap = [f for f in kfs if lo < f < hi and not any(w0 <= f <= w1 for w0, w1 in windows)]
-            for atom in _carried_atoms(test_obj.steps, j, j + 1):
-                broken = [f for f in gap if contact_proxy(harmonized_kf, atom.args[0], atom.args[1], f) == Tri.F]
-                if broken:
-                    ctx.timings["verify_ms"] = (time.perf_counter() - t2) * 1000.0
-                    return fallback(f"G-pass:carried_break_suspected_in_unverified_gap(f={broken[0]})")
+        windows = [pad_window(bracket_start(j), bracket_end(j), n) for j in range(n_steps)]
+        # A step whose search checks a carried literal is covered without gaps from the previous step's bracket to its
+        # own: the engine fails at the first F of a carried literal, which keyframes cannot see.
+        windows += [
+            pad_window(bracket_start(t - 1), bracket_end(t), n)
+            for t in range(1, n_steps)
+            if _checks_carried(test_obj.steps, t)
+        ]
         merged = _merge_windows(windows)
         if ctx.meter.would_exceed(1 + len(merged)):
             ctx.timings["verify_ms"] = (time.perf_counter() - t2) * 1000.0
@@ -909,10 +972,16 @@ def run_fast(
             else:
                 ctx.guards.append(f"G-miss:probe_unresolved(f={m})->keep_bracket")
                 break
-        w0, w1 = pad_window(f_a - lead, f_b + BRACKET_PAD_FRAMES, n)
+        start, end = f_a - lead, f_b + BRACKET_PAD_FRAMES
     else:
         # Failing step never held at any keyframe: the engine decides "unmet" at the last frame, so the window ends there.
-        w0, w1 = pad_window(n - 1, n - 1, n)
+        start, end = n - 1, n - 1
+    # A carried literal checked up to the failure must be watched densely from the step that introduced it.
+    carry_start = _carry_start(test_obj.steps, anchor, k) if has_anchor else None
+    if carry_start is not None:
+        start = min(start, bracket_start(carry_start))
+        ctx.guards.append(f"carry-window:dense_from_step({test_obj.steps[carry_start].name})")
+    w0, w1 = pad_window(start, end, n)
     ctx.timings["stage15_ms"] = (time.perf_counter() - t15) * 1000.0
 
     # ---- Stage 2: dense backward window + residual evaluation (G-miss extends back <= 2x) ------------------------
@@ -925,9 +994,10 @@ def run_fast(
     ctx.window = (w0, w1)
     ctx.timings["stage2_ms"] = (time.perf_counter() - t2) * 1000.0
 
-    first_step = anchor if has_anchor else 0
+    first_step = carry_start if carry_start is not None else (anchor if has_anchor else 0)
     residual = test_obj.steps[first_step:]
-    early = _early_limit(test_obj.steps[anchor], clip.fps) if has_anchor else 0
+    anchor_seen = seen[first_step] if has_anchor else None
+    early = _early_limit(test_obj.steps[first_step], clip.fps) if has_anchor else 0
     eval_ms = 0.0
     for attempt in range(G_MISS_MAX_EXTENSIONS + 1):
         te = time.perf_counter()

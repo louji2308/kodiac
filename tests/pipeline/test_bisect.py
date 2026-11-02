@@ -228,6 +228,69 @@ def test_pass_is_never_declared_from_keyframes_alone(force_bisect: None, tmp_pat
     assert any(g.startswith("G-pass:verification_not_pass") for g in fast.plan.guards_fired)
 
 
+def test_dwell_proxy_follows_dwell_semantics_not_on(force_bisect: None, tmp_path: Path) -> None:
+    """Regression: dwell(A, B) only asks that A stays still (dwell.py ignores B). A proxy built from on(A, B) missed the
+    resting cube at frames 15-30 and turned this PASS into a FAIL."""
+    base, _ = load_green_test(STACKCUBE)
+    dwell = next(a for s in base.steps for a in bisect._extract_atoms(s.expr) if a.name == "dwell")
+    step = base.steps[2].model_copy(update={"index": 1, "name": "dwell", "expr": Expr(op="atom", atom=dwell)})
+    test = base.model_copy(update={"name": "dwell_only", "steps": [step]})
+    clip = open_clip(CLIPS_DIR / "b02_xy_misalignment.mp4")
+    full = run(test=test, clip=clip, output_dir=tmp_path / "full")
+    fast = run_fast(test, clip, FixtureBackend(), output_dir=tmp_path / "fast")
+    assert full.verdict == Verdict.PASS
+    assert fast.result.verdict == Verdict.PASS
+    assert fast.result.steps[0].frame == full.steps[0].frame
+
+
+def test_carry_start_finds_the_step_that_introduces_a_checked_literal() -> None:
+    steps = load_green_test(STACKCUBE)[0].steps  # grasp: moves_with ∧ lifted · place: on · release: ¬moves_with ∧ dwell
+    assert bisect._carry_start(steps, anchor=0, failing=1) == 0
+    assert bisect._carry_start(steps, anchor=1, failing=2) == 0  # checked while searching `place`
+    assert bisect._carry_start(_lift_test().steps, anchor=0, failing=0) is None
+    assert bisect._checks_carried(steps, 1) and not bisect._checks_carried(steps, 2)
+
+
+def _pool_episode(name: str) -> tuple[Clip, dict[str, Track], dict]:
+    import importlib.util
+
+    import numpy as np
+
+    spec = importlib.util.spec_from_file_location("_ve", Path("scripts/validate_engine.py"))
+    assert spec is not None and spec.loader is not None
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    npz = np.load(Path("experiments/pool/episodes") / f"{name}.state.npz")
+    tracks = mod.build_synthetic_tracks_from_obs(npz["obs_state"], npz["cam_K"])
+    clip = Clip(
+        ref={"uri": f"sim://pool/{name}", "source_kind": "sim"},
+        path_h264=f"experiments/pool/episodes/{name}.mp4",
+        fps=30.0,
+        n_frames=len(npz["obs_state"]),
+        width=640,
+        height=480,
+        sha256=f"pool-{name}",
+    )
+    return clip, tracks, {"cam_K": npz["cam_K"], "cam_extrinsic": npz["cam_extrinsic"]}
+
+
+def test_bisect_t_star_exact_on_mock_episode_with_carried_break(tmp_path: Path) -> None:
+    """Regression: the engine breaks at the FIRST F of carried moves_with (any pause makes it F). Watching it only at
+    keyframes put t* at 106 instead of 54; the carried interval is now tracked densely. Synthetic tracks from mock state."""
+    clip, tracks, cam = _pool_episode("ep_00000_calibration")
+    assert clip.n_frames > bisect.MIN_BISECT_FRAMES  # default policy runs the bisect
+    full = run(test=STACKCUBE, clip=clip, tracks=tracks, output_dir=tmp_path / "full", **cam)
+    names = {"cube_a": "cubeA", "cube_b": "cubeB", "gripper": "gripper"}
+    seg = _Replay({k: tracks[v] for k, v in names.items()})
+    fast = run_fast(STACKCUBE, clip, seg, output_dir=tmp_path / "fast", **cam)
+    assert fast.result.backends["mode"] == "fast"
+    assert fast.plan.stage1_frames and fast.plan.stage1_frames[-1] == clip.n_frames - 1
+    assert any(g.startswith("carry-window:dense_from_step(grasp)") for g in fast.plan.guards_fired)
+    assert fast.result.verdict == full.verdict == Verdict.FAIL
+    assert _decisive(full.steps) == 54
+    assert abs(_decisive(fast.result.steps) - _decisive(full.steps)) <= 2
+
+
 def test_g_alias_records_effector_resolved_through_alias_prompts(force_bisect: None, tmp_path: Path) -> None:
     clip = open_clip(CLIPS_DIR / "correct_run.mp4")
     test = _lift_test()
