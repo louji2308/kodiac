@@ -1,0 +1,259 @@
+{
+  "schema": "kodiac.gate_refusals/v1",
+  "generated_at": "2026-11-02T04:01:11.220422+00:00",
+  "generated_by": "$env:KODIAC_WRITE_GATE_ARTIFACT='1'; .venv\\Scripts\\python.exe -m pytest tests/loop/test_gate.py -q -p no:cacheprovider --basetemp=.cache\\pt_t04_artifact",
+  "backend": "kinematic_mock",
+  "is_mock": true,
+  "label": "[MOCK SIMULATION · NOT SAPIEN PHYSICS]",
+  "evidence_type": "kinematic_mock_replay + synthetic tracks projected from sim state (not perception)",
+  "test": "examples/stackcube.green (copied into a temp workspace)",
+  "script": "examples/sim/pick_place.py copies; bug copies flip the default bug_id of execute_pick_place",
+  "note": "Recorded by the test suite against temporary workspaces. Exit 2 = stop blocked, 0 = stop allowed. The privileged oracle is never part of the gate decision; bug_matrix lists it only as a cross-check.",
+  "attacks": [
+    {
+      "attack": "no_init",
+      "description": "workspace never initialised with `Kodiac gate --init`: unrelated sessions are not blocked",
+      "exit_code": 0,
+      "stderr_first_line": "gate: no `Kodiac gate --init` state for this workspace; not gating",
+      "backend": "kinematic_mock",
+      "is_mock": true
+    },
+    {
+      "attack": "b01_with_cached_pass_from_other_script",
+      "description": "pinned script is the B01 (early release) copy; .Kodiac/last_verdict.json and runs/<id>/result.json hold a genuine PASS earned by a different, correct script (pick_place_fixed.py): ignored, the gate re-runs the pinned script and refuses with blame",
+      "exit_code": 2,
+      "stderr_first_line": "GATE BLOCKED [MOCK SIMULATION]: stackcube FAIL on a fresh re-run of examples/sim/pick_place.py (seed 0); goal NOT verified",
+      "backend": "kinematic_mock",
+      "is_mock": true
+    },
+    {
+      "attack": "correct_script_ground_truth",
+      "description": "reference pick_place.py: the gate allows the stop (PASS on mock)",
+      "exit_code": 0,
+      "stderr_first_line": "GATE PASS [MOCK SIMULATION]: stackcube PASS on a fresh re-run of examples/sim/pick_place.py (seed 0); goal verified",
+      "backend": "kinematic_mock",
+      "is_mock": true
+    },
+    {
+      "attack": "stale_pass_after_code_edit_with_stop_hook_active",
+      "description": "after a PASS the script is edited back to B01 and the hook says stop_hook_active=true: no stale PASS, no auto-pass; fresh re-run refuses",
+      "exit_code": 2,
+      "stderr_first_line": "GATE BLOCKED [MOCK SIMULATION]: stackcube FAIL on a fresh re-run of examples/sim/pick_place.py (seed 0); goal NOT verified",
+      "backend": "kinematic_mock",
+      "is_mock": true
+    },
+    {
+      "attack": "test_modified",
+      "description": "agent loosened align_xy_cm<=3.33 to <=30 in the pinned .green",
+      "exit_code": 2,
+      "stderr_first_line": "GATE BLOCKED [MOCK SIMULATION]: test modified since `Kodiac gate --init` (tests/stackcube.green: pinned sha256 3a9d0a1e8cc0, now 9d9f517c291a); goal NOT verified",
+      "backend": "kinematic_mock",
+      "is_mock": true
+    },
+    {
+      "attack": "config_modified_lock",
+      "description": "agent created/edited the .green.lock threshold sidecar after --init",
+      "exit_code": 2,
+      "stderr_first_line": "GATE BLOCKED [MOCK SIMULATION]: config modified since `Kodiac gate --init` (tests/stackcube.green.lock); goal NOT verified",
+      "backend": "kinematic_mock",
+      "is_mock": true
+    },
+    {
+      "attack": "config_modified_toml",
+      "description": "agent added a Kodiac.toml threshold override after --init",
+      "exit_code": 2,
+      "stderr_first_line": "GATE BLOCKED [MOCK SIMULATION]: config modified since `Kodiac gate --init` (Kodiac.toml); goal NOT verified",
+      "backend": "kinematic_mock",
+      "is_mock": true
+    },
+    {
+      "attack": "engine_source_modified",
+      "description": "agent edited the grader's own predicate source (predicates/on.py)",
+      "exit_code": 2,
+      "stderr_first_line": "GATE BLOCKED [MOCK SIMULATION]: Kodiac engine source modified since `Kodiac gate --init`; goal NOT verified",
+      "backend": "kinematic_mock",
+      "is_mock": true
+    },
+    {
+      "attack": "pin_file_edited_inside_workspace",
+      "description": "agent edited the test and planted a re-digested pin file + gate_state.json inside the workspace: no effect",
+      "exit_code": 2,
+      "stderr_first_line": "GATE BLOCKED [MOCK SIMULATION]: test modified since `Kodiac gate --init` (tests/stackcube.green: pinned sha256 3a9d0a1e8cc0, now 9d9f517c291a); goal NOT verified",
+      "backend": "kinematic_mock",
+      "is_mock": true
+    },
+    {
+      "attack": "pin_file_edited_outside_workspace_naively",
+      "description": "pinned sha edited without the self-digest",
+      "exit_code": 2,
+      "stderr_first_line": "GATE ERROR: pin file digest mismatch (edited or corrupted outside the gate) (fail closed; goal NOT verified)",
+      "backend": "kinematic_mock",
+      "is_mock": true
+    },
+    {
+      "attack": "pin_file_corrupt",
+      "description": "pin file overwritten with garbage",
+      "exit_code": 2,
+      "stderr_first_line": "GATE ERROR: pin file unreadable or not valid JSON: <repo>\\.cache\\pt_t04_artifact\\test_tampered_corrupt_or_missi0\\gate_home\\79b088e64e9c644d89d28e5df5e0d6c3f7533e1c2a97b3cbd03fba464e4c282c.json (fail closed; goal NOT verified)",
+      "backend": "kinematic_mock",
+      "is_mock": true
+    },
+    {
+      "attack": "pin_file_deleted",
+      "description": "pin file deleted while the workspace marker remains",
+      "exit_code": 2,
+      "stderr_first_line": "GATE ERROR: pin file missing at <repo>\\.cache\\pt_t04_artifact\\test_tampered_corrupt_or_missi0\\gate_home\\79b088e64e9c644d89d28e5df5e0d6c3f7533e1c2a97b3cbd03fba464e4c282c.json although this workspace was initialised (pins were written to <repo>\\.cache\\pt_t04_artifact\\test_tampered_corrupt_or_missi0\\gate_home\\79b088e64e9c644d89d28e5df5e0d6c3f7533e1c2a97b3cbd03fba464e4c282c.json) (fail closed; goal NOT verified)",
+      "backend": "kinematic_mock",
+      "is_mock": true
+    },
+    {
+      "attack": "env_file_corrupt",
+      "description": "pinned KODIAC_ENV_FILE has an unparsable line (value never echoed)",
+      "exit_code": 2,
+      "stderr_first_line": "GATE ERROR: env file <repo>\\.cache\\pt_t04_artifact\\test_missing_or_corrupt_env_fi0\\secrets\\kodiac.env line 2 is not KEY=VALUE (fail closed; goal NOT verified)",
+      "backend": "kinematic_mock",
+      "is_mock": true
+    },
+    {
+      "attack": "env_file_missing",
+      "description": "pinned KODIAC_ENV_FILE deleted",
+      "exit_code": 2,
+      "stderr_first_line": "GATE ERROR: env file not found: <repo>\\.cache\\pt_t04_artifact\\test_missing_or_corrupt_env_fi0\\secrets\\kodiac.env (fail closed; goal NOT verified)",
+      "backend": "kinematic_mock",
+      "is_mock": true
+    },
+    {
+      "attack": "max_blocks_exhausted",
+      "description": "two refusals with max_blocks=2: the stop is allowed, labelled NOT verified",
+      "exit_code": 0,
+      "stderr_first_line": "GATE EXHAUSTED: goal NOT verified (2/2 blocks used); the stop is allowed only so the session can end; treat this run as a FAILURE",
+      "backend": "kinematic_mock",
+      "is_mock": true
+    },
+    {
+      "attack": "sim_crash",
+      "description": "pinned script raises inside run(robot)",
+      "exit_code": 2,
+      "stderr_first_line": "GATE ERROR: sim run failed: sim script crashed (child exit code 1):   File \"<repo>\\.cache\\pt_t04_artifact\\test_sim_crash_fails_closed0\\ws\\examples\\sim\\pick_place.py\", line 3, in run |     raise RuntimeError('controller exploded') | RuntimeError: controller exploded (fail closed; goal NOT verified)",
+      "backend": "kinematic_mock",
+      "is_mock": true
+    },
+    {
+      "attack": "teleport_arm",
+      "description": "script jumps the end effector across the table in one control step",
+      "exit_code": 2,
+      "stderr_first_line": "GATE ERROR: sim run failed: control step 0 commands 22.8 cm of end-effector travel in 1/30 s (limit 5 cm per step); teleporting the arm is not a valid robot motion (fail closed; goal NOT verified)",
+      "backend": "kinematic_mock",
+      "is_mock": true
+    },
+    {
+      "attack": "script_stubs_oracle_engine_gate_and_teleports_cube",
+      "description": "script monkeypatches oracle_success/pipeline.run/gate_check, sets KODIAC_* env vars, writes a PASS .Kodiac/last_verdict.json and a PASS file, then writes the cube onto the target in sim state: the gate re-simulates only the commanded actions in its own process and refuses",
+      "exit_code": 2,
+      "stderr_first_line": "GATE BLOCKED [MOCK SIMULATION]: stackcube FAIL on a fresh re-run of examples/sim/pick_place.py (seed 0); goal NOT verified",
+      "backend": "kinematic_mock",
+      "is_mock": true
+    }
+  ],
+  "bug_matrix": [
+    {
+      "script": "correct",
+      "gate_exit_code": 0,
+      "verdict": "PASS",
+      "oracle_success_crosscheck": true,
+      "honest_outcome": "agree",
+      "stderr_first_line": "GATE PASS [MOCK SIMULATION]: stackcube PASS on a fresh re-run of examples/sim/pick_place.py (seed 0); goal verified",
+      "code_location_line": null
+    },
+    {
+      "script": "B01",
+      "gate_exit_code": 2,
+      "verdict": "FAIL",
+      "oracle_success_crosscheck": false,
+      "honest_outcome": "agree",
+      "stderr_first_line": "GATE BLOCKED [MOCK SIMULATION]: stackcube FAIL on a fresh re-run of examples/sim/pick_place.py (seed 0); goal NOT verified",
+      "code_location_line": "code: .cache/pt_t04_artifact/test_bug_matrix_for_artifact_B0/ws/examples/sim/pick_place.py:83 -> robot.gripper.open(steps=15)"
+    },
+    {
+      "script": "B02",
+      "gate_exit_code": 2,
+      "verdict": "FAIL",
+      "oracle_success_crosscheck": false,
+      "honest_outcome": "agree",
+      "stderr_first_line": "GATE BLOCKED [MOCK SIMULATION]: stackcube FAIL on a fresh re-run of examples/sim/pick_place.py (seed 0); goal NOT verified",
+      "code_location_line": "code: .cache/pt_t04_artifact/test_bug_matrix_for_artifact_B1/ws/examples/sim/pick_place.py:104 -> robot.arm.move_to(place_pose)"
+    },
+    {
+      "script": "B03",
+      "gate_exit_code": 2,
+      "verdict": "FAIL",
+      "oracle_success_crosscheck": false,
+      "honest_outcome": "agree",
+      "stderr_first_line": "GATE BLOCKED [MOCK SIMULATION]: stackcube FAIL on a fresh re-run of examples/sim/pick_place.py (seed 0); goal NOT verified",
+      "code_location_line": "code: .cache/pt_t04_artifact/test_bug_matrix_for_artifact_B2/ws/examples/sim/pick_place.py:66 -> robot.arm.lift(distance=0.005)"
+    },
+    {
+      "script": "B04",
+      "gate_exit_code": 0,
+      "verdict": "PASS",
+      "oracle_success_crosscheck": false,
+      "honest_outcome": "DISAGREE (engine false PASS)",
+      "stderr_first_line": "GATE PASS [MOCK SIMULATION]: stackcube PASS on a fresh re-run of examples/sim/pick_place.py (seed 0); goal verified",
+      "code_location_line": null
+    },
+    {
+      "script": "B05",
+      "gate_exit_code": 2,
+      "verdict": "FAIL",
+      "oracle_success_crosscheck": false,
+      "honest_outcome": "agree",
+      "stderr_first_line": "GATE BLOCKED [MOCK SIMULATION]: stackcube FAIL on a fresh re-run of examples/sim/pick_place.py (seed 0); goal NOT verified",
+      "code_location_line": "code: .cache/pt_t04_artifact/test_bug_matrix_for_artifact_B4/ws/examples/sim/pick_place.py:39 -> robot.arm.move_to(pre_grasp)"
+    },
+    {
+      "script": "B06",
+      "gate_exit_code": 2,
+      "verdict": "FAIL",
+      "oracle_success_crosscheck": false,
+      "honest_outcome": "agree",
+      "stderr_first_line": "GATE BLOCKED [MOCK SIMULATION]: stackcube FAIL on a fresh re-run of examples/sim/pick_place.py (seed 0); goal NOT verified",
+      "code_location_line": "code: .cache/pt_t04_artifact/test_bug_matrix_for_artifact_B5/ws/examples/sim/pick_place.py:39 -> robot.arm.move_to(pre_grasp)"
+    },
+    {
+      "script": "B07",
+      "gate_exit_code": 2,
+      "verdict": "FAIL",
+      "oracle_success_crosscheck": false,
+      "honest_outcome": "agree",
+      "stderr_first_line": "GATE BLOCKED [MOCK SIMULATION]: stackcube FAIL on a fresh re-run of examples/sim/pick_place.py (seed 0); goal NOT verified",
+      "code_location_line": "code: .cache/pt_t04_artifact/test_bug_matrix_for_artifact_B6/ws/examples/sim/pick_place.py:39 -> robot.arm.move_to(pre_grasp)"
+    },
+    {
+      "script": "B08",
+      "gate_exit_code": 2,
+      "verdict": "FAIL",
+      "oracle_success_crosscheck": false,
+      "honest_outcome": "agree",
+      "stderr_first_line": "GATE BLOCKED [MOCK SIMULATION]: stackcube FAIL on a fresh re-run of examples/sim/pick_place.py (seed 0); goal NOT verified",
+      "code_location_line": "code: .cache/pt_t04_artifact/test_bug_matrix_for_artifact_B7/ws/examples/sim/pick_place.py:39 -> robot.arm.move_to(pre_grasp)"
+    },
+    {
+      "script": "B09",
+      "gate_exit_code": 0,
+      "verdict": "PASS",
+      "oracle_success_crosscheck": false,
+      "honest_outcome": "DISAGREE (engine false PASS)",
+      "stderr_first_line": "GATE PASS [MOCK SIMULATION]: stackcube PASS on a fresh re-run of examples/sim/pick_place.py (seed 0); goal verified",
+      "code_location_line": null
+    },
+    {
+      "script": "B10",
+      "gate_exit_code": 2,
+      "verdict": "FAIL",
+      "oracle_success_crosscheck": false,
+      "honest_outcome": "agree",
+      "stderr_first_line": "GATE BLOCKED [MOCK SIMULATION]: stackcube FAIL on a fresh re-run of examples/sim/pick_place.py (seed 0); goal NOT verified",
+      "code_location_line": "code: .cache/pt_t04_artifact/test_bug_matrix_for_artifact_B9/ws/examples/sim/pick_place.py:91 -> robot.arm.move_to(pre_place)"
+    }
+  ]
+}

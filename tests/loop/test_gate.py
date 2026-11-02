@@ -14,6 +14,7 @@ import io
 import json
 import os
 import sys
+import tempfile
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -58,13 +59,21 @@ def pick_place_source(bug: str | None = None) -> str:
     return src if bug is None else src.replace(_SIG, _SIG.replace("= None", f'= "{bug}"'))
 
 
+def _scrub(text: str) -> str:
+    """Keep machine-specific absolute paths (and the user name in them) out of the committed artifact."""
+    for root, label in ((REPO_ROOT, "<repo>"), (Path(tempfile.gettempdir()), "<tmp>"), (Path.home(), "~")):
+        for variant in {str(root), root.as_posix()}:
+            text = text.replace(variant, label)
+    return text
+
+
 def record(attack: str, description: str, code: int, message: str) -> None:
     _RECORDS.append(
         {
             "attack": attack,
             "description": description,
             "exit_code": code,
-            "stderr_first_line": message.splitlines()[0] if message else "",
+            "stderr_first_line": _scrub(message.splitlines()[0]) if message else "",
             "backend": "kinematic_mock",
             "is_mock": True,
         }
@@ -616,7 +625,8 @@ def test_bug_matrix_for_artifact(ws: Path, bug: str | None) -> None:
                 "agree" if (code == 0) == bool(last.get("oracle_success_crosscheck")) else "DISAGREE (engine false PASS)"
                 if code == 0 else "DISAGREE (gate refused an oracle success)"
             ),
-            "stderr_first_line": msg.splitlines()[0],
+            "stderr_first_line": _scrub(msg.splitlines()[0]),
+            "code_location_line": next((_scrub(ln.strip()) for ln in msg.splitlines() if ln.strip().startswith("code:")), None),
         }
     )
     assert code in (0, 2)

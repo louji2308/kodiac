@@ -336,7 +336,9 @@ def _load_pred_frames(trace_path: Path) -> dict[str, list[PredFrame]]:
     return frames
 
 
-def _try_blame(result: RunResult, test: GreenTest, fps: float) -> tuple[Blame | None, str | None]:
+def _try_blame(
+    result: RunResult, test: GreenTest, fps: float, spans: list[SimSpan]
+) -> tuple[Blame | None, str | None]:
     blame_from_run = None
     for mod in ("Kodiac_robotics.blame", "Kodiac_robotics.blame.validate"):
         try:
@@ -347,9 +349,21 @@ def _try_blame(result: RunResult, test: GreenTest, fps: float) -> tuple[Blame | 
             break
     if blame_from_run is None:
         return None, "blame module not available yet"
+    extra: dict[str, Any] = {}
+    if spans:
+        extra["spans"] = spans  # sim-span disambiguation (ARCHITECTURE §9): release-before-place vs place_z
+    try:
+        from Kodiac_robotics.blame.hint import make_hint
+
+        extra["hint_fn"] = make_hint
+    except Exception:
+        pass
     try:
         pred_frames = _load_pred_frames(Path(result.trace_path))
-        blame = blame_from_run(result, test, pred_frames, fps)
+        try:
+            blame = blame_from_run(result, test, pred_frames, fps, **extra)
+        except TypeError:
+            blame = blame_from_run(result, test, pred_frames, fps)
     except Exception as exc:
         return None, f"blame failed ({type(exc).__name__})"
     if blame is not None and not isinstance(blame, Blame):
@@ -406,7 +420,11 @@ def _explain(result: RunResult, test: GreenTest, test_path: Path, sim: SimRunRes
     if result.reasons:
         lines.append(f"  verdict reasons: {', '.join(r.value for r in result.reasons)}")
 
-    blame, why_not = _try_blame(result, test, sim.fps)
+    try:
+        spans = load_spans(sim.spans_path)
+    except Exception:
+        spans = []
+    blame, why_not = _try_blame(result, test, sim.fps, spans)
     if blame is not None:
         summary = re.sub(r"^\s*blame:\s*", "", blame.summary)
         lines.append(f"  blame: {summary} (summary: {blame.summary_source})")
@@ -419,10 +437,6 @@ def _explain(result: RunResult, test: GreenTest, test_path: Path, sim: SimRunRes
     predicate = None
     if step is not None and step.decisive:
         predicate = min(step.decisive, key=lambda c: c.margin).name.split(".")[0]
-    try:
-        spans = load_spans(sim.spans_path)
-    except Exception:
-        spans = []
     loc = _code_location(spans, blame, step.frame if step else None, predicate, sim.fps)
     if loc is not None:
         lines.append(f"  code: {loc.file}:{loc.line} -> {loc.code}")
