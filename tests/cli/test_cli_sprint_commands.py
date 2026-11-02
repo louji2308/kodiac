@@ -119,3 +119,77 @@ def test_audit_and_loop_subcommands_registered(runner: CliRunner) -> None:
     loop = runner.invoke(app, ["loop", "--help"])
     assert loop.exit_code == 0
     assert "init" in loop.stdout and "eval" in loop.stdout
+
+
+# ---------------------------------------------------------------------------
+# Simulated-episode path: the only non-degenerate verdict source in this repo.
+# These tests protect two things at once: the wiring, and the promise that a
+# sim grade is never dressed up as perception.
+# ---------------------------------------------------------------------------
+
+SIM = "examples/sim/pick_place.py"
+
+
+def test_run_sim_episode_is_labelled_as_synthetic(runner: CliRunner, tmp_path: Path) -> None:
+    """An unpatched sim episode PASSes and every badge says the tracks came from sim state."""
+    res = runner.invoke(
+        app, ["run", TEST, "--sim", SIM, "--seed", "0", "--json", "--output", str(tmp_path)]
+    )
+    assert res.exit_code == 0, res.stdout
+    payload = json.loads(res.stdout)
+    assert payload["verdict"] == "PASS"
+    badges = " ".join(payload["badges"])
+    assert "[SIM]" in badges
+    assert "SYNTHETIC TRACKS FROM SIM STATE" in badges
+    assert "MOCK SIMULATION" in badges
+    # The false claim that killed credibility on the video path must never reappear here.
+    assert "CACHED SAM 3.1" not in badges
+
+
+def test_run_sim_episode_with_seeded_bug_fails(runner: CliRunner, tmp_path: Path) -> None:
+    """Injecting B01 turns the same episode into a FAIL and says how the bug got in."""
+    res = runner.invoke(
+        app,
+        ["run", TEST, "--sim", SIM, "--bug", "B01", "--seed", "0", "--json", "--output", str(tmp_path)],
+    )
+    assert res.exit_code == 1, res.stdout
+    payload = json.loads(res.stdout)
+    assert payload["verdict"] == "FAIL"
+    badges = " ".join(payload["badges"])
+    assert "[SIM BUG B01: injected via patch]" in badges
+    assert "SYNTHETIC TRACKS FROM SIM STATE" in badges
+
+
+def test_blame_sim_episode_returns_tstar_and_source_line(runner: CliRunner, tmp_path: Path) -> None:
+    """`blame --sim --bug` attributes the failure to a frame and the actuation line that caused it."""
+    res = runner.invoke(
+        app,
+        ["blame", TEST, "--sim", SIM, "--bug", "B01", "--seed", "0", "--json", "--output", str(tmp_path)],
+    )
+    assert res.exit_code == 1, res.stdout
+    payload = json.loads(res.stdout)
+    assert payload["verdict"] == "FAIL"
+    blame = payload["blame"]
+    assert blame is not None
+    facts = blame["facts"]
+    assert facts["transition"] == "T->F"
+    assert facts["frame"] > 0
+    assert facts["t_star_s"] > 0
+    assert facts["sigma_frames"] >= 0
+    assert facts["facts"], "a blame without measured facts is not a blame"
+    loc = facts["code_location"]
+    assert loc is not None, "the sim path must point at the actuation line"
+    assert loc["line"] > 0
+    assert loc["code"].strip()
+    assert loc["file"]
+
+
+def test_run_requires_exactly_one_input(runner: CliRunner) -> None:
+    """Neither a clip nor --sim (or both) is a usage error, never a silent guess."""
+    neither = runner.invoke(app, ["run", TEST, "--json"])
+    assert neither.exit_code == 3
+    assert "exactly one" in json.loads(neither.stdout)["error"]
+    both = runner.invoke(app, ["run", TEST, B01, "--sim", SIM, "--json"])
+    assert both.exit_code == 3
+    assert "exactly one" in json.loads(both.stdout)["error"]
+

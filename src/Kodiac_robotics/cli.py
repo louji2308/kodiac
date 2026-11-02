@@ -81,8 +81,17 @@ def run_command(
         help="Path to .green test specification or JSON file.",
     ),
     clip_path: str = typer.Argument(
-        ...,
-        help="Path to video clip, lerobot:// URI, or file:// URI.",
+        None,
+        help="Path to video clip, lerobot:// URI, or file:// URI (omit when using --sim).",
+    ),
+    sim: str = typer.Option(
+        None,
+        "--sim",
+        help="Grade a simulated episode from this script instead of a video clip.",
+    ),
+    seed: int = typer.Option(0, "--seed", help="Simulation seed (with --sim)."),
+    bug: str = typer.Option(
+        None, "--bug", help="Inject a seeded bug (B01..B10) into the sim script copy (with --sim)."
     ),
     mode: str = typer.Option(
         "full",
@@ -113,13 +122,41 @@ def run_command(
         help="Custom output directory for run artifacts (default: runs/<id>).",
     ),
 ) -> None:
-    """Executes a Green test over a video clip.
+    """Executes a Green test over a video clip or a simulated episode.
 
     Evaluates perceptual tracking, metric scale models, uncertainty gates G1-G6,
     and Kleene step chain logic. Returns exit codes: 0 (PASS), 1 (FAIL), 2 (CAN'T TELL), 3 (ERROR).
+
+    With ``--sim script.py`` the episode is recorded by the sim runner and graded by the same
+    pipeline; every badge then says the tracks are synthetic projections of simulator state.
     """
+    if bool(sim) == bool(clip_path):
+        message = "pass exactly one of a clip path or --sim <script.py>"
+        if json_output:
+            typer.echo(json.dumps({"error": message, "exit_code": 3}))
+        else:
+            typer.echo(message, err=True)
+        raise typer.Exit(code=3)
+    if bug and not sim:
+        message = "--bug needs --sim <script.py>"
+        if json_output:
+            typer.echo(json.dumps({"error": message, "exit_code": 3}))
+        else:
+            typer.echo(message, err=True)
+        raise typer.Exit(code=3)
+
     try:
-        if mode == "fast":
+        if sim:
+            if mode == "fast":
+                typer.echo("--mode fast needs a clip (the bisect path has no sim segmenter)", err=True)
+                raise typer.Exit(code=3)
+            if render_card:
+                typer.echo("--card currently needs a clip run", err=True)
+                raise typer.Exit(code=3)
+            run_res, _sim_res = _run_sim_episode(
+                test_path, sim, seed=seed, output_dir=output_dir, bug=bug
+            )
+        elif mode == "fast":
             if render_card:
                 typer.echo("--card needs --mode full (the fast path does not render a card)", err=True)
                 raise typer.Exit(code=3)
@@ -892,10 +929,94 @@ def _execute_fast(
     return result
 
 
+def _load_sim_spans(spans_path: str | Path) -> list[Any]:
+    """Read ``spans.jsonl`` into ``SimSpan`` objects (empty if the file is missing or unreadable).
+
+    Spans are *not* an engine input: they are only used after the verdict, to point blame at the
+    source line that actuated the failing step.
+    """
+    path = Path(spans_path)
+    if not path.is_file():
+        return []
+    from Kodiac_robotics.sim.spans import SimSpan
+
+    spans: list[Any] = []
+    for line in path.read_text(encoding="utf-8").splitlines():
+        line = line.strip()
+        if not line:
+            continue
+        try:
+            spans.append(SimSpan.model_validate(json.loads(line)))
+        except Exception:  # noqa: BLE001 - a malformed span must not hide the blame
+            continue
+    return spans
+
+
+def _run_sim_episode(
+    test_path: str,
+    sim_path: str,
+    *,
+    seed: int,
+    output_dir: Path | None,
+    bug: str | None = None,
+) -> tuple[Any, Any]:
+    """Record one episode from a sim script and grade it with the same pipeline a video uses.
+
+    Returns ``(RunResult, SimRunResult)``. The grader projects tracks from simulator state, so every
+    badge it emits says the tracks are synthetic; the mock backend is labelled as a mock. This is the
+    only path that produces a non-degenerate FAIL/PASS (the golden Tier C clips abstain), which is
+    exactly why it must stay clearly labelled and must never be described as perception.
+
+    ``bug`` materialises a copy of the script with one seeded bug injected and badges how it was
+    injected (``patch`` when the shipped diff applies, ``bug_id_pin`` when it had to fall back).
+    """
+    from Kodiac_robotics.loop.gate import grade_sim_run
+    from Kodiac_robotics.sim.runner import run_script
+
+    suffix = f"-{bug.upper()}" if bug else ""
+    base = (
+        Path(output_dir)
+        if output_dir
+        else Path(".cache/sim_runs") / f"{Path(sim_path).stem}-s{seed}{suffix}"
+    )
+    base = base.resolve()
+    script = Path(sim_path).resolve()
+
+    injection: str | None = None
+    if bug:
+        from Kodiac_robotics.proof.loop_eval import inject_bug
+        from Kodiac_robotics.sim.bugs import get_bug
+
+        spec = get_bug(bug.upper())
+        patch = Path(spec.patch_path) if spec.patch_path else None
+        script = base / "script" / f"{Path(sim_path).stem}_{bug.upper()}.py"
+        script.parent.mkdir(parents=True, exist_ok=True)
+        script.write_text(Path(sim_path).read_text(encoding="utf-8"), encoding="utf-8")
+        injection = inject_bug(script, bug.upper(), patch)
+
+    sim_res = run_script(script, seed, base / "episode")
+    # grade_sim_run() chdirs into the output directory, so the test path must be absolute.
+    run_res = grade_sim_run(Path(test_path).resolve(), sim_res, base / "graded")
+    if injection:
+        badge = f"[SIM BUG {bug.upper()}: injected via {injection}]"
+        if badge not in run_res.badges:
+            run_res.badges.append(badge)
+    return run_res, sim_res
+
+
 @app.command(name="blame")
 def blame_command(
     test_path: str = typer.Argument(..., help="Path to .green test specification."),
-    clip_path: str = typer.Argument(..., help="Path to the failed clip, file:// URI, or lerobot:// URI."),
+    clip_path: str = typer.Argument(
+        None, help="Path to the failed clip, file:// URI, or lerobot:// URI (or use --sim)."
+    ),
+    sim: str = typer.Option(
+        None, "--sim", help="Grade a simulated episode from this script instead of a clip."
+    ),
+    seed: int = typer.Option(0, "--seed", help="Simulation seed (with --sim)."),
+    bug: str = typer.Option(
+        None, "--bug", help="Inject a seeded bug (B01..B10) into the sim script copy (with --sim)."
+    ),
     camera: str = typer.Option(None, "--camera", "-c", help="Camera calibration tier: tier_a, tier_b, tier_c."),
     output_dir: Path = typer.Option(None, "--output", "-o", help="Run artifact directory."),
     json_output: bool = typer.Option(False, "--json", help="Emit pure JSON only."),
@@ -905,19 +1026,47 @@ def blame_command(
     Runs the test, reads the per-frame predicate trace, then reports the transition, the refined
     onset with its bootstrap sigma, the measured facts behind it, an actionable hint and (for sim
     runs) the source line. `blame` is defined only for FAIL: PASS and CAN'T TELL exit unchanged.
+
+    Pass ``--sim script.py`` to blame a simulated attempt instead of a video; ``--bug B01`` injects a
+    seeded bug into a copy of that script first, and the source line then comes from recorded spans.
     """
     from Kodiac_robotics.blame.transitions import load_trace_pred_frames
     from Kodiac_robotics.blame.validate import blame_from_run
     from Kodiac_robotics.io.clip import open_clip
 
+    if bool(sim) == bool(clip_path):
+        message = "pass exactly one of a clip path or --sim <script.py>"
+        if json_output:
+            typer.echo(json.dumps({"error": message, "exit_code": 3}))
+        else:
+            typer.echo(message, err=True)
+        raise typer.Exit(code=3)
+    if bug and not sim:
+        message = "--bug needs --sim <script.py>"
+        if json_output:
+            typer.echo(json.dumps({"error": message, "exit_code": 3}))
+        else:
+            typer.echo(message, err=True)
+        raise typer.Exit(code=3)
+
+    spans: list[Any] = []
+    fps = 30.0
     try:
-        run_res = execute_run(
-            test=test_path,
-            clip=clip_path,
-            backend="fixture",
-            output_dir=output_dir,
-            camera=camera,  # type: ignore[arg-type]
-        )
+        if sim:
+            run_res, sim_res = _run_sim_episode(
+                test_path, sim, seed=seed, output_dir=output_dir, bug=bug
+            )
+            fps = float(sim_res.fps)
+            spans = _load_sim_spans(sim_res.spans_path)
+        else:
+            run_res = execute_run(
+                test=test_path,
+                clip=clip_path,
+                backend="fixture",
+                output_dir=output_dir,
+                camera=camera,  # type: ignore[arg-type]
+            )
+            fps = float(open_clip(clip_path).fps)
     except Exception as exc:  # noqa: BLE001 - surfaced as exit 3 with the real message
         if json_output:
             typer.echo(json.dumps({"error": str(exc), "exit_code": 3}))
@@ -959,14 +1108,20 @@ def blame_command(
         from Kodiac_robotics.pipeline.loader import load_green_test
 
         test_obj, _ = load_green_test(test_path)
-        clip_obj = open_clip(clip_path)
         frames = load_trace_pred_frames(run_res.trace_path)
+        locator = None
+        if spans:
+            from Kodiac_robotics.blame.codeloc import locate_code
+
+            locator = lambda frame, component: locate_code(spans, frame, component)  # noqa: E731
         blame = blame_from_run(
             run_res,
             test_obj,
             frames,
-            clip_obj.fps,
+            fps,
             hint_fn=hint_fn,
+            spans=spans or None,
+            code_locator=locator,
         )
     except Exception as exc:  # noqa: BLE001
         if json_output:
