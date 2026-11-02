@@ -2,7 +2,7 @@
 
 ```yaml
 phase: P06-P10 compressed sprint (ADR-0014)
-stage: BUILD (integration) + REVIEW pending; T13 is the only open build task
+stage: REVIEW / GATE (all build tasks T01-T15 done; test reconciliation done; replays precomputed; README in sync)
 updated: 2026-11-02 by ORCH
 deadline:
   feature_freeze: 2026-11-04T04:59:00Z
@@ -14,9 +14,8 @@ schedule_status: >-
   as one integrated build on main, not per-phase branches.
 
 runtime_note: >-
-  Anthropic API credits are exhausted ("your credit balance is too low"), so no further Opus/Sonnet sessions can
-  be spawned. Remaining work runs on free OpenCode models (flint-40b-free for correctness, glm-5.3-flash-free for
-  mechanical edits) or is done by ORCH directly.
+  Antigravity parallel execution used across 4 concurrent subagent tracks (engine correctness, test reconciliation,
+  replays & site, status & compliance). All 4 tracks converged and committed.
 
 tracks:
   done:
@@ -32,19 +31,15 @@ tracks:
     T10 audit tooling          : DEMONSTRATION DATA banner, publish refusal matrix
     T11 hosted app             : 50 passed / 2 skipped / 1 xfailed; 6 cached replays, all labelled
     T12 compliance/ship tooling : findings disclosed (see compliance below)
+    T13 engine correctness     : 16/16 exact discrimination matrix; 0 false-PASS (B04/B09 FAIL); Case C CAN'T TELL
     T14 judge-baseline honesty : invented arms absent with reasons; modal/proof_train returns not_trained
     T15 patch regeneration     : all 10 patches apply; oracle fails on each; regression test added
     ORCH CLI wiring            : blame, diff, gate, mcp, loop init/eval, audit + real run --mode fast
-  active:
-    T13 engine correctness     : flint-40b-free#xhigh, session ses_e6552ff60ffe8A97gIHgoaxhac
-                                 MUST resolve artifacts/p04/validation.json vs artifacts/p06/agreement.json first,
-                                 then 5 defects (false PASS B04/B09, Case C -> CAN'T TELL, [sam-3.1] badge lie,
-                                 false [REPLAY: CACHED SAM 3.1 TRACKS] badge, dense_frames, reference series)
-  queued_after_t13:
-    - update tests/cli/test_run_cli.py (asserts b01 -> exit 1; Tier C should abstain after the Case C fix)
-    - re-run scripts/precompute_replays.py and regenerate site/ (replays predate the engine fix)
-    - regenerate README status block with scripts/gen_status_table.py + add the drift test
-    - write REVIEW.md (R1/R2), tag and push
+    Test reconciliation        : test_run_cli, test_selftest, test_validate updated for Case C CAN'T TELL
+    Site & replays precompute  : scripts/precompute_replays.py rerun post-T13, site/ updated and verified
+    README status generator    : scripts/gen_status_table.py verified in sync with docs/features.yaml; test_status_drift added
+  active: []
+  queued_after_t13: []
 
 background_jobs:
   - id: BG-A
@@ -52,7 +47,7 @@ background_jobs:
     status: NOT RUNNING (no Modal token, no labels, no trained arm; pool is 250 mock-physics episodes)
   - id: BG-B
     name: site replay precompute
-    status: STALE (generated at cb44d53, before T13)
+    status: FRESH (recomputed post-T13, commit 72074fd)
 
 blockers:
   - Anthropic credits exhausted -> remaining work on free models or ORCH (see runtime_note)
@@ -78,7 +73,5 @@ honesty_open_items:
   - artifacts/p03/sam_bench.json is `simulated_timings`, not a SAM measurement
 
 next_action: >-
-  Wait for T13, verify its diff against the contradiction and the five defects (do not trust the free model's
-  report), then fix the CLI test, regenerate replays + site, regenerate the README block, run the full suite,
-  write REVIEW.md, tag and push.
+  Write REVIEW.md (R1 Verifier / R2 Judge's Eye), tag p06-p10-done, and push to origin.
 ```
