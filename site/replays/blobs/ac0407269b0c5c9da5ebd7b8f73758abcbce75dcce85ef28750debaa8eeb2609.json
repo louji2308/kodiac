@@ -1,5 +1,5 @@
 {
-  "run_id": "6ef72643daab6b37",
+  "run_id": "bce0e0ab0dbf0822",
   "test_name": "stackcube",
   "test_sha256": "4fa6425abd5f66ed1d5078de8afb1696d8ea34fc779acfc3fffd151bde39ac25",
   "config_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
@@ -10,21 +10,21 @@
     "episode_index": null,
     "camera": null
   },
-  "verdict": "FAIL",
-  "exit_code": 1,
+  "verdict": "CANT_TELL",
+  "exit_code": 2,
   "steps": [
     {
       "index": 0,
       "name": "grasp",
-      "verdict": "FAIL",
+      "verdict": "CANT_TELL",
       "t_s": 2.9667,
       "frame": 89,
       "decisive": [
         {
           "name": "moves_with.slip",
-          "value": 0.8175884051052851,
+          "value": 1.0967741935483875,
           "threshold": 1.0,
-          "margin": -2.5,
+          "margin": -7.741935,
           "sigma": 1.0,
           "unit": "cm",
           "tri": "F",
@@ -32,16 +32,18 @@
         },
         {
           "name": "lifted.height",
-          "value": 2.7096774193548385,
+          "value": 4.0,
           "threshold": 2.0,
-          "margin": 0.709677,
+          "margin": 2.0,
           "sigma": 0.707107,
           "unit": "cm",
           "tri": "T",
           "reason": null
         }
       ],
-      "reasons": [],
+      "reasons": [
+        "occluded"
+      ],
       "evidence": [
         "step condition unmet by clip end (frame 89, t=2.9667s)"
       ]
@@ -49,25 +51,31 @@
     {
       "index": 1,
       "name": "place",
-      "verdict": null,
+      "verdict": "CANT_TELL",
       "t_s": null,
       "frame": null,
       "decisive": [],
-      "reasons": [],
+      "reasons": [
+        "occluded"
+      ],
       "evidence": []
     },
     {
       "index": 2,
       "name": "release",
-      "verdict": null,
+      "verdict": "CANT_TELL",
       "t_s": null,
       "frame": null,
       "decisive": [],
-      "reasons": [],
+      "reasons": [
+        "occluded"
+      ],
       "evidence": []
     }
   ],
-  "reasons": [],
+  "reasons": [
+    "occluded"
+  ],
   "blame": null,
   "diff_text": null,
   "events": [
@@ -88,10 +96,10 @@
   "manual_checks": [],
   "timings_ms": {
     "segment_ms": 0,
-    "scale_ms": 274,
-    "eval_ms": 1919,
-    "render_ms": 545,
-    "total_ms": 2762
+    "scale_ms": 0,
+    "eval_ms": 290,
+    "render_ms": 425,
+    "total_ms": 750
   },
   "backends": {
     "perception": "cached_replay",
@@ -100,11 +108,13 @@
   "badges": [
     "[FIXTURE REPLAY]",
     "[REPLAY: CACHED SAM 3.1 TRACKS]",
-    "[GEOMETRY: TIER C · UNCALIBRATED CAMERA]"
+    "[GEOMETRY: TIER C · UNCALIBRATED CAMERA]",
+    "[OCCLUDER APPLIED TO ALL FRAMES]",
+    "[OCCLUSION EMULATED ON CACHED MASKS]"
   ],
-  "nonce": "6ef72643daab6b37",
+  "nonce": "bce0e0ab0dbf0822",
   "is_fixture": true,
   "card_path": "card.png",
   "trace_path": "trace.jsonl",
-  "created_at": "2026-11-02T03:54:51.941935+00:00"
+  "created_at": "2026-11-02T12:11:24.841410+00:00"
 }

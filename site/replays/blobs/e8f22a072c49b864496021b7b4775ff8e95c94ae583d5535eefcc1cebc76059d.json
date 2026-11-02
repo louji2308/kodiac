@@ -1,5 +1,5 @@
 {
-  "run_id": "cb58ea390abf4c18",
+  "run_id": "bd9b601b4491a956",
   "test_name": "stackcube",
   "test_sha256": "4fa6425abd5f66ed1d5078de8afb1696d8ea34fc779acfc3fffd151bde39ac25",
   "config_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
@@ -24,7 +24,7 @@
           "name": "moves_with.slip",
           "value": 12.538442546203925,
           "threshold": 1.0,
-          "margin": -2.5,
+          "margin": -11.538443,
           "sigma": 1.0,
           "unit": "cm",
           "tri": "F",
@@ -96,10 +96,10 @@
   "manual_checks": [],
   "timings_ms": {
     "segment_ms": 0,
-    "scale_ms": 6,
-    "eval_ms": 1323,
-    "render_ms": 511,
-    "total_ms": 1855
+    "scale_ms": 9,
+    "eval_ms": 1773,
+    "render_ms": 730,
+    "total_ms": 2545
   },
   "backends": {
     "perception": "cached_replay",
@@ -110,9 +110,9 @@
     "[REPLAY: CACHED SAM 3.1 TRACKS]",
     "[GEOMETRY: TIER C · UNCALIBRATED CAMERA]"
   ],
-  "nonce": "cb58ea390abf4c18",
+  "nonce": "bd9b601b4491a956",
   "is_fixture": true,
   "card_path": "card.png",
   "trace_path": "trace.jsonl",
-  "created_at": "2026-11-02T03:55:00.684780+00:00"
+  "created_at": "2026-11-02T12:11:06.577100+00:00"
 }

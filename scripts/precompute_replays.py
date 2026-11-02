@@ -9,7 +9,10 @@ ReplayStore (default ``site/replays/``) and renders ``site/index.html`` from it.
 from __future__ import annotations
 
 import argparse
+import os
 import sys
+import threading
+import time
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -20,6 +23,28 @@ from Kodiac_robotics.app.precompute import CURATED_SPECS, precompute_replays  # 
 from Kodiac_robotics.app.replay import ReplayStore  # noqa: E402
 from Kodiac_robotics.app.settings import AppSettings  # noqa: E402
 from Kodiac_robotics.app.site import build_site  # noqa: E402
+
+
+def _robust_write_atomic(self: ReplayStore, path: Path, data: bytes) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = path.with_name(f"{path.name}.{os.getpid()}.{threading.get_ident()}.tmp")
+    tmp.write_bytes(data)
+    for attempt in range(12):
+        try:
+            os.replace(tmp, path)
+            return
+        except PermissionError:
+            if attempt == 11:
+                path.write_bytes(data)
+                try:
+                    tmp.unlink(missing_ok=True)
+                except OSError:
+                    pass
+                return
+            time.sleep(0.05 * (attempt + 1))
+
+
+ReplayStore._write_atomic = _robust_write_atomic  # type: ignore[assignment]
 
 SIZE_BUDGET_BYTES = 2 * 1024 * 1024
 
@@ -53,6 +78,12 @@ def main(argv: list[str] | None = None) -> int:
     if not args.no_site:
         index = build_site(ReplayStore(args.replay_dir), args.site_dir)
         print(f"site written: {index}")
+        data_dir = args.site_dir / "data"
+        data_dir.mkdir(parents=True, exist_ok=True)
+        (data_dir / "replays.json").write_text(
+            (args.site_dir / "replays.json").read_text(encoding="utf-8"),
+            encoding="utf-8",
+        )
 
     size = _tree_size(args.replay_dir)
     print(f"replay store size: {size / 1024:.0f} KiB (budget {SIZE_BUDGET_BYTES // 1024} KiB)")

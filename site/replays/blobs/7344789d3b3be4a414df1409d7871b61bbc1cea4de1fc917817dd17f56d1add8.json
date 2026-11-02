@@ -1,10 +1,10 @@
 {
-  "run_id": "90152a1893c1c826",
+  "run_id": "9c683c6506e46ab5",
   "test_name": "stackcube",
   "test_sha256": "4fa6425abd5f66ed1d5078de8afb1696d8ea34fc779acfc3fffd151bde39ac25",
   "config_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
   "clip": {
-    "uri": "curated:b02_xy_misalignment",
+    "uri": "curated:b01_early_release",
     "source_kind": "sim",
     "dataset": null,
     "episode_index": null,
@@ -22,9 +22,9 @@
       "decisive": [
         {
           "name": "moves_with.slip",
-          "value": 0.8532020954842562,
+          "value": 0.0,
           "threshold": 1.0,
-          "margin": -2.5,
+          "margin": -5.067021,
           "sigma": 1.0,
           "unit": "cm",
           "tri": "F",
@@ -89,9 +89,9 @@
   "timings_ms": {
     "segment_ms": 0,
     "scale_ms": 1,
-    "eval_ms": 693,
-    "render_ms": 383,
-    "total_ms": 1098
+    "eval_ms": 943,
+    "render_ms": 486,
+    "total_ms": 1479
   },
   "backends": {
     "perception": "cached_replay",
@@ -102,9 +102,9 @@
     "[REPLAY: CACHED SAM 3.1 TRACKS]",
     "[GEOMETRY: TIER C · UNCALIBRATED CAMERA]"
   ],
-  "nonce": "90152a1893c1c826",
+  "nonce": "9c683c6506e46ab5",
   "is_fixture": true,
   "card_path": "card.png",
   "trace_path": "trace.jsonl",
-  "created_at": "2026-11-02T03:54:55.935273+00:00"
+  "created_at": "2026-11-02T12:10:24.035197+00:00"
 }
