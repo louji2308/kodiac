@@ -189,16 +189,23 @@ def summarize(rows: list[dict[str, Any]], **labels: Any) -> dict[str, Any]:
     cost = [r["billed_video_frames"] * USD_PER_VIDEO_FRAME + r["billed_images"] * USD_PER_IMAGE for r in rows]
     verdict_rate = k_v / n if n else 0.0
     tstar_rate = k_t / len(nonpass) if nonpass else 0.0
+    mix_ok = any(r["full_verdict"] == "PASS" for r in rows) and bool(nonpass)
+    oracle = [r["oracle_success"] for r in rows if "oracle_success" in r]
     return {
         **labels,
         "n": n,
+        "verdict_mix_covers_pass_and_non_pass": mix_ok,
+        "oracle_success_episodes": sum(oracle) if oracle else None,
         "verdict_agreement": round(verdict_rate, 4),
         "verdict_agreement_wilson95": wilson(k_v, n),
         "tstar_within_2_frames": round(tstar_rate, 4),
         "tstar_denominator": f"{len(nonpass)} pairs whose full-path verdict is FAIL or CANT_TELL",
         "tstar_within_2_frames_wilson95": wilson(k_t, len(nonpass)),
-        "target_met": bool(n >= TARGET_N and verdict_rate >= TARGET_VERDICT and tstar_rate >= TARGET_TSTAR),
+        "target_met": bool(n >= TARGET_N and verdict_rate >= TARGET_VERDICT and tstar_rate >= TARGET_TSTAR and mix_ok),
         "targets": {"n_min": TARGET_N, "verdict": TARGET_VERDICT, "tstar_within_2": TARGET_TSTAR},
+        "target_rule": "n >= 100 AND verdict >= 95% AND t* within ±2 >= 90% AND the full path produced both PASS and "
+        "non-PASS verdicts (otherwise the block cannot detect a PASS<->FAIL flip, the point of the agreement test)",
+        "fast_bills_more_than_one_dense_pass": bool(billed and np.mean(billed) > np.mean(full_billed)),
         "fallback_to_full_rate": round(len(fallbacks) / n, 4) if n else None,
         "resolved_by_bisect_without_fallback": n - len(fallbacks),
         "guards_fired_counts": dict(sorted(guards.items())),
@@ -332,6 +339,13 @@ def main() -> int:
         "is_fixture": True,
         "is_mock": True,
         "latency_kind": bisect.LATENCY_KIND_FIXTURE,
+        "headline_caveats": [
+            f"full-path verdict mix in the headline block: {head['full_path_verdicts']} "
+            f"(oracle-success episodes: {head['oracle_success_episodes']}); without PASS cases PASS-preservation is untested",
+            f"fast path billed {head['billed_frames']['mean']} frames on average vs {head['full_path_billed_frames_mean']} "
+            "for one dense pass: on 4-6 s clips the exact-t* window (grasp -> failure) plus the keyframe pack costs more",
+            "golden blocks have n=45 < 100 and every golden clip is 90 frames, so the default policy never bisects them",
+        ],
         "honesty": [
             "No API keys exist: no number in this file comes from SAM 3.1, Meta APIs or real video.",
             "Latencies are in-process replay timings (fixture_replay_not_sam); never quote them as live latency.",

@@ -1,0 +1,290 @@
+{
+  "artifact": "fast-vs-full agreement (two-stage bisect)",
+  "generated_at": "2026-11-02T03:59:13.147347+00:00",
+  "git_head": "810407615a4b4b866193ed0f46a29f3d0424c3a9",
+  "command": "python scripts/agreement.py",
+  "headline_block": "pool_calibration_default_policy",
+  "n": 200,
+  "verdict_agreement": 1.0,
+  "tstar_within_2_frames": 1.0,
+  "fallback_to_full_rate": 0.0,
+  "target_met": false,
+  "evidence_type": "synthetic_tracks_from_privileged_state",
+  "is_fixture": true,
+  "is_mock": true,
+  "latency_kind": "fixture_replay_not_sam",
+  "headline_caveats": [
+    "full-path verdict mix in the headline block: {'PASS': 0, 'FAIL': 200, 'CANT_TELL': 0} (oracle-success episodes: 66); without PASS cases PASS-preservation is untested",
+    "fast path billed 168.5 frames on average vs 150.7 for one dense pass: on 4-6 s clips the exact-t* window (grasp -> failure) plus the keyframe pack costs more",
+    "golden blocks have n=45 < 100 and every golden clip is 90 frames, so the default policy never bisects them"
+  ],
+  "honesty": [
+    "No API keys exist: no number in this file comes from SAM 3.1, Meta APIs or real video.",
+    "Latencies are in-process replay timings (fixture_replay_not_sam); never quote them as live latency.",
+    "Pool tracks are projected from privileged sim state (circular for perception); golden tracks are synthetic fixtures.",
+    "t* = frame of the first FAIL / CANT_TELL step; compared only where the full-path verdict is not PASS.",
+    "hypothetical_hosted_cost_usd = billed units x list price; nothing was billed."
+  ],
+  "blocks": [
+    {
+      "block": "golden_default_policy",
+      "evidence_type": "fixture_replay_synthetic_tracks",
+      "is_fixture": true,
+      "is_mock": false,
+      "latency_kind": "fixture_replay_not_sam",
+      "note": "90-frame clips: bisect would bill >= 100 frames, so the default policy tracks them directly (G-budget:short_clip_direct). Agreement here is by construction; see the forced block for the bisect.",
+      "n": 45,
+      "verdict_mix_covers_pass_and_non_pass": true,
+      "oracle_success_episodes": null,
+      "verdict_agreement": 1.0,
+      "verdict_agreement_wilson95": [
+        0.9213,
+        1.0
+      ],
+      "tstar_within_2_frames": 1.0,
+      "tstar_denominator": "31 pairs whose full-path verdict is FAIL or CANT_TELL",
+      "tstar_within_2_frames_wilson95": [
+        0.8897,
+        1.0
+      ],
+      "target_met": false,
+      "targets": {
+        "n_min": 100,
+        "verdict": 0.95,
+        "tstar_within_2": 0.9
+      },
+      "target_rule": "n >= 100 AND verdict >= 95% AND t* within \u00b12 >= 90% AND the full path produced both PASS and non-PASS verdicts (otherwise the block cannot detect a PASS<->FAIL flip, the point of the agreement test)",
+      "fast_bills_more_than_one_dense_pass": true,
+      "fallback_to_full_rate": 1.0,
+      "resolved_by_bisect_without_fallback": 0,
+      "guards_fired_counts": {
+        "G-budget:short_clip_direct": 45
+      },
+      "full_path_verdicts": {
+        "PASS": 14,
+        "FAIL": 23,
+        "CANT_TELL": 8
+      },
+      "sam_calls": {
+        "mean": 2.0,
+        "p50": 2.0,
+        "max": 2
+      },
+      "billed_frames": {
+        "mean": 91.0,
+        "p50": 91.0,
+        "max": 91
+      },
+      "full_path_billed_frames_mean": 90.0,
+      "hypothetical_hosted_cost_usd_mean": 0.0205,
+      "latency_ms": {
+        "eval_ms": {
+          "p50": 217.0,
+          "p95": 309.6,
+          "n": 45
+        },
+        "fallback_ms": {
+          "p50": 18.0,
+          "p95": 32.8,
+          "n": 45
+        },
+        "sam_ms": {
+          "p50": 18.0,
+          "p95": 32.0,
+          "n": 45
+        },
+        "total_ms": {
+          "p50": 252.0,
+          "p95": 347.6,
+          "n": 45
+        }
+      },
+      "disagreements": []
+    },
+    {
+      "block": "golden_bisect_forced",
+      "evidence_type": "fixture_replay_synthetic_tracks",
+      "is_fixture": true,
+      "is_mock": false,
+      "latency_kind": "fixture_replay_not_sam",
+      "note": "Bisect forced on 90-frame clips. On these fixtures moves_with is U at Tier C (below noise floor), so any hypothesis anchored on 'grasp' is unverifiable densely and G-miss falls back to the full path.",
+      "n": 45,
+      "verdict_mix_covers_pass_and_non_pass": true,
+      "oracle_success_episodes": null,
+      "verdict_agreement": 1.0,
+      "verdict_agreement_wilson95": [
+        0.9213,
+        1.0
+      ],
+      "tstar_within_2_frames": 1.0,
+      "tstar_denominator": "31 pairs whose full-path verdict is FAIL or CANT_TELL",
+      "tstar_within_2_frames_wilson95": [
+        0.8897,
+        1.0
+      ],
+      "target_met": false,
+      "targets": {
+        "n_min": 100,
+        "verdict": 0.95,
+        "tstar_within_2": 0.9
+      },
+      "target_rule": "n >= 100 AND verdict >= 95% AND t* within \u00b12 >= 90% AND the full path produced both PASS and non-PASS verdicts (otherwise the block cannot detect a PASS<->FAIL flip, the point of the agreement test)",
+      "fast_bills_more_than_one_dense_pass": true,
+      "fallback_to_full_rate": 0.5556,
+      "resolved_by_bisect_without_fallback": 20,
+      "guards_fired_counts": {
+        "G-miss:anchor_unverified": 8,
+        "G-miss:object_lost_at_keyframes": 9,
+        "G-pass:dense_verification_windows": 20,
+        "G-pass:verification_not_pass": 8,
+        "carry-window:dense_from_step": 8
+      },
+      "full_path_verdicts": {
+        "PASS": 14,
+        "FAIL": 23,
+        "CANT_TELL": 8
+      },
+      "sam_calls": {
+        "mean": 2.82,
+        "p50": 3.0,
+        "max": 4
+      },
+      "billed_frames": {
+        "mean": 147.5,
+        "p50": 140.0,
+        "max": 230
+      },
+      "full_path_billed_frames_mean": 90.0,
+      "hypothetical_hosted_cost_usd_mean": 0.0306,
+      "latency_ms": {
+        "eval_ms": {
+          "p50": 176.0,
+          "p95": 710.0,
+          "n": 45
+        },
+        "fallback_ms": {
+          "p50": 8.0,
+          "p95": 13.4,
+          "n": 25
+        },
+        "sam_ms": {
+          "p50": 27.0,
+          "p95": 55.0,
+          "n": 45
+        },
+        "stage15_ms": {
+          "p50": 0.0,
+          "p95": 0.0,
+          "n": 16
+        },
+        "stage1_ms": {
+          "p50": 10.0,
+          "p95": 28.8,
+          "n": 45
+        },
+        "stage2_ms": {
+          "p50": 9.5,
+          "p95": 25.8,
+          "n": 16
+        },
+        "total_ms": {
+          "p50": 220.0,
+          "p95": 747.4,
+          "n": 45
+        },
+        "verify_ms": {
+          "p50": 19.5,
+          "p95": 45.7,
+          "n": 20
+        }
+      },
+      "disagreements": []
+    },
+    {
+      "block": "pool_calibration_default_policy",
+      "evidence_type": "synthetic_tracks_from_privileged_state",
+      "is_fixture": true,
+      "is_mock": true,
+      "latency_kind": "fixture_replay_not_sam",
+      "note": "KinematicMockEnv episodes; boxes projected from privileged state; Tier A camera. Measures shortcut fidelity to the full evaluator on identical tracks, NOT perception agreement and NOT SAM latency.",
+      "n": 200,
+      "verdict_mix_covers_pass_and_non_pass": false,
+      "oracle_success_episodes": 66,
+      "verdict_agreement": 1.0,
+      "verdict_agreement_wilson95": [
+        0.9812,
+        1.0
+      ],
+      "tstar_within_2_frames": 1.0,
+      "tstar_denominator": "200 pairs whose full-path verdict is FAIL or CANT_TELL",
+      "tstar_within_2_frames_wilson95": [
+        0.9812,
+        1.0
+      ],
+      "target_met": false,
+      "targets": {
+        "n_min": 100,
+        "verdict": 0.95,
+        "tstar_within_2": 0.9
+      },
+      "target_rule": "n >= 100 AND verdict >= 95% AND t* within \u00b12 >= 90% AND the full path produced both PASS and non-PASS verdicts (otherwise the block cannot detect a PASS<->FAIL flip, the point of the agreement test)",
+      "fast_bills_more_than_one_dense_pass": true,
+      "fallback_to_full_rate": 0.0,
+      "resolved_by_bisect_without_fallback": 200,
+      "guards_fired_counts": {
+        "carry-window:dense_from_step": 194
+      },
+      "full_path_verdicts": {
+        "PASS": 0,
+        "FAIL": 200,
+        "CANT_TELL": 0
+      },
+      "sam_calls": {
+        "mean": 2.5,
+        "p50": 2.5,
+        "max": 3
+      },
+      "billed_frames": {
+        "mean": 168.5,
+        "p50": 171.5,
+        "max": 211
+      },
+      "full_path_billed_frames_mean": 150.7,
+      "hypothetical_hosted_cost_usd_mean": 0.0348,
+      "latency_ms": {
+        "eval_ms": {
+          "p50": 131.0,
+          "p95": 484.0,
+          "n": 200
+        },
+        "sam_ms": {
+          "p50": 0.0,
+          "p95": 1.0,
+          "n": 200
+        },
+        "stage15_ms": {
+          "p50": 0.0,
+          "p95": 0.0,
+          "n": 200
+        },
+        "stage1_ms": {
+          "p50": 2.0,
+          "p95": 6.1,
+          "n": 200
+        },
+        "stage2_ms": {
+          "p50": 1.0,
+          "p95": 1.0,
+          "n": 200
+        },
+        "total_ms": {
+          "p50": 184.0,
+          "p95": 525.0,
+          "n": 200
+        }
+      },
+      "disagreements": []
+    }
+  ],
+  "runtime_s": 339.9
+}
