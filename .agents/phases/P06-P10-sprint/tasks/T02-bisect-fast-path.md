@@ -34,3 +34,16 @@ def run_fast(test: GreenTest | Path, clip: Clip, segmenter: Segmenter, *, k_keyf
 - [ ] Committed `feat(p06/t02): …`.
 
 ## Report (filled by owner at DONE)
+### Micro-plan (IMPL-2, recon findings first)
+- Recon: `pipeline.run.run` cannot evaluate sparse stitched tracks: its G2 scene scan (`run.py:246-258`) marks any frame
+  missing from a non-effector track as OCCLUDED and flips every non-PASS verdict to CANT_TELL; temporal predicates
+  (`moves_with.py:62-99`, `dwell.py:56-85`) read frames outside the window. → INTERFACE-REQUEST to ORCH; meanwhile a
+  dense-window evaluator in `bisect.py` reuses run.py's building blocks, and a test pins it to `run.run` on fully observed clips.
+- Recon: on the 5 golden clips the full path gives 4× FAIL (grasp unmet, frame 89) + 1× CANT_TELL; `correct_run.mp4` does NOT
+  PASS `examples/stackcube.green` (moves_with is U/below-noise-floor during transport). Not mine to fix; disclosed.
+- Stage 1 keyframes (one call) → static proxies → prefix-max progress → bracket; Stage 1.5 single-frame halving on the carried
+  literal; Stage 2 window (cut_window padding arithmetic, seeds on the last frame, backward); residual test anchored on the last
+  proxy-achieved step; G-miss extend-back ×2 then full fallback; G-pass dense verification windows; G-budget call cap + a
+  short-clip rule (bisect bills ≥100 frames, so clips ≤100 frames go direct).
+- `scripts/agreement.py`: golden clips × a fixed spec family (both specs + every step/atom of stackcube) in default and forced-bisect
+  mode, plus pool calibration episodes with tracks projected from privileged state (labelled, not perception).

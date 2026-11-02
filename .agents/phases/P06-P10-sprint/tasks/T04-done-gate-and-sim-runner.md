@@ -52,3 +52,14 @@ Env: gate loads secrets only from `Kodiac_ENV_FILE` (hooks run with a cleared en
 - [ ] No `TODO|NotImplemented`; ruff clean; full suite green. Committed `feat(p07/t04): …`.
 
 ## Report (filled by owner at DONE)
+
+### Micro-plan (IMPL-4, 2026-11-02)
+1. `sim/runner.py`: execute the script in an **isolated child interpreter** (`python -I`, whitelisted env, no secrets) that only records the
+   commanded Robot-API actions + spans; the parent then **replays those actions in a fresh env it owns** (deterministic) and writes video,
+   `state.npz` (frame-aligned, incl. ee_pos), `spans.jsonl`, `meta.json`. Monkeypatching the env/oracle/pipeline inside the script cannot reach
+   the grader. Action sanity bounds (finite, ≤3600 steps, ≤5 cm/step, |grip|≤1). `auto` → ManiSkill iff importable.
+2. `loop/pins.py`: pins outside the workspace (`KODIAC_GATE_HOME` override), self-digest, workspace marker so a deleted pin fails closed.
+3. `loop/gate.py`: `gate_init` / `gate_check` per KD-11: pins → exhausted → env file → test sha → config sha → engine-source digest → fresh
+   run_script → synthetic tracks from the gate's own replayed state (labelled) → `pipeline.run.run` → provenance checks → PASS/BLOCK.
+   Outer wrapper maps every exception to exit 2. Blame via `blame.validate.blame_from_run` if importable, else decisive components + span.
+4. Tests: runner (correct PASS-oracle, B01–B10, isolation, crash, bounds) and gate anti-cheat list; generate `artifacts/p07/gate_refusals.json`.
