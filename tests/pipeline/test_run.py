@@ -90,6 +90,22 @@ def test_run_direct_stored_track_replay() -> None:
         assert res.backends.get("perception") == "cached_replay"
 
 
+def test_run_fixture_backend_badges_both_replay_labels() -> None:
+    """backend='fixture' carries both the fixture and cached-track badges, without duplicates."""
+    with tempfile.TemporaryDirectory() as tmpdir:
+        res = run(
+            test="examples/stackcube.green",
+            clip="tests/fixtures/clips/b01_early_release.mp4",
+            backend="fixture",
+            output_dir=Path(tmpdir) / "run_fixture_badges",
+        )
+
+        assert res.is_fixture is True
+        assert "[FIXTURE REPLAY]" in res.badges
+        assert "[REPLAY: CACHED SAM 3.1 TRACKS]" in res.badges
+        assert len(res.badges) == len(set(res.badges))
+
+
 def test_run_with_verdict_card_rendering() -> None:
     """render_card=True generates a 1280x720 card.png artifact."""
     with tempfile.TemporaryDirectory() as tmpdir:

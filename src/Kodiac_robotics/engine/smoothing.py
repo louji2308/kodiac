@@ -2,10 +2,19 @@
 
 from __future__ import annotations
 
-import numpy as np
-from scipy.signal import savgol_filter
+import warnings
 
-from Kodiac_robotics.contracts.core import Tri
+import numpy as np
+
+warnings.filterwarnings(
+    "ignore",
+    message=r"A NumPy version .* is required for this version of SciPy",
+    category=UserWarning,
+)
+
+from scipy.signal import savgol_filter  # noqa: E402
+
+from Kodiac_robotics.contracts.core import Tri  # noqa: E402
 
 
 class TemporalSmoother:

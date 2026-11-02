@@ -13,18 +13,22 @@ import warnings
 from pathlib import Path
 from typing import Any
 
-import typer
-from rich import box
-from rich.console import Console
-from rich.panel import Panel
-from rich.table import Table
+warnings.filterwarnings(
+    "ignore",
+    message=r"A NumPy version .* is required for this version of SciPy",
+    category=UserWarning,
+)
 
-from Kodiac_robotics import __version__
-from Kodiac_robotics.config import get_settings
-from Kodiac_robotics.contracts.core import Verdict
-from Kodiac_robotics.pipeline.run import run as execute_run
+import typer  # noqa: E402
+from rich import box  # noqa: E402
+from rich.console import Console  # noqa: E402
+from rich.panel import Panel  # noqa: E402
+from rich.table import Table  # noqa: E402
 
-warnings.filterwarnings("ignore", category=UserWarning)
+from Kodiac_robotics import __version__  # noqa: E402
+from Kodiac_robotics.config import get_settings  # noqa: E402
+from Kodiac_robotics.contracts.core import Verdict  # noqa: E402
+from Kodiac_robotics.pipeline.run import run as execute_run  # noqa: E402
 
 # Ensure UTF-8 stdout/stderr streams on Windows platforms
 if sys.platform == "win32":

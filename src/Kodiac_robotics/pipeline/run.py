@@ -144,7 +144,9 @@ def run(
             is_fixture = True
             fb = FixtureBackend()
             resolved_tracks = fb._load_tracks(clip_obj)
-            badges.append("[FIXTURE REPLAY]")
+            for badge in ("[FIXTURE REPLAY]", "[REPLAY: CACHED SAM 3.1 TRACKS]"):
+                if badge not in badges:
+                    badges.append(badge)
             backends_map["perception"] = "fixture"
         elif backend == "modal":
             from Kodiac_robotics.segment.modal_backend import ModalSamBackend

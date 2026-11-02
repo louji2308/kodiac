@@ -13,7 +13,7 @@ from pathlib import Path
 import pytest
 
 from Kodiac_robotics.contracts.core import Clip, ClipRef
-from Kodiac_robotics.io.clip import open_clip
+from Kodiac_robotics.io.clip import _infer_source_kind, open_clip
 
 
 @pytest.fixture
@@ -57,6 +57,28 @@ def test_open_clip_with_clipref():
     assert clip.fps == 30.0
     assert clip.width == 640
     assert clip.height == 480
+
+
+def test_infer_source_kind_fixture_clips_are_sim():
+    """Clips under tests/fixtures/clips are sim renders, so the card badges [SIM] not [UPLOAD]."""
+    assert _infer_source_kind("tests/fixtures/clips/b01_early_release.mp4") == "sim"
+    absolute = str(Path("tests/fixtures/clips/b01_early_release.mp4").resolve())
+    assert _infer_source_kind(absolute) == "sim"
+    assert _infer_source_kind(Path(absolute).as_uri()) == "sim"
+
+
+def test_open_clip_fixture_path_resolves_to_sim():
+    """open_clip on a fixture Path infers source_kind='sim' without an explicit ClipRef."""
+    clip = open_clip(Path("tests/fixtures/clips/b01_early_release.mp4"))
+    assert clip.ref.source_kind == "sim"
+
+
+def test_infer_source_kind_other_paths_unchanged():
+    """Non-fixture inference keeps its existing heuristics."""
+    assert _infer_source_kind("videos/my_upload.mp4") == "upload"
+    assert _infer_source_kind("datasets/sim_run.mp4") == "sim"
+    assert _infer_source_kind("clips/droid_ep1.mp4") == "real"
+    assert _infer_source_kind("clips/webcam.mp4") == "demo"
 
 
 def test_open_clip_file_uri():

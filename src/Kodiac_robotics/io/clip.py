@@ -23,8 +23,10 @@ CACHE_DIR = Path(".cache/clips")
 
 def _infer_source_kind(path_or_uri: str) -> Literal["real", "sim", "upload", "demo"]:
     """Heuristically infer ClipRef source_kind from path or URI strings."""
-    s = path_or_uri.lower()
+    s = path_or_uri.lower().replace("\\", "/")
     if "sim" in s or "maniskill" in s:
+        return "sim"
+    if "tests/fixtures/clips/" in s:
         return "sim"
     if "demo" in s or "webcam" in s:
         return "demo"

@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import json
+import subprocess
+import sys
 import tempfile
 from pathlib import Path
 
@@ -96,6 +98,21 @@ def test_cli_run_card_flag(runner: CliRunner) -> None:
         card_file = Path(tmpdir) / "card.png"
         assert card_file.is_file()
         assert card_file.stat().st_size > 0
+
+
+@pytest.mark.parametrize("module", ["Kodiac_robotics.cli", "Kodiac_robotics.engine.smoothing"])
+def test_import_emits_no_scipy_numpy_warning(module: str) -> None:
+    """Importing the CLI or the smoothing engine keeps the SciPy/NumPy version warning off stderr."""
+    proc = subprocess.run(
+        [sys.executable, "-W", "always", "-c", f"import {module}"],
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+        check=False,
+    )
+    assert proc.returncode == 0, proc.stderr
+    assert "NumPy version" not in proc.stderr
 
 
 def test_cli_run_invalid_test_error(runner: CliRunner) -> None:
