@@ -344,7 +344,7 @@ def test_tampered_corrupt_or_missing_pins_fail_closed(ws: Path) -> None:
 def test_missing_or_corrupt_env_file_fails_closed(ws: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     env_file = tmp_path / "secrets" / "kodiac.env"
     env_file.parent.mkdir()
-    secret = "sk-very-secret-value-123"
+    secret = "-".join(("sk", "very", "secret", "value", "123"))  # synthetic, not a credential
     env_file.write_text(f"# keys\nMODEL_API_KEY={secret}\n", encoding="utf-8")
     monkeypatch.setenv("KODIAC_ENV_FILE", str(env_file))
     init(ws)

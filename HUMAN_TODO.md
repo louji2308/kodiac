@@ -45,7 +45,25 @@
 
 ---
 
-## 4. Workshops & Office Hours (Optional / High-Leverage)
+## 4. Git History Scrub Before the Public Mirror (needs your approval)
+
+- [ ] **Approve a `--replace-text` scrub of two synthetic test strings** (AGENTS.md §12.5 destructive op)
+  - **Finding:** `scripts/compliance_check.py` reports 2 `secret-history` hits. Both are *fake* keys written as
+    test fixtures: `sk-test-SECRET-1234567890` (`tests/judge/test_judge_backends.py` @ `c142535`) and
+    `sk-very-secret-value-123` (`tests/loop/test_gate.py` @ `d4258d1`). The working tree is already clean
+    (both are now assembled at runtime); only old commits still contain the literals.
+  - **Why it matters:** the public mirror keeps history, so `scripts/make_public_mirror.sh --run` will refuse to
+    build (`lint_public.py --history` fails) until history is scrubbed. A judge browsing history would also see
+    credential-shaped strings, which is exactly the impression we cannot afford.
+  - **Proposed command (not run):** `git filter-repo --replace-text <(printf 'sk-test-SECRET-1234567890==>REDACTED\nsk-very-secret-value-123==>REDACTED\n')`
+    then re-add every remote (filter-repo drops them) and force-push the *private* repo.
+  - **Alternatives:** (A) publish the mirror squashed to a single "hackathon snapshot" commit (no history to scrub,
+    but loses the provenance story); (B) leave it and accept a `lint_public.py --history` failure that must be
+    disclosed in the submission. Recommendation: **A** if you do not want to rewrite history, otherwise the command above.
+
+---
+
+## 5. Workshops & Office Hours (Optional / High-Leverage)
 
 - [ ] **Agents 102: Verifiable Agents Best Practices** (Yash Khare, Meta DevRel)
   - Date: Wednesday Oct 28, 12:00–1:00 PM ET (16:00–17:00 UTC).
