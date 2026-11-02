@@ -26,6 +26,7 @@ gate's verdict.
 Dry-run command (committed artifact):
     python -m Kodiac_robotics.proof.loop_eval --driver reference_patcher \
         --out-dir .cache/loop_eval_dryrun --report artifacts/p07/loop_eval_dryrun.json
+(with --report, transcripts are also published next to it in artifacts/p07/transcripts/B##.md)
 """
 
 from __future__ import annotations
@@ -403,6 +404,14 @@ def build_report(outcomes: list[BugOutcome], *, max_iters: int) -> dict[str, Any
     return report
 
 
+def _display_path(path: Path) -> str:
+    """Repo/cwd-relative posix path when possible, so reports carry no machine-specific prefix."""
+    try:
+        return path.resolve().relative_to(Path.cwd().resolve()).as_posix()
+    except ValueError:
+        return path.as_posix()
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Muse Code /goal fix-rate harness (F42)")
     parser.add_argument("--driver", choices=["reference_patcher", "muse_exec"], default="reference_patcher")
@@ -424,6 +433,13 @@ def main(argv: list[str] | None = None) -> int:
         print(f"REFUSED: {exc}", file=sys.stderr)
         return 2
 
+    if args.report:
+        published = args.report.parent / "transcripts"
+        published.mkdir(parents=True, exist_ok=True)
+        for o in outcomes:
+            target = published / Path(o.transcript_path).name
+            shutil.copyfile(o.transcript_path, target)
+            o.transcript_path = _display_path(target)
     report = build_report(outcomes, max_iters=args.max_iters)
     if args.report:
         args.report.parent.mkdir(parents=True, exist_ok=True)

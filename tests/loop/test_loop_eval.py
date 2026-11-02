@@ -322,6 +322,9 @@ def test_main_reference_run_writes_labelled_report(monkeypatch: pytest.MonkeyPat
     data = json.loads(report.read_text(encoding="utf-8"))
     assert data["evidence_type"] == "plumbing_dry_run" and data["agent_fix_rate"] is None
     assert [o["bug"] for o in data["outcomes"]] == ["B01", "B04"]
+    for o in data["outcomes"]:
+        assert Path(o["transcript_path"]).name == f"{o['bug']}.md"
+        assert (report.parent / "transcripts" / f"{o['bug']}.md").is_file()
 
 
 def test_main_muse_driver_is_refused_without_opt_in(monkeypatch: pytest.MonkeyPatch, tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
