@@ -12,6 +12,9 @@ Fact names: ``xy_offset_cm`` (on.align_xy), ``gap_z_cm`` (on.gap), ``depth_ratio
 ``reference_xy_cm`` (that closest distance), ``aperture_open_event`` (sim span / aperture evidence only),
 ``occlusion`` (fraction of frames near t* where a blamed object was occluded or not visible) and
 ``blame_class`` (disambiguation for hint/code location; see ``classify``).
+
+Context facts are taken at t*, except for a ``moves_with`` True->False release, where they are taken on the last
+attached frame ``t* - 1`` (the release pose); each fact records its own ``frame``.
 """
 
 from __future__ import annotations
@@ -137,10 +140,14 @@ def _component_fact(pf: PredFrame, c: Component, role: str) -> dict[str, Any]:
     }
 
 
-def _argmin_bootstrap(
+def _arrival_bootstrap(
     frames: list[int], values: list[float], sigmas: list[float], n_boot: int = 200, seed: int = 0
 ) -> float:
-    """Seeded parametric-bootstrap std (frames) of the argmin of a measured series; floor 0.5 frame."""
+    """Seeded parametric-bootstrap std (frames) of the closest-approach arrival frame; floor 0.5 frame.
+
+    Arrival = first frame whose distance is within its own sigma of the observed minimum (the minimum of the noisy
+    replicates themselves would be biased low by extreme-value noise on a hover plateau).
+    """
     if len(frames) < 2:
         return SIGMA_FLOOR_FRAMES
     rng = np.random.default_rng(seed)
@@ -148,7 +155,9 @@ def _argmin_bootstrap(
     v = np.asarray(values, dtype=float)
     s = np.asarray(sigmas, dtype=float)
     draws = v[:, None] + rng.normal(0.0, 1.0, size=(len(v), n_boot)) * s[:, None]
-    picks = fr[np.argmin(draws, axis=0)]
+    hit = draws <= float(v.min()) + s[:, None]
+    hit[-1, :] |= ~hit.any(axis=0)
+    picks = fr[np.argmax(hit, axis=0)]
     return float(max(SIGMA_FLOOR_FRAMES, float(np.std(picks.astype(float), ddof=1))))
 
 
@@ -318,7 +327,9 @@ def build_fact_table(
         elif c is not None:
             evidence.append(f"cause {c.name} at frame {f} unavailable: {c.reason.value if c.reason else 'unknown'}")
 
-    # 2. Context facts at t*: every reliable component of atoms over the blamed objects.
+    # 2. Context facts: every reliable component of atoms over the blamed objects, at t* — except for a
+    #    moves_with True->False release, where they describe the release pose (last attached frame, t* - 1).
+    f_ctx = f - 1 if (transition.cls == "broken_prerequisite" and pred == "moves_with" and f > 0) else f
     for key, slot in sorted(index.items()):
         if key == lit_key:
             continue
@@ -327,7 +338,7 @@ def build_fact_table(
             continue
         if effector is not None and args and args[0] == effector:
             continue  # effector-target reference series: used for dt_before_reference_s, not a context fact
-        pf = slot.get(f)
+        pf = slot.get(f_ctx)
         if pf is None:
             continue
         for comp in pf.components:
@@ -338,7 +349,7 @@ def build_fact_table(
                 ReasonCode.APPEARANCE_UNRESOLVED,
                 ReasonCode.DEPTH_AMBIGUOUS,
             }:
-                evidence.append(f"{comp.name} at frame {f} not used: {comp.reason.value}")
+                evidence.append(f"{comp.name} at frame {f_ctx} not used: {comp.reason.value}")
                 continue
             name = fact_name(comp.name)
             if name in facts and facts[name].get("role") == "cause":
@@ -351,10 +362,12 @@ def build_fact_table(
         at_tstar = next((s for s in series if s[0] == f), None)
         after = [s for s in series if s[0] > f]
         if at_tstar is not None and after:
-            ref = min(after, key=lambda s: s[1])
+            d_min = min(s[1] for s in after)
+            # Arrival at the closest approach: first frame within its own sigma of the minimum distance.
+            ref = next(s for s in after if s[1] <= d_min + s[2])
             closer_by = at_tstar[1] - ref[1]
             if closer_by > max(at_tstar[2], ref[2]):
-                sig_ref = _argmin_bootstrap(
+                sig_ref = _arrival_bootstrap(
                     [s[0] for s in after], [s[1] for s in after], [s[2] for s in after], seed=0
                 )
                 sig_dt = math.sqrt(float(tstar.sigma_frames) ** 2 + sig_ref**2) / fps
@@ -430,7 +443,7 @@ def build_fact_table(
                 "frames_occluded": occluded,
                 "frames_checked": checked,
                 "window": [lo, hi],
-                "role": "context",
+                "role": "derived",
             }
 
     facts["blame_class"] = classify(transition, facts, cause_name)

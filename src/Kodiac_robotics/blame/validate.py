@@ -83,13 +83,16 @@ def _decimals(token: str) -> int:
 
 
 def _matches(token: str, value: float) -> bool:
+    """True iff ``value`` rounded to the token's precision prints as the token (``-0.0`` == ``0.0``)."""
     d = _decimals(token)
     try:
-        return abs(round(float(value), d) - float(token)) < 0.5 * 10 ** (-d) * 1e-6 + 1e-12 or (
-            f"{round(float(value), d):.{d}f}" == f"{float(token):.{d}f}"
-        )
+        x = round(float(value), d)
+        y = round(float(token), d)
     except (TypeError, ValueError):
         return False
+    x = 0.0 if x == 0 else x
+    y = 0.0 if y == 0 else y
+    return f"{x:.{d}f}" == f"{y:.{d}f}"
 
 
 def _norm_unit(unit: str | None) -> str | None:

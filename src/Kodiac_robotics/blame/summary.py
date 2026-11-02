@@ -29,10 +29,11 @@ _OP_TEXT = {"<=": "≤", ">=": "≥"}
 
 
 def fmt_num(v: float) -> str:
-    """One decimal; two when a non-zero value would otherwise print as 0.0."""
-    if v != 0 and abs(v) < 0.05:
+    """One decimal; two when a value of at least 0.005 would otherwise print as 0.0."""
+    if 0.005 <= abs(v) < 0.05:
         return f"{v:.2f}"
-    return f"{v:.1f}"
+    out = f"{v:.1f}"
+    return "0.0" if out == "-0.0" else out
 
 
 def fmt_pm(fact: dict[str, Any]) -> str:
