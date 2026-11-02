@@ -82,17 +82,23 @@
 - id: F13
   name: Two-stage git bisect fast path
   tier: MVP
-  status: planned
-  evidence_type: null
-  evidence: null
-  note: pending T02 (bisect not built). artifacts/p03/sam_bench.json is fixture-only random draws, not evidence.
+  status: partial
+  evidence_type: fixture_replay
+  evidence: tests/pipeline/test_bisect.py
+  note: >-
+    Built and tested (keyframes -> halving -> dense window, guards G-alias/G-miss/G-budget/G-pass). On the
+    synthetic pool (n=200) fast and full agreed 100% on verdict and t* (+-2 frames), but every episode was FAIL
+    so PASS-as-PASS is untested; on short clips (<=100 frames) it falls back to the full path and it billed
+    more frames than one dense pass (168.5 vs 150.7). artifacts/p06/agreement.json records target_met false.
 - id: F14
   name: Dense backward window
   tier: MVP
-  status: planned
-  evidence_type: null
-  evidence: null
-  note: pending T02 (dense backward window not built). artifacts/p03/sam_bench.json is fixture-only, not evidence.
+  status: done
+  evidence_type: synthetic
+  evidence: tests/pipeline/test_bisect.py, artifacts/p06/agreement.json
+  note: >-
+    Backward-seeded dense window inside clip bounds (failure at frame 0 and last frame tested). Agreement is
+    measured on synthetic tracks projected from mock-sim state, not perception.
 - id: F15
   name: Scale model (px -> cm)
   tier: MVP
@@ -159,21 +165,26 @@
 - id: F25
   name: Two-way contrastive crop judge
   tier: Strong
-  status: planned
-  evidence_type: null
-  evidence: null
+  status: partial
+  evidence_type: fixture_replay
+  evidence: tests/judge/test_judge_two_way.py, tests/judge/test_judge_crops.py
+  note: >-
+    Protocol built and tested offline (antonym question pairs, 9-combination decision table, yes-bias defeat,
+    crop >=512 px with outline). The live Meta API was never called (no key); endpoint and model ids are [UNVERIFIED].
 - id: F26
   name: Hard-case escalation
   tier: Strong
-  status: planned
-  evidence_type: null
-  evidence: null
+  status: partial
+  evidence_type: fixture_replay
+  evidence: tests/judge/test_judge_two_way.py
+  note: Wonder escalation with a wall-clock cap tested with an injectable clock; live muse-wonder-1.0 unverified.
 - id: F27
   name: Open-weights / private mode
   tier: Strong
   status: planned
   evidence_type: null
   evidence: null
+  note: Backends are wired (baseten-spark-open / modal-glimmer-vllm / llamacpp-glimmer) but no model was ever loaded or run.
 - id: F28
   name: Verdict + reason codes + exit codes
   tier: MVP
@@ -195,101 +206,129 @@
 - id: F31
   name: Step-chain transition finder
   tier: MVP
-  status: planned
-  evidence_type: null
-  evidence: null
+  status: done
+  evidence_type: unit_tests
+  evidence: tests/blame/test_transitions.py
+  note: Three classes (broken prerequisite via carried literals, unmet condition via soft score, order violation); transient breaks become warnings.
 - id: F32
   name: Exact t* by backward refinement
   tier: MVP
-  status: planned
-  evidence_type: null
-  evidence: null
+  status: partial
+  evidence_type: synthetic
+  evidence: tests/blame/test_tstar.py
+  note: >-
+    Detach-onset / piecewise-breakpoint refinement with seeded bootstrap sigma; frame-exact on synthetic ramps.
+    On Tier C fixture tracks sigma is several frames (~7), so "exact" is proven only on synthetic data.
 - id: F33
   name: One-sentence summary bound to measurements
   tier: MVP
-  status: planned
-  evidence_type: null
-  evidence: null
+  status: done
+  evidence_type: unit_tests
+  evidence: tests/blame/test_summary.py, tests/blame/test_validate.py
+  note: Validator rejects fabricated numbers, unknown objects and unlicensed verbs; template fallback is labelled "template", never "muse-spark".
 - id: F34
   name: Event-level reality diff
   tier: MVP
-  status: planned
-  evidence_type: null
-  evidence: null
+  status: done
+  evidence_type: synthetic
+  evidence: tests/blame/test_diff.py, tests/blame/golden/
+  note: Myers LCS over (step, kind, predicate) with measurements; golden snapshots are built from constructed event lists, not recorded runs.
 - id: F35a
   name: Blame target, real footage
   tier: MVP
   status: planned
   evidence_type: null
   evidence: null
+  note: No real-footage clip exists; blame was exercised on fixture replays of mock-sim renders only.
 - id: F35b
   name: Blame target, sim code
   tier: MVP
-  status: planned
-  evidence_type: null
-  evidence: null
+  status: done
+  evidence_type: mock_sim
+  evidence: tests/blame/test_codeloc.py, artifacts/p06/codeloc_B01_B10.json
+  note: >-
+    10/10 bug lines located on the kinematic mock sim (seed 0). This is not blind validation (the expected onset
+    came from a test-side step machine) and B07/B10 disagree with the registry's expected span class; both disclosed in the JSON.
 - id: F36
   name: Prefix salvage
   tier: MVP
-  status: planned
-  evidence_type: null
-  evidence: null
+  status: partial
+  evidence_type: unit_tests
+  evidence: tests/blame/test_salvage.py
+  note: Cut + chunk-safe mask + LeRobot-style export tested; the h5 path is untested (h5py absent) and no retraining run exists.
 - id: F37
   name: Corrective hint
   tier: MVP
-  status: planned
-  evidence_type: null
-  evidence: null
+  status: done
+  evidence_type: unit_tests
+  evidence: tests/blame/test_hint.py
+  note: Every suggested delta is derived from a measured fact; insufficient facts -> no hint.
 - id: F38
   name: MCP tool Kodiac.verify
   tier: MVP
-  status: planned
-  evidence_type: null
-  evidence: null
+  status: done
+  evidence_type: mock_sim
+  evidence: tests/loop/test_mcp.py
+  note: FastMCP server "Kodiac" with tool "verify"; real integration PASS for the correct script and FAIL+hint for B01 on the mock sim.
 - id: F39
   name: Done-gate
   tier: MVP
-  status: planned
-  evidence_type: null
-  evidence: null
+  status: done
+  evidence_type: mock_sim
+  evidence: tests/loop/test_gate.py, artifacts/p07/gate_refusals.json
+  note: >-
+    Pins live outside the workspace; every check fails closed (never exit 3). 18 recorded attacks refused
+    (edited test, edited config, forged verdict, stale clip, edited pin, sim crash). Mock backend badges [MOCK SIMULATION].
 - id: F40
   name: /goal recipe
   tier: MVP
-  status: planned
-  evidence_type: null
-  evidence: null
+  status: partial
+  evidence_type: unit_tests
+  evidence: tests/loop/test_installer.py
+  note: Templates + idempotent installer tested; the `.muse/hooks.json` format is unverified against Muse Code and no live /goal run exists.
 - id: F41
   name: Sim harness
   tier: MVP
   status: partial
   evidence_type: mock_sim
-  evidence: tests/sim/test_env.py
-  note: Kinematic mock env only; ManiSkill path unverified (no GPU/Modal).
+  evidence: tests/sim/test_env.py, tests/loop/test_runner.py
+  note: >-
+    Kinematic mock env plus an isolated-child sim runner (action replay, sanity bounds, digests), all mock.
+    The ManiSkill path is unverified (no GPU/Modal) and scripts are graded on tracks projected from sim state.
 - id: F42
   name: 10 seeded physical bugs + fix-rate eval
   tier: MVP
   status: partial
   evidence_type: mock_sim
-  evidence: tests/sim/test_bugs.py
-  note: Bug registry B01-B10 exists; fix-rate eval not run.
+  evidence: tests/sim/test_bugs.py, tests/sim/test_bug_patches.py, artifacts/p07/loop_eval_dryrun.json
+  note: >-
+    B01-B10 registry and real patches (all apply, oracle fails on each). The fix-rate harness ran only its
+    plumbing dry run with a scripted reference patcher; there is no agent fix rate (agent_fix_rate null).
 - id: F43
   name: 'Headline: "Only the judge changed"'
   tier: MVP
   status: planned
   evidence_type: null
   evidence: null
+  note: >-
+    NOT MEASURED. Statistics machinery is built and tested; there are no judge labels and no trained arms, so
+    experiments/results/headline.json carries Y_points null and status NOT_MEASURED (no number is claimed).
 - id: F44
   name: Fair baselines
   tier: MVP
-  status: planned
-  evidence_type: null
-  evidence: null
+  status: partial
+  evidence_type: synthetic
+  evidence: tests/proof/test_arms.py, tests/proof/test_no_oracle_leak.py
+  note: >-
+    Arms are fail-closed: a missing judge label makes the arm absent with a reason, never oracle-derived.
+    Oracle / accept-all / injected-noise controls exist; no baseline judge has been run, so no comparison exists.
 - id: F45
   name: Judge benchmark table
   tier: MVP
   status: planned
   evidence_type: null
   evidence: null
+  note: No judge has been run against labelled clips; the benchmark table cannot be filled without keys/labels.
 - id: F46
   name: Real-footage validation
   tier: Strong
@@ -299,84 +338,108 @@
 - id: F47
   name: Proof chart
   tier: MVP
-  status: planned
-  evidence_type: null
-  evidence: null
+  status: partial
+  evidence_type: synthetic
+  evidence: tests/proof/test_chart.py, experiments/results/headline.json
+  note: >-
+    Renderer refuses to draw bars unless the headline is MEASURED; it currently renders the "NOT MEASURED: NO
+    TRAINED ARMS YET" watermark, which is the honest current state.
 - id: F48
   name: Meta ablation ladder
   tier: Strong
-  status: planned
-  evidence_type: null
-  evidence: null
+  status: partial
+  evidence_type: synthetic
+  evidence: tests/proof/test_ablation.py
+  note: Ladder logic tested with synthetic inputs; no rung has been measured.
 - id: F49
   name: Audit of public robot datasets
   tier: MVP
-  status: planned
-  evidence_type: null
-  evidence: null
+  status: partial
+  evidence_type: mock_sim
+  evidence: tests/audit/test_audit_run.py, tests/audit/test_audit_review_digest.py
+  note: >-
+    Batch runner, review queue, digest, export and guarded publish are built and tested on fixture episodes
+    labelled DEMONSTRATION DATA. No public dataset has been audited; no flag is human-verified yet.
 - id: F50
   name: Failure-Norm Digest
   tier: MVP
-  status: planned
-  evidence_type: null
-  evidence: null
+  status: done
+  evidence_type: unit_tests
+  evidence: tests/audit/test_audit_review_digest.py
+  note: Deterministic histogram + Wilson lower bound over hand-verified flags only; narration validator rejects invented numbers.
 - id: F51
   name: LeRobot-compatible verdict export
   tier: MVP
-  status: planned
-  evidence_type: null
-  evidence: null
+  status: done
+  evidence_type: unit_tests
+  evidence: tests/audit/test_audit_review_digest.py
+  note: Kodiac_verdicts.parquet validated against the VerdictRow contract, plus an evidence manifest.
 - id: F52
   name: Helpful community reports
   tier: Strong
   status: planned
   evidence_type: null
   evidence: null
+  note: Publish is a guarded stub that refuses without a recorded human approval ticket; nothing was ever posted.
 - id: F53
   name: Hosted web app
   tier: MVP
-  status: planned
-  evidence_type: null
-  evidence: null
+  status: partial
+  evidence_type: fixture_replay
+  evidence: tests/app/test_app_server.py, tests/app/test_app_ui.py
+  note: >-
+    FastAPI server (/health, /grade, /replay) and a Gradio UI are built and tested offline against fixture clips.
+    Nothing is deployed: no Modal token, no public URL. Every grade is fixture replay and says so.
 - id: F54
   name: Live wall-clock timer, "<12 s"
   tier: MVP
-  status: planned
-  evidence_type: null
-  evidence: null
+  status: partial
+  evidence_type: fixture_replay
+  evidence: tests/app/test_app_server.py
+  note: >-
+    The timer measures real wall-clock of what actually ran and is shown as measured, never as a "<12 s" claim.
+    No live grade exists (no API key), and the fixture benchmark timings are simulated, so the budget is unverified.
 - id: F55
   name: Camera-cover test + occlusion brush
   tier: MVP
-  status: planned
-  evidence_type: null
-  evidence: null
+  status: done
+  evidence_type: fixture_replay
+  evidence: tests/app/test_app_occlusion.py
+  note: Brushed rectangles are applied to every frame and the run abstains with a reason code; replayed on cached masks with a badge.
 - id: F56
   name: Instant Cached Replay
   tier: MVP
-  status: planned
-  evidence_type: null
-  evidence: null
+  status: done
+  evidence_type: fixture_replay
+  evidence: tests/app/test_app_replay_guards.py, site/replays.json
+  note: Content-addressed store; every entry records is_fixture, backend and source commit; the site labels every card as a cached replay.
 - id: F57
   name: Operations guard
   tier: MVP
-  status: planned
-  evidence_type: null
-  evidence: null
+  status: done
+  evidence_type: unit_tests
+  evidence: tests/app/test_app_replay_guards.py
+  note: Per-IP token bucket, size/length caps with typed errors, 24 h upload reaper, and logs that hash IPs and filenames.
 - id: F58
   name: pip package + CLI
   tier: MVP
-  status: planned
-  evidence_type: null
-  evidence: null
+  status: partial
+  evidence_type: unit_tests
+  evidence: tests/cli/test_cli_sprint_commands.py, tests/cli/test_run_cli.py
+  note: >-
+    Commands run/test/blame/diff/gate/mcp/loop/audit are wired and tested locally; the package is not published
+    (the PyPI name reservation is still a human action).
 - id: F59
   name: 3-minute video
   tier: MVP
   status: planned
   evidence_type: null
   evidence: null
+  note: A draft script and linter exist (video/SCRIPT.md); no footage, voiceover or edit exists, and unmeasured numbers are marked pending.
 - id: F60
   name: README + write-up
   tier: MVP
-  status: planned
-  evidence_type: null
-  evidence: null
+  status: partial
+  evidence_type: unit_tests
+  evidence: README.md, docs/SUBMISSION.md
+  note: README has a generated-from-registry status table; the write-up and submission text still contain [PENDING] links.
