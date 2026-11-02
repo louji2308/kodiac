@@ -45,6 +45,18 @@ TEMPLATE_COMPILER_BADGE = "[COMPILER: DETERMINISTIC TEMPLATE FALLBACK · LLM OFF
 MAX_INSTRUCTION_CHARS = 280
 
 
+def _move_dir(src: Path, dst: Path, attempts: int = 8) -> None:
+    """Rename a directory; on Windows a scanner can briefly hold a file open, so retry then copy."""
+    for _ in range(attempts):
+        try:
+            os.replace(src, dst)
+            return
+        except PermissionError:
+            time.sleep(0.15)
+    shutil.copytree(src, dst, dirs_exist_ok=True)
+    shutil.rmtree(src, ignore_errors=True)
+
+
 @dataclass
 class CuratedClip:
     id: str
@@ -289,7 +301,7 @@ class GradeService:
             final_dir = self.settings.run_dir / result.run_id
             if final_dir.exists():
                 shutil.rmtree(final_dir, ignore_errors=True)
-            os.replace(work, final_dir)
+            _move_dir(work, final_dir)
             card = final_dir / "card.png"
             return GradeOutcome(
                 run=result,
