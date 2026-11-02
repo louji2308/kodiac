@@ -35,16 +35,24 @@ def test_features_yaml_schema_validity(repo_root: Path):
     assert len(data) >= 60, f"Expected at least 60 features, found {len(data)}"
 
     feature_ids = set()
-    expected_keys = {"id", "name", "tier", "status", "evidence"}
+    required_keys = {"id", "name", "tier", "status", "evidence", "evidence_type"}
+    optional_keys = {"note"}
     allowed_tiers = {"MVP", "Strong", "Stretch"}
-    allowed_statuses = {"planned", "in_progress", "done", "blocked"}
+    allowed_statuses = {"planned", "partial", "in_progress", "done", "blocked"}
+    allowed_evidence_types = {None, "unit_tests", "fixture_replay", "synthetic", "mock_sim", "live"}
     id_pattern = re.compile(r"^F\d{2}[a-z]?$")
 
     for idx, item in enumerate(data):
         assert isinstance(item, dict), f"Feature item {idx} must be a dictionary"
-        assert set(item.keys()) == expected_keys, (
-            f"Feature item {idx} keys mismatch: {set(item.keys())} != {expected_keys}"
+        keys = set(item.keys())
+        assert required_keys <= keys <= required_keys | optional_keys, (
+            f"Feature item {idx} keys mismatch: {keys}"
         )
+        assert item["evidence_type"] in allowed_evidence_types
+        if item["status"] == "done":
+            assert item["evidence_type"] and item["evidence"], f"done row {item['id']} lacks evidence"
+            for ev in str(item["evidence"]).split(","):
+                assert (repo_root / ev.strip()).exists(), f"{item['id']} evidence missing: {ev}"
         fid = item["id"]
         assert id_pattern.match(fid), f"Invalid feature id format: {fid}"
         assert fid not in feature_ids, f"Duplicate feature id detected: {fid}"
