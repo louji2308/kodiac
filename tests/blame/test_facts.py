@@ -8,7 +8,14 @@ from Kodiac_robotics.blame.facts import build_fact_table, classify, component_op
 from Kodiac_robotics.blame.transitions import Transition, find_transition
 from Kodiac_robotics.blame.tstar import TStar, refine_tstar
 from Kodiac_robotics.blame.validate import blame_from_run
-from Kodiac_robotics.contracts.core import CodeLocation, Component, ReasonCode, StepResult, Tri, Verdict
+from Kodiac_robotics.contracts.core import (
+    CodeLocation,
+    Component,
+    ReasonCode,
+    StepResult,
+    Tri,
+    Verdict,
+)
 
 from .test_transitions import FPS, atom_expr, mk_test, run_result, scenario, series
 

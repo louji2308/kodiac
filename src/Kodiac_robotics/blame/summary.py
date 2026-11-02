@@ -123,10 +123,12 @@ def render_template_summary(ft: FactTable) -> str:
         return f"blame: {ft.literal} broke at {when}: {clause}"
     if ft.transition == "order":
         return f"blame: step {ft.step_name} held out of order at {when}: {clause}"
+    # Unmet conditions: t* is an argmax over the window and can be ambiguous, so its own ± is shown (seconds).
+    t_pm = f"{fmt_num(ft.t_star_s)} ± {fmt_num(ft.sigma_frames / ft.fps)} s (frame {ft.frame})"
     below_floor = abs(float(fact.get("margin", 0.0))) < float(fact.get("sigma", 0.0)) or fact.get("tri") == "U"
     if below_floor:
-        return f"blame: step {ft.step_name} never confirmed: {clause} stayed within noise (best at {when})"
-    return f"blame: step {ft.step_name} never held: {clause} at closest approach ({when})"
+        return f"blame: step {ft.step_name} never confirmed: {clause} stayed within noise, best at {t_pm}"
+    return f"blame: step {ft.step_name} never held: {clause}, closest at {t_pm}"
 
 
 def build_prompt(ft: FactTable, test: GreenTest) -> str:

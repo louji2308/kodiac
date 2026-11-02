@@ -1,0 +1,696 @@
+{
+  "task": "P06/T01 blame core",
+  "law1_note": "fixture_replay rows: golden 640x480 clips replayed through recorded HSV-segmented tracks (no live SAM 3.1, no SAPIEN physics), Tier C geometry. synthetic_kinematic rows: hand-built gripper/cube trajectories with known release frames fed through the real predicates, gates and step engine via an exact (tier-A-like) fake scale model; they test the blame logic, not perception.",
+  "fixture_limitation": "On every fixture clip, including correct_run.mp4, the engine returns FAIL at step grasp because Tier C sigma for moves_with.slip (1.0 cm) equals the slip threshold, so gate G3 holds the grasp at U. Blame reports this honestly as an unresolved grasp; these clips are not hero evidence.",
+  "fixture_replay": [
+    {
+      "clip": "tests/fixtures/clips/b01_early_release.mp4",
+      "evidence_type": "fixture_replay",
+      "verdict": "FAIL",
+      "steps": [
+        {
+          "name": "grasp",
+          "verdict": "FAIL",
+          "frame": 89
+        },
+        {
+          "name": "place",
+          "verdict": null,
+          "frame": null
+        },
+        {
+          "name": "release",
+          "verdict": null,
+          "frame": null
+        }
+      ],
+      "badges": [
+        "[FIXTURE REPLAY]",
+        "[REPLAY: CACHED SAM 3.1 TRACKS]",
+        "[GEOMETRY: TIER C \u00b7 UNCALIBRATED CAMERA]"
+      ],
+      "backends": {
+        "perception": "fixture",
+        "scale_tier": "C"
+      },
+      "is_fixture": true,
+      "blame": {
+        "transition": "never_T",
+        "step": "grasp",
+        "literal": "moves_with(gripper, cubeA)",
+        "t_star_frame": 57,
+        "t_star_s": 1.9,
+        "sigma_frames": 7.3689,
+        "facts": {
+          "slip_cm": {
+            "value": 0.18036389206293402,
+            "sigma": 1.0,
+            "unit": "cm",
+            "threshold": 1.0,
+            "frame": 57
+          },
+          "speed_cm_s": {
+            "value": 22.070844686648503,
+            "sigma": 5.303301,
+            "unit": "cm/s",
+            "threshold": 1.0,
+            "frame": 57
+          },
+          "dwell_s": {
+            "value": 0.03333333333333333,
+            "sigma": 0.033333,
+            "unit": "s",
+            "threshold": 0.5,
+            "frame": 57
+          },
+          "lift_cm": {
+            "value": 7.806451612903226,
+            "sigma": 0.707107,
+            "unit": "cm",
+            "threshold": 2.0,
+            "frame": 57
+          },
+          "xy_offset_cm": {
+            "value": 9.591280653950953,
+            "sigma": 0.707107,
+            "unit": "cm",
+            "threshold": 3.33,
+            "frame": 57
+          },
+          "depth_ratio": {
+            "value": 0.0,
+            "sigma": 0.02,
+            "unit": "ratio",
+            "threshold": 0.12,
+            "frame": 57
+          },
+          "occlusion": {
+            "value": 0.0,
+            "sigma": null,
+            "unit": "ratio"
+          },
+          "blame_class": {
+            "value": "grasp",
+            "unit": "class"
+          }
+        },
+        "summary": "blame: step grasp never confirmed: slip 0.2 \u00b1 1.0 cm vs \u2264 1.0 cm stayed within noise, best at 1.9 \u00b1 0.2 s (frame 57)",
+        "summary_source": "template",
+        "summary_violations": [],
+        "warnings": [
+          "cause moves_with.slip is below the noise floor at its best frame (margin +0.82 vs sigma 1.00 cm): the condition was never confirmed rather than measured as violated",
+          "step 'grasp' was unresolved (U) for 26 consecutive frames; a True run could be hidden there (ARCHITECTURE 7.5), so this FAIL is low-confidence",
+          "fixture replay: measurements come from recorded tracks, not a live SAM 3.1 call"
+        ]
+      }
+    },
+    {
+      "clip": "tests/fixtures/clips/b02_xy_misalignment.mp4",
+      "evidence_type": "fixture_replay",
+      "verdict": "FAIL",
+      "steps": [
+        {
+          "name": "grasp",
+          "verdict": "FAIL",
+          "frame": 89
+        },
+        {
+          "name": "place",
+          "verdict": null,
+          "frame": null
+        },
+        {
+          "name": "release",
+          "verdict": null,
+          "frame": null
+        }
+      ],
+      "badges": [
+        "[FIXTURE REPLAY]",
+        "[REPLAY: CACHED SAM 3.1 TRACKS]",
+        "[GEOMETRY: TIER C \u00b7 UNCALIBRATED CAMERA]"
+      ],
+      "backends": {
+        "perception": "fixture",
+        "scale_tier": "C"
+      },
+      "is_fixture": true,
+      "blame": {
+        "transition": "never_T",
+        "step": "grasp",
+        "literal": "moves_with(gripper, cubeA)",
+        "t_star_frame": 58,
+        "t_star_s": 1.9333,
+        "sigma_frames": 11.9544,
+        "facts": {
+          "slip_cm": {
+            "value": 0.12024259470862297,
+            "sigma": 1.0,
+            "unit": "cm",
+            "threshold": 1.0,
+            "frame": 58
+          },
+          "speed_cm_s": {
+            "value": 15.531335149863757,
+            "sigma": 5.303301,
+            "unit": "cm/s",
+            "threshold": 1.0,
+            "frame": 58
+          },
+          "dwell_s": {
+            "value": 0.03333333333333333,
+            "sigma": 0.033333,
+            "unit": "s",
+            "threshold": 0.5,
+            "frame": 58
+          },
+          "lift_cm": {
+            "value": 7.806451612903226,
+            "sigma": 0.707107,
+            "unit": "cm",
+            "threshold": 2.0,
+            "frame": 58
+          },
+          "xy_offset_cm": {
+            "value": 10.572207084468666,
+            "sigma": 0.707107,
+            "unit": "cm",
+            "threshold": 3.33,
+            "frame": 58
+          },
+          "depth_ratio": {
+            "value": 0.0,
+            "sigma": 0.02,
+            "unit": "ratio",
+            "threshold": 0.12,
+            "frame": 58
+          },
+          "occlusion": {
+            "value": 0.0,
+            "sigma": null,
+            "unit": "ratio"
+          },
+          "blame_class": {
+            "value": "grasp",
+            "unit": "class"
+          }
+        },
+        "summary": "blame: step grasp never confirmed: slip 0.1 \u00b1 1.0 cm vs \u2264 1.0 cm stayed within noise, best at 1.9 \u00b1 0.4 s (frame 58)",
+        "summary_source": "template",
+        "summary_violations": [],
+        "warnings": [
+          "cause moves_with.slip is below the noise floor at its best frame (margin +0.88 vs sigma 1.00 cm): the condition was never confirmed rather than measured as violated",
+          "step 'grasp' was unresolved (U) for 45 consecutive frames; a True run could be hidden there (ARCHITECTURE 7.5), so this FAIL is low-confidence",
+          "fixture replay: measurements come from recorded tracks, not a live SAM 3.1 call"
+        ]
+      }
+    },
+    {
+      "clip": "tests/fixtures/clips/b09_lift_failure.mp4",
+      "evidence_type": "fixture_replay",
+      "verdict": "FAIL",
+      "steps": [
+        {
+          "name": "grasp",
+          "verdict": "FAIL",
+          "frame": 89
+        },
+        {
+          "name": "place",
+          "verdict": null,
+          "frame": null
+        },
+        {
+          "name": "release",
+          "verdict": null,
+          "frame": null
+        }
+      ],
+      "badges": [
+        "[FIXTURE REPLAY]",
+        "[REPLAY: CACHED SAM 3.1 TRACKS]",
+        "[GEOMETRY: TIER C \u00b7 UNCALIBRATED CAMERA]"
+      ],
+      "backends": {
+        "perception": "fixture",
+        "scale_tier": "C"
+      },
+      "is_fixture": true,
+      "blame": {
+        "transition": "never_T",
+        "step": "grasp",
+        "literal": "lifted(cubeA)",
+        "t_star_frame": 0,
+        "t_star_s": 0.0,
+        "sigma_frames": 24.1727,
+        "facts": {
+          "lift_cm": {
+            "value": 0.0,
+            "sigma": 0.707107,
+            "unit": "cm",
+            "threshold": 2.0,
+            "frame": 0
+          },
+          "speed_cm_s": {
+            "value": 0.0,
+            "sigma": 21.213203,
+            "unit": "cm/s",
+            "threshold": 1.0,
+            "frame": 0
+          },
+          "dwell_s": {
+            "value": 0.03333333333333333,
+            "sigma": 0.033333,
+            "unit": "s",
+            "threshold": 0.5,
+            "frame": 0
+          },
+          "xy_offset_cm": {
+            "value": 14.659400544959126,
+            "sigma": 0.707107,
+            "unit": "cm",
+            "threshold": 3.33,
+            "frame": 0
+          },
+          "depth_ratio": {
+            "value": 0.0,
+            "sigma": 0.02,
+            "unit": "ratio",
+            "threshold": 0.12,
+            "frame": 0
+          },
+          "occlusion": {
+            "value": 0.0,
+            "sigma": null,
+            "unit": "ratio"
+          },
+          "blame_class": {
+            "value": "lift_height",
+            "unit": "class"
+          }
+        },
+        "summary": "blame: step grasp never held: lift 0.0 \u00b1 0.7 cm vs \u2265 2.0 cm, closest at 0.0 \u00b1 0.8 s (frame 0)",
+        "summary_source": "template",
+        "summary_violations": [],
+        "warnings": [
+          "fixture replay: measurements come from recorded tracks, not a live SAM 3.1 call"
+        ]
+      }
+    },
+    {
+      "clip": "tests/fixtures/clips/correct_run.mp4",
+      "evidence_type": "fixture_replay",
+      "verdict": "FAIL",
+      "steps": [
+        {
+          "name": "grasp",
+          "verdict": "FAIL",
+          "frame": 89
+        },
+        {
+          "name": "place",
+          "verdict": null,
+          "frame": null
+        },
+        {
+          "name": "release",
+          "verdict": null,
+          "frame": null
+        }
+      ],
+      "badges": [
+        "[FIXTURE REPLAY]",
+        "[REPLAY: CACHED SAM 3.1 TRACKS]",
+        "[GEOMETRY: TIER C \u00b7 UNCALIBRATED CAMERA]"
+      ],
+      "backends": {
+        "perception": "fixture",
+        "scale_tier": "C"
+      },
+      "is_fixture": true,
+      "blame": {
+        "transition": "never_T",
+        "step": "grasp",
+        "literal": "moves_with(gripper, cubeA)",
+        "t_star_frame": 71,
+        "t_star_s": 2.3667,
+        "sigma_frames": 12.4562,
+        "facts": {
+          "slip_cm": {
+            "value": 0.08016172980574865,
+            "sigma": 1.0,
+            "unit": "cm",
+            "threshold": 1.0,
+            "frame": 71
+          },
+          "speed_cm_s": {
+            "value": 17.198778131173643,
+            "sigma": 5.303301,
+            "unit": "cm/s",
+            "threshold": 1.0,
+            "frame": 71
+          },
+          "dwell_s": {
+            "value": 0.03333333333333333,
+            "sigma": 0.033333,
+            "unit": "s",
+            "threshold": 0.5,
+            "frame": 71
+          },
+          "lift_cm": {
+            "value": 7.290322580645161,
+            "sigma": 0.707107,
+            "unit": "cm",
+            "threshold": 2.0,
+            "frame": 71
+          },
+          "xy_offset_cm": {
+            "value": 0.0,
+            "sigma": 0.707107,
+            "unit": "cm",
+            "threshold": 3.33,
+            "frame": 71
+          },
+          "depth_ratio": {
+            "value": 0.0,
+            "sigma": 0.02,
+            "unit": "ratio",
+            "threshold": 0.12,
+            "frame": 71
+          },
+          "occlusion": {
+            "value": 0.0,
+            "sigma": null,
+            "unit": "ratio"
+          },
+          "blame_class": {
+            "value": "grasp",
+            "unit": "class"
+          }
+        },
+        "summary": "blame: step grasp never confirmed: slip 0.1 \u00b1 1.0 cm vs \u2264 1.0 cm stayed within noise, best at 2.4 \u00b1 0.4 s (frame 71)",
+        "summary_source": "template",
+        "summary_violations": [],
+        "warnings": [
+          "cause moves_with.slip is below the noise floor at its best frame (margin +0.92 vs sigma 1.00 cm): the condition was never confirmed rather than measured as violated",
+          "step 'grasp' was unresolved (U) for 49 consecutive frames; a True run could be hidden there (ARCHITECTURE 7.5), so this FAIL is low-confidence",
+          "fixture replay: measurements come from recorded tracks, not a live SAM 3.1 call"
+        ]
+      }
+    }
+  ],
+  "synthetic_kinematic": [
+    {
+      "scenario": "b01_early_release",
+      "evidence_type": "synthetic_kinematic",
+      "ground_truth_detach_frame": 46,
+      "t_star_frame": 46,
+      "sigma_frames": 0.5,
+      "transition": "T->F",
+      "literal": "moves_with(gripper, cubeA)",
+      "blame_class": "release_before_place",
+      "facts": {
+        "slip_cm": {
+          "value": 0.8251952873427655,
+          "sigma": 0.14,
+          "unit": "cm",
+          "threshold": 1.0,
+          "frame": 46
+        },
+        "speed_cm_s": {
+          "value": 18.016288755397035,
+          "sigma": 0.742462120245875,
+          "unit": "cm/s",
+          "threshold": 1.0,
+          "frame": 45
+        },
+        "dwell_s": {
+          "value": 0.03333333333333333,
+          "sigma": 0.03333333333333333,
+          "unit": "s",
+          "threshold": 0.5,
+          "frame": 45
+        },
+        "lift_cm": {
+          "value": 9.996125034176224,
+          "sigma": 0.09899494936611666,
+          "unit": "cm",
+          "threshold": 2.0,
+          "frame": 45
+        },
+        "xy_offset_cm": {
+          "value": 8.998340700843572,
+          "sigma": 0.09899494936611666,
+          "unit": "cm",
+          "threshold": 3.33,
+          "frame": 45
+        },
+        "gap_z_cm": {
+          "value": 5.9993459867921715,
+          "sigma": 0.09899494936611666,
+          "unit": "cm",
+          "threshold": 0.5,
+          "frame": 45
+        },
+        "depth_ratio": {
+          "value": 0.0001823113977635904,
+          "sigma": 0.02,
+          "unit": "ratio",
+          "threshold": 0.12,
+          "frame": 45
+        },
+        "dt_before_reference_s": {
+          "value": 0.4666666666666667,
+          "sigma": 0.023570226039551587,
+          "unit": "s"
+        },
+        "reference_xy_cm": {
+          "value": 0.005313630401888104,
+          "sigma": 0.09899494936611666,
+          "unit": "cm",
+          "frame": 60
+        },
+        "occlusion": {
+          "value": 0.0,
+          "sigma": null,
+          "unit": "ratio"
+        },
+        "blame_class": {
+          "value": "release_before_place",
+          "unit": "class"
+        }
+      },
+      "summary": "blame: gripper released cubeA 0.5 \u00b1 0.02 s before reaching cubeB (xy offset 9.0 \u00b1 0.1 cm at 00:01.5, frame 46)",
+      "summary_source": "template"
+    },
+    {
+      "scenario": "b02_xy_offset",
+      "evidence_type": "synthetic_kinematic",
+      "ground_truth_detach_frame": 73,
+      "t_star_frame": 73,
+      "sigma_frames": 0.5135,
+      "transition": "T->F",
+      "literal": "moves_with(gripper, cubeA)",
+      "blame_class": "xy_offset",
+      "facts": {
+        "slip_cm": {
+          "value": 0.5404671946572928,
+          "sigma": 0.14,
+          "unit": "cm",
+          "threshold": 1.0,
+          "frame": 73
+        },
+        "speed_cm_s": {
+          "value": 8.908584216384932,
+          "sigma": 0.4286607049870562,
+          "unit": "cm/s",
+          "threshold": 1.0,
+          "frame": 72
+        },
+        "dwell_s": {
+          "value": 0.1,
+          "sigma": 0.03333333333333333,
+          "unit": "s",
+          "threshold": 0.5,
+          "frame": 72
+        },
+        "lift_cm": {
+          "value": 4.001090278307151,
+          "sigma": 0.09899494936611666,
+          "unit": "cm",
+          "threshold": 2.0,
+          "frame": 72
+        },
+        "xy_offset_cm": {
+          "value": 4.499887381970546,
+          "sigma": 0.09899494936611666,
+          "unit": "cm",
+          "threshold": 3.33,
+          "frame": 72
+        },
+        "gap_z_cm": {
+          "value": 0.004311230923099707,
+          "sigma": 0.09899494936611666,
+          "unit": "cm",
+          "threshold": 0.5,
+          "frame": 72
+        },
+        "depth_ratio": {
+          "value": 2.8229845296490197e-05,
+          "sigma": 0.02,
+          "unit": "ratio",
+          "threshold": 0.12,
+          "frame": 72
+        },
+        "occlusion": {
+          "value": 0.0,
+          "sigma": null,
+          "unit": "ratio"
+        },
+        "blame_class": {
+          "value": "xy_offset",
+          "unit": "class"
+        }
+      },
+      "summary": "blame: gripper released cubeA 4.5 \u00b1 0.1 cm from cubeB in xy at 00:02.4, frame 73",
+      "summary_source": "template"
+    },
+    {
+      "scenario": "b10_place_high",
+      "evidence_type": "synthetic_kinematic",
+      "ground_truth_detach_frame": 73,
+      "t_star_frame": 73,
+      "sigma_frames": 0.5135,
+      "transition": "T->F",
+      "literal": "moves_with(gripper, cubeA)",
+      "blame_class": "place_z",
+      "facts": {
+        "slip_cm": {
+          "value": 0.5404671946572928,
+          "sigma": 0.14,
+          "unit": "cm",
+          "threshold": 1.0,
+          "frame": 73
+        },
+        "speed_cm_s": {
+          "value": 4.408648947363281,
+          "sigma": 0.4286607049870562,
+          "unit": "cm/s",
+          "threshold": 1.0,
+          "frame": 72
+        },
+        "dwell_s": {
+          "value": 0.1,
+          "sigma": 0.03333333333333333,
+          "unit": "s",
+          "threshold": 0.5,
+          "frame": 72
+        },
+        "lift_cm": {
+          "value": 7.001090278307151,
+          "sigma": 0.09899494936611666,
+          "unit": "cm",
+          "threshold": 2.0,
+          "frame": 72
+        },
+        "xy_offset_cm": {
+          "value": 0.0006311923412233504,
+          "sigma": 0.09899494936611666,
+          "unit": "cm",
+          "threshold": 3.33,
+          "frame": 72
+        },
+        "gap_z_cm": {
+          "value": 3.0043112309230997,
+          "sigma": 0.09899494936611666,
+          "unit": "cm",
+          "threshold": 0.5,
+          "frame": 72
+        },
+        "depth_ratio": {
+          "value": 2.8229845296490197e-05,
+          "sigma": 0.02,
+          "unit": "ratio",
+          "threshold": 0.12,
+          "frame": 72
+        },
+        "occlusion": {
+          "value": 0.0,
+          "sigma": null,
+          "unit": "ratio"
+        },
+        "blame_class": {
+          "value": "place_z",
+          "unit": "class"
+        }
+      },
+      "summary": "blame: gripper released cubeA 3.0 \u00b1 0.1 cm above cubeB at 00:02.4, frame 73, with xy offset 0.0 \u00b1 0.1 cm",
+      "summary_source": "template"
+    },
+    {
+      "scenario": "b09_low_lift",
+      "evidence_type": "synthetic_kinematic",
+      "ground_truth_detach_frame": null,
+      "t_star_frame": 37,
+      "sigma_frames": 10.4438,
+      "transition": "never_T",
+      "literal": "lifted(cubeA)",
+      "blame_class": "lift_height",
+      "facts": {
+        "lift_cm": {
+          "value": 1.0067765664892765,
+          "sigma": 0.09899494936611666,
+          "unit": "cm",
+          "threshold": 2.0,
+          "frame": 37
+        },
+        "speed_cm_s": {
+          "value": 11.075521789441657,
+          "sigma": 0.742462120245875,
+          "unit": "cm/s",
+          "threshold": 1.0,
+          "frame": 37
+        },
+        "dwell_s": {
+          "value": 0.03333333333333333,
+          "sigma": 0.03333333333333333,
+          "unit": "s",
+          "threshold": 0.5,
+          "frame": 37
+        },
+        "xy_offset_cm": {
+          "value": 15.42803431838565,
+          "sigma": 0.09899494936611666,
+          "unit": "cm",
+          "threshold": 3.33,
+          "frame": 37
+        },
+        "gap_z_cm": {
+          "value": 2.990002480894775,
+          "sigma": 0.09899494936611666,
+          "unit": "cm",
+          "threshold": 0.5,
+          "frame": 37
+        },
+        "depth_ratio": {
+          "value": 0.0001749535069599517,
+          "sigma": 0.02,
+          "unit": "ratio",
+          "threshold": 0.12,
+          "frame": 37
+        },
+        "occlusion": {
+          "value": 0.0,
+          "sigma": null,
+          "unit": "ratio"
+        },
+        "blame_class": {
+          "value": "lift_height",
+          "unit": "class"
+        }
+      },
+      "summary": "blame: step grasp never held: lift 1.0 \u00b1 0.1 cm vs \u2265 2.0 cm, closest at 1.2 \u00b1 0.3 s (frame 37)",
+      "summary_source": "template"
+    }
+  ]
+}
