@@ -1,5 +1,5 @@
 # T03: Event diff, corrective hint, code location, prefix salvage
-phase: P06 · owner: IMPL-3 (Sonnet 5.5 @ high) · status: TODO
+phase: P06 · owner: IMPL-3 (Sonnet 5.5 @ high) · status: DONE
 plan_ref: IMPLEMENTATION_PLAN.md P06.S06–S08 · ARCHITECTURE.md §9, §5.4, §10 · IDEA F34, F35b, F36, F37
 depends_on: [] (consumes the frozen FactTable/Event/Hint/CodeLocation contracts; T01 produces FactTables in parallel) · blocks: [ORCH CLI diff wiring]
 owns_paths: [src/Kodiac_robotics/blame/diff.py, src/Kodiac_robotics/blame/hint.py, src/Kodiac_robotics/blame/codeloc.py, src/Kodiac_robotics/blame/salvage.py, tests/blame/test_diff.py, tests/blame/test_hint.py, tests/blame/test_codeloc.py, tests/blame/test_salvage.py, tests/blame/golden/**, artifacts/p06/codeloc_B01_B10.json]
@@ -39,3 +39,24 @@ def export_prefix(episode_state_npz: Path, cut_frame: int, out_dir: Path, fmt: L
 - [ ] Committed `feat(p06/t03): …`.
 
 ## Report (filled by owner at DONE)
+
+**Status: DONE** (IMPL-3, 2026-11-02). Commits: 33e5b76 (codeloc), 285a003 (salvage), be7d609 (hint), 7bccd9e (diff + goldens), 485af17 (align with blame/facts.py), df0c66e (newlines).
+
+**Micro-plan:** (1) codeloc table + validation on mock B01-B10; (2) salvage cut/mask/export; (3) hint from FactTable only; (4) Myers diff + goldens; (5) align with T01's fact schema; (6) full suite.
+
+**Built**
+- `blame/codeloc.py`: `locate_code` (latest span with `step_start <= frame+slack` in the component's admissible actuation classes; falls back to wrapped `sim.spans.find_blame_span`), `component_for_facts`, `locate_from_fact_table`.
+- `blame/salvage.py`: `salvage_cut`, `chunk_safe_start_mask` (`s + H_a <= cut`), `export_prefix` (LeRobot-v2.0-style parquet+meta; ManiSkill h5 when h5py exists, else labelled `npz_fallback`; h5py is NOT installed here, so the h5 path is untested).
+- `blame/hint.py`: order / xy / z-gap / lift / dwell hints; None when threshold, margin and demo reference are all absent or the margin is already >= +sigma.
+- `blame/diff.py`: `myers_lcs` (checked against a DP LCS on 300 random pairs) and `diff_events` (context/-/+ lines, `value ± sigma unit`, camera-relative direction words unless Tier A).
+
+**Evidence:** tests (mine) 61 passed: `pytest tests/blame/test_{diff,hint,codeloc,salvage}.py`; ruff clean on owned paths; no TODO/NotImplemented. Artifact `artifacts/p06/codeloc_B01_B10.json` (force-added; `artifacts/` is gitignored) is rewritten by `tests/blame/test_codeloc.py`; labelled `backend=kinematic_mock, is_mock=true, evidence_type=mock_sim_privileged_state`.
+
+**B01-B10 code-location accuracy: 10/10 located line == expected buggy line, on the kinematic MOCK sim, seed 0.** Caveats (honest):
+- Onset frame/component come from a test-side step machine over privileged mock state, NOT the Kodiac blame engine and not real SAM tracks. The first run of that oracle gave 9/10 (B06): its soft-score clip at +-5 saturated and picked frame 0. I widened the clip to +-100 (a bug in the validation oracle, not in codeloc) and got 10/10. The change was made after seeing the failure, so this is not blind validation.
+- Expected lines are anchored by source text in `examples/sim/pick_place.py`. The `.patch` files do not apply to the current script (line numbers and content differ), so the `bug_id` branches are the ground truth. B02/B10/B06/B08 point to the actuation call that consumes the bad variable. B09 is an omission bug, so the expected line is the retract (manifestation).
+- Disagrees with the bug registry's `expected_blame_span` on B07 (registry arm.move_to, located arm.lift) and B10 (registry gripper.open, located move_to(place), per ARCHITECTURE section 9's z-gap rule). Flagged per bug in the JSON (`match_registry_span_class`).
+- `stable_frame_window` per bug is in the JSON; B01 is tightest (frames 112-126), B07 widest.
+- The `01_project_analysis.md` section 3.11 table cited by the card does not exist in the repo; the component->class table is derived from ARCHITECTURE section 9 and `find_blame_span`.
+
+**Deviations / known limits:** codeloc/hint read the T01 fact schema as of 2026-11-02 (`gap_z_cm`, `op`, `objects`, `blame_class`); not run end-to-end on T01's `blame_from_run` (T01 reports fixture clips at Tier C all FAIL at step 0). Diff goldens use hand-constructed (synthetic) event lists. `.agents/.../CHANNEL.md` note posted for ORCH wiring (`diff_events(lock.demo_events, result.events, camera_tier=lock.geometry_tier)`).
