@@ -23,3 +23,20 @@ Protect against kill-shots (disqualifiers, leaked secrets/strategy docs, banned 
 - [ ] ruff clean; no `TODO|NotImplemented`; full suite green. Committed `feat(p10/t12): …`.
 
 ## Report (filled by owner at DONE)
+
+status: DONE (2026-11-02, IMPL-12)
+Micro-plan: lint_script (IDEA 10.3 parsed at runtime) -> SCRIPT.md/concepts.yaml draft -> lint_public (secrets/forbidden paths/lineage, history+messages) -> compliance_check -> mirror .sh/.ps1 (dry-run default, never pushes) -> docs -> tests.
+Built: scripts/{lint_script,lint_public,compliance_check}.py, scripts/make_public_mirror.{sh,ps1}, video/{SCRIPT.md,concepts.yaml}, docs/{SUBMISSION,OPS_RUNBOOK}.md, tests/ship (29 tests, pass). ruff clean on owned files.
+Draft script: lint reports 6 violations (5 [MEASURED VALUE PENDING] + unregistered "95%" CI level): expected. Lineage = UNVERIFIABLE.
+Compliance run (real, unedited):
+~~~
+Kodiac compliance check: C:\Users\LOUJAN B\Kodiac
+[UNVERIFIABLE] lineage: UNVERIFIABLE: docs/private/lineage_terms.txt missing (no list invented; lineage scan NOT performed)
+[OPEN] attributions: no ATTRIBUTIONS.md row for DROID (CC-BY); human must confirm the licence from the upstream source (not guessed here)
+[OPEN] attributions: no ATTRIBUTIONS.md row for Robometer / TOPReward; human must confirm the licence from the upstream source (not guessed here)
+[OPEN] attributions: no ATTRIBUTIONS.md row for cookbook (MIT); human must confirm the licence from the upstream source (not guessed here)
+counts: {"OPEN": 3, "UNVERIFIABLE": 1}  ok=False
+
+~~~
+Deviations: ATTRIBUTIONS.md not edited (not owned); 3 rows OPEN for human (DROID, Robometer/TOPReward, cookbook). Mirror run path not exercised: git-filter-repo not installed here (scripts exit 3, tested); only dry-run/exit-3 verified. bash script not executed (only statically tested).
+Known limits: secret scan is regex+entropy (detect-secrets not used); no commit-message/patch scan of binary files; the first-commit check uses author dates. Full suite (ran concurrently with other agents): 631 passed, 5 failed in tests/audit and tests/loop (not mine; loop failures = subprocess without pydantic).

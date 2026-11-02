@@ -19,7 +19,6 @@ import compliance_check as cc  # noqa: E402
 import lint_public as lp  # noqa: E402
 import lint_script as ls  # noqa: E402
 
-
 # ---------------------------------------------------------------- script lint
 CONCEPTS8 = "concepts:\n" + "".join(f"  - {{id: C{i}, text: c{i}}}\n" for i in range(1, 9))
 
