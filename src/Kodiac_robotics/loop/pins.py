@@ -23,6 +23,7 @@ import json
 import os
 import secrets
 import tempfile
+import time
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -166,7 +167,19 @@ def _atomic_write(path: Path, data: bytes) -> None:
             fh.write(data)
             fh.flush()
             os.fsync(fh.fileno())
-        os.replace(tmp, path)
+        for attempt in range(12):
+            try:
+                os.replace(tmp, path)
+                return
+            except PermissionError:
+                if attempt == 11:
+                    Path(path).write_bytes(data)
+                    try:
+                        Path(tmp).unlink(missing_ok=True)
+                    except OSError:
+                        pass
+                    return
+                time.sleep(0.05 * (attempt + 1))
     except BaseException:
         Path(tmp).unlink(missing_ok=True)
         raise

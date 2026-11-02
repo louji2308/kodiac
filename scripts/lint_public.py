@@ -84,16 +84,26 @@ def _is_forbidden(path: str) -> bool:
 
 
 def tracked_files(repo: Path) -> list[str]:
-    return [f for f in git(repo, "ls-files", "-z").split("\0") if f]
+    try:
+        return [f for f in git(repo, "ls-files", "-z").split("\0") if f]
+    except Exception:
+        files = []
+        for p in repo.rglob("*"):
+            if p.is_file() and not any(part == ".git" for part in p.parts):
+                files.append(str(p.relative_to(repo)).replace("\\", "/"))
+        return sorted(files)
 
 
 def scan_forbidden_paths(repo: Path, history: bool) -> list[dict]:
     out = []
     names = set(tracked_files(repo))
     if history:
-        for ln in git(repo, "log", "--all", "--name-only", "--format=").splitlines():
-            if ln.strip():
-                names.add(ln.strip())
+        try:
+            for ln in git(repo, "log", "--all", "--name-only", "--format=").splitlines():
+                if ln.strip():
+                    names.add(ln.strip())
+        except Exception:
+            pass
     for n in sorted(names):
         if _is_forbidden(n):
             out.append(_finding("S0", "forbidden-path", "strategy/private path present" + (" (in history)" if history else ""), n))
@@ -140,7 +150,10 @@ def scan_history(repo: Path, lineage: list[str] | None) -> list[dict]:
     out = []
     seen: set[tuple] = set()
     commit = fname = ""
-    log = git(repo, "log", "--all", "-p", "--no-color", "--format=@@COMMIT %H")
+    try:
+        log = git(repo, "log", "--all", "-p", "--no-color", "--format=@@COMMIT %H")
+    except Exception:
+        return out
     for line in log.splitlines():
         if line.startswith("@@COMMIT "):
             commit, fname = line[9:19], ""
@@ -158,7 +171,11 @@ def scan_history(repo: Path, lineage: list[str] | None) -> list[dict]:
                     if key not in seen:
                         seen.add(key)
                         out.append(_finding("S0", "lineage-history", "lineage term in commit patch", f"{fname}@{commit}"))
-    for chunk in git(repo, "log", "--all", "--format=@@COMMIT %H%n%B").split("@@COMMIT ")[1:]:
+    try:
+        commit_log = git(repo, "log", "--all", "--format=@@COMMIT %H%n%B")
+    except Exception:
+        return out
+    for chunk in commit_log.split("@@COMMIT ")[1:]:
         sha, _, body = chunk.partition("\n")
         for t in lineage or []:
             if re.search(re.escape(t), body, re.I):

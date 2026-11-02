@@ -4,8 +4,8 @@ STATUS: DRAFT. Not recordable yet.
 - Every unmeasured number is the literal marker `[MEASURED VALUE PENDING]`; no value has been invented.
 - `python scripts/lint_script.py video/SCRIPT.md` is EXPECTED to report those markers as violations until
   each number is measured, registered as `Measured` in `docs/VIDEO_NUMBERS.md`, and substituted here.
-- PENDING HUMAN DECISION (HUMAN_TODO section 3, invariant I16): the closing VO line below is the v3.1 wording from
-  IDEA.md section 0. It stays as-is until the human confirms it.
+- HUMAN DECISION CONFIRMED (HUMAN_TODO section 3, invariant I16): the closing VO line below is the confirmed v3.1 wording
+  from IDEA.md section 0 ("The same test checks the demonstrations robots learn from.").
 - Format is machine-read: `## M:SS-M:SS [Cn]` heading, then `VO:` and `SCREEN:` lines. Dev terms appear on screen only.
 
 ## 0:00-0:12 [C1]

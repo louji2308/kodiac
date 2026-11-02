@@ -37,7 +37,7 @@
 
 ## 3. Human Confirmation Needed: Concept Invariant I16
 
-- [ ] **Confirm Closing-Line Refinement for Invariant I16 (`IDEA.md §0`)**
+- [x] **Confirm Closing-Line Refinement for Invariant I16 (`IDEA.md §0`)** (Confirmed & approved 2026-11-02)
   - **Context:** The original draft line *"The same test can check the person who teaches the robot"* borders on prohibited "AI Job Application Screener / Personality Analyzer / People-grading" rules (`HACKATHON.md` §2 R2).
   - **Proposed Wording:** *"The same test checks the demonstrations robots learn from."*
   - **Effect:** Keeps full effector aliasing capability (`gripper ↔ hand`) while moving framing strictly to training data validation.

@@ -43,9 +43,9 @@ Each invariant has an acceptance check that reviewers run.
 | **I16** | **The same test grades a human demonstration and a robot attempt** (effector aliasing `gripper ↔ hand`). Closing line (v3.1 wording): ***"The same test checks the demonstrations robots learn from."*** | Extends value from robot policies to the *demonstration data* robots learn from | At least one human-hand demonstration is graded by the same `.green` file that grades robot attempts |
 | **I17** | **Six predicates, exact names:** `on`, `inside`, `near`, `lifted`, `moves_with`, `dwell` | A small closed vocabulary keeps tests readable, lintable, and compilable from speech | The grammar enumerates exactly these. Appearance uses `looks(...)`; non-visual uses `MANUAL(...)`. Neither is a predicate |
 
-> **⚠ Human confirmation requested (v3.1 change to I16's closing line):** the original line *"The same test can check the person who
-> teaches the robot"* reads as AI grading human workers. That is close to the hackathon's banned "job screener / personality analyzer"
-> categories (see `HACKATHON.md` §2 R2). The capability is unchanged; only the framing moved from *people* to *data*.
+> **✓ Human confirmation approved (v3.1 change to I16's closing line):** the original line *"The same test can check the person who
+> teaches the robot"* was replaced with *"The same test checks the demonstrations robots learn from."* to prevent any overlap
+> with the hackathon's banned "job screener / personality analyzer" categories (see `HACKATHON.md` §2 R2). Confirmed 2026-11-02.
 
 ---
 
@@ -493,7 +493,7 @@ audit opener, the hosted page with timer + CAN'T TELL + cached replay, and the 8
 |---|---|---|---|
 | v3.0 | pre-event | Original master spec (kept privately in `docs/private/`; **not** for the public repo) | — |
 | **v3.1** | 2026-10-27 | Public wording no longer describes pre-event design history (terms in the private lineage list) | New-work rule (`HACKATHON.md` R1) |
-| v3.1 | 2026-10-27 | Closing line → "The same test checks the demonstrations robots learn from" (**awaiting human confirmation**) | Anti-project rule R2 |
+| v3.1 | 2026-10-27 | Closing line → "The same test checks the demonstrations robots learn from" (**confirmed & approved**) | Anti-project rule R2 |
 | v3.1 | 2026-10-27 | Problem/proof claims rewritten in sourced wording; RUM attribution corrected; SOAR/RoboReward/VERITAS cited | Claims verification |
 | v3.1 | 2026-10-27 | `pip install Kodiac` → `pip install Kodiac-robotics` (CLI stays `Kodiac`) | PyPI name taken |
 | v3.1 | 2026-10-27 | `UNKNOWN` → `CAN'T TELL` everywhere; one public latency number (<12 s p95) | Internal inconsistency |

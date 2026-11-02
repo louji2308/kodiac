@@ -18,6 +18,7 @@ import os
 import re
 import subprocess
 import threading
+import time
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -100,7 +101,19 @@ class ReplayStore:
         path.parent.mkdir(parents=True, exist_ok=True)
         tmp = path.with_name(f"{path.name}.{os.getpid()}.{threading.get_ident()}.tmp")
         tmp.write_bytes(data)
-        os.replace(tmp, path)
+        for attempt in range(12):
+            try:
+                os.replace(tmp, path)
+                return
+            except PermissionError:
+                if attempt == 11:
+                    path.write_bytes(data)
+                    try:
+                        tmp.unlink(missing_ok=True)
+                    except OSError:
+                        pass
+                    return
+                time.sleep(0.05 * (attempt + 1))
 
     def put(
         self,
