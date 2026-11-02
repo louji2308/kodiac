@@ -507,3 +507,4 @@ audit opener, the hosted page with timer + CAN'T TELL + cached replay, and the 8
 | v3.1 | 2026-10-27 | I2 acceptance clarified: demo-compiled steps carry quote + span; text-compiled steps carry `source=text` + the task string | Review R1-35 |
 | v3.1 | 2026-10-27 | Blame output always shows ± σ; hero mocks badged SIM (30 fps); VO says "In simulation"; added §1.1 and the P-7 time-saved proof | Review round 1 (R1/R2) applied |
 | v3.1 | 2026-10-27 | "Every product in the release" → "every Meta model we use" | Muse Image is unused |
+| v3.2 | 2026-11-02 | Honesty reconciliation (P06/T06): fixture-replay SAM latency bench and synthetic-track engine validation relabelled as fixture/synthetic (not real SAM, not real physics); features.yaml gains evidence_type and several rows downgraded; the <12 s latency figure is a target, unmeasured; mock-sim pool not valid for the headline proof. No measured value changed. | AGENTS Law 1; status audit |
