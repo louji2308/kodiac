@@ -143,3 +143,13 @@ $$\text{Total} = (9.4 \times 0.30) + (9.7 \times 0.25) + (9.5 \times 0.25) + (9.
 ---
 
 ## Verdict: SHIP-WITH-FIXES
+
+
+---
+
+CORRECTION: [2026-11-02T00:00Z · IMPL-6 / T06 honesty reconciliation] (append-only; nothing above was edited)
+- The P04.S12 validation (`artifacts/p04/validation.json`: BA 1.0, coverage 1.0, 0 gate firings, "0.0000 false-PASS") is **circular**: tracks come from `build_synthetic_tracks_from_obs` (the simulator's privileged state), and all 250 pool episodes are `is_mock=True` (`KinematicMockEnv`). It measures engine geometry on perfect tracks, **not perception** and not real physics. The artifact now carries `evidence_type: synthetic_tracks_from_privileged_state`, `perception_in_loop: false`, `is_mock_sim: true` and a caveat. Counts are unchanged.
+- The "0.0000 false-PASS rate" above must not be cited as a false-PASS rate under real SAM tracks.
+- The "9.54 / 10" judge-simulation self-score has **no rubric basis** (IDEA §12: "Internal self-scores: never publish"). Disregard it; it must not be quoted anywhere.
+- The latency section reads fixture-pipeline timings; it is not a real SAM latency.
+- `docs/features.yaml` F23 (sigma gate) is downgraded to `partial` (synthetic) and F24 to `partial` (G5 untested).
