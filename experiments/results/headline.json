@@ -1,0 +1,41 @@
+{
+  "Y_points": null,
+  "arms": {},
+  "baseline_arm": null,
+  "bootstrap": {
+    "samples": 10000,
+    "seed": 0
+  },
+  "comparisons": {},
+  "delta": null,
+  "dose_response": [],
+  "gate_failures": [],
+  "generated_at": "2026-11-02T03:39:45+00:00",
+  "generated_by": "python -m Kodiac_robotics.proof.chart --real-state",
+  "git_head": "1161e3854eb3bd398826e553b791099a551cda6c",
+  "inputs": {
+    "eval_arms": [],
+    "evals_dir": "experiments/evals",
+    "judge_label_files": [],
+    "pool": {
+      "is_mock": true,
+      "n_calibration": 200,
+      "n_episodes": 250,
+      "n_train": 50,
+      "path": "experiments/pool/manifest.parquet",
+      "present": true
+    }
+  },
+  "is_mock": true,
+  "kodiac_arm": null,
+  "prereg": "experiments/PREREGISTRATION.md \u00a71 H2, \u00a74, \u00a75, \u00a76",
+  "prereg_deviations": [],
+  "reasons": [
+    "no trained arms: no downstream evaluation results exist",
+    "practice pool is kinematic mock (is_mock=True, 250 episodes): not valid for the headline (PREREG \u00a72 requires ManiSkill3 physics)",
+    "no judge labels on the practice pool (experiments/labels/*.parquet)"
+  ],
+  "sentence": null,
+  "status": "NOT_MEASURED",
+  "synthetic": false
+}

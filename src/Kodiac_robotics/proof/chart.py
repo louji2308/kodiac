@@ -193,6 +193,7 @@ def build_real_headline(root: Path) -> dict[str, Any]:
             is_mock=oracle.is_mock,
         )
         if oracle.is_mock:
+            h["is_mock"] = True
             h["reasons"].append(
                 f"practice pool is kinematic mock (is_mock=True, {len(oracle)} episodes): "
                 "not valid for the headline (PREREG §2 requires ManiSkill3 physics)"
