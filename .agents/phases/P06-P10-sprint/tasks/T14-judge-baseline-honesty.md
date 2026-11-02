@@ -1,5 +1,5 @@
 # T14: S0 honesty fix: proof arms and baseline-judge stand-ins must never fabricate
-phase: P08 (hotfix) · owner: IMPL-14 (Sonnet 5.5 @ high) · status: TODO
+phase: P08 (hotfix) · owner: IMPL-14 (Sonnet 5.5 @ high) · status: DONE
 plan_ref: AGENTS §0 Law 1 · CHANNEL.md 2026-11-02T10:45Z IMPL-9 finding · experiments/PREREGISTRATION.md · contracts `JudgeLabel` (now has `is_mock: bool = True`, `evidence_type`)
 depends_on: [] · blocks: [any baseline/arm labelling, headline proof]
 owns_paths: [src/Kodiac_robotics/proof/arms.py, src/Kodiac_robotics/proof/judges/**, tests/proof/test_judges.py, tests/proof/test_arms.py, tests/proof/test_pool.py (only if it asserts the removed behaviour), modal/proof_train.py (only labelling-honesty edits), experiments/README.md (append-only "Judge baselines status" section)]
@@ -23,3 +23,10 @@ timebox: 90 min
 - [ ] New/updated tests pass; the oracle-leak audit test passes; ruff clean; no `TODO|NotImplemented`; full suite green. Commit `fix(p08/t14): …`.
 
 ## Report (filled by owner at DONE)
+
+- Verified first: with an empty labels dir `assemble_proof_arms` returned 4 fabricated judge arms (kodiac_cloud 16, robometer 18, topreward 18, single_pass 24 of 40) and `SinglePassSparkJudge(api_key=...)` returned the oracle copy.
+- Built: `proof/arms.py` now returns `ProofArms` (only buildable arms; `.absent` reasons; `.provenance` is_mock/evidence_type). Judge arms come only from real label files (validated via `labels.load_labels`, score thresholds fitted on calibration only, CAN'T TELL never accepted, unlabelled episode = rejected, coverage recorded). Salvage requires a measured `t_star_frame` in the Kodiac labels. Oracle-only arms kept: oracle, accept_all, oracle_k_{5,10,20,30} (injected noise, synthetic). Size-matched control needs the Kodiac arm.
+- Judges: `JudgeUnavailable` (judges/base.py); single_pass makes a real chat/completions call (multi-image part shape [UNVERIFIED]), injected transport/extractor => fixture/is_mock; robometer/topreward raise unless a scorer + declared provenance is supplied. Oracle-copy double moved to `_test_doubles.py`.
+- Also: `modal/proof_train.py` returned an invented success curve; now `status="not_trained"`, rates None. README "Judge baselines status" appended. tests/segment/test_quality.py (not owned) updated to the new contract.
+- Tests: 28 in test_arms/test_judges/test_no_oracle_leak; full suite 957 passed, 13 skipped, 1 xfailed. Commit 597fbe7.
+- Known limits: cost_usd is unmetered (0.0); no response caching; a hand-written label file can still declare is_mock=false (provenance is declared, not attested); manifest `oracle_success` still defines the oracle/dose arms.
