@@ -165,3 +165,17 @@ All rulings, architectural choices, and deviations are logged here chronological
   3. *Rejection of Sloppy Demonstrations:* If empirical demonstration measurements exceed any physical sanity cap, compilation MUST halt immediately with diagnostic `E005: demonstration exceeds physical sanity cap; re-record a valid demonstration`. No test specification or lockfile shall be generated.
 - **Rationale:** Guarantees that valid human demonstrations achieve `Verdict == PASS` with $\text{margin} \ge 2\sigma$ by mathematical construction, while strictly preventing sloppy demonstrations from generating degenerate test oracles that poison policy training.
 - **Supersedes:** None.
+
+---
+
+### ADR-0014 · 2026-11-02 · P06–P10 · Compressed Sprint Execution (council/SDM bypass, 7-wide dispatch)
+- **Context:** P01–P05 are done; P06–P10 are 0% built with ≈36 build-hours to feature freeze (Nov 4 04:59 UTC). The plan had P06 finishing Oct 31 and P07 Nov 1, so the project is ≈2 phases late (AGENTS §12.6 schedule threat). The full lifecycle (council R0–R3 + SDM per phase) cannot fit.
+- **Decision (user-directed, 2026-11-02):**
+  1. Skip per-phase COUNCIL/SDM for P06–P10. ORCH writes one sprint BRIEF (`.agents/phases/P06-P10-sprint/BRIEF.md`) and task cards; the task cards double as the rendered prompts of record.
+  2. Dispatch up to 7 concurrent implementers (AGENTS §1 allows >3 with an ADR). DAG-width justification: file ownership is disjoint by construction (blame core / bisect / diff-hint-codeloc-salvage / gate / MCP / honesty-docs / backlog-fixes), contracts are frozen, and `cli.py` + `pipeline/run.py` wiring is ORCH-only to avoid collisions.
+  3. Model routing: Opus 5.5 @ xhigh for correctness-critical and invariant-bearing work (blame core, bisect, done-gate anti-cheat, proof statistics); Sonnet 5.5 for well-specified build work; Haiku 5.5 for mechanical fixes.
+  4. Reviews (R1/R2) run on the integrated result, not per phase.
+  5. Law 1 stays in force: no API keys exist, so all new evidence is labelled fixture / kinematic-mock. No real-model number may be claimed.
+- **Honesty corrections recorded at the same time (see the P04 REVIEW CORRECTION):** `sam_bench.json` is fixture replay; `validation.json` uses synthetic tracks projected from privileged state (circular); the practice pool is `KinematicMockEnv` (`is_mock=True` ×250, contradicting ADR-0004's pool rule); `features.yaml` F11/F13/F14/F17 were overstated.
+- **Cut order if time runs short:** IDEA §11 (community reports → … → two-way judge → full 2.5D inside). The never-cut list is unchanged.
+- **Supersedes:** none (process deviation from AGENTS §2, §5, §6 only; invariants untouched).
