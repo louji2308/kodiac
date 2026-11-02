@@ -163,3 +163,55 @@ def test_hint_is_deterministic_and_does_not_mutate_facts() -> None:
     before = ft.model_dump()
     assert make_hint(ft) == make_hint(ft)
     assert ft.model_dump() == before
+
+
+def test_t01_fact_schema_gap_z_op_and_objects() -> None:
+    """facts.py shape: gap_z_cm, `op`, `objects`, `blame_class` (place_z class)."""
+    ft = _ft(
+        {
+            "xy_offset_cm": {
+                "value": 0.2, "sigma": 0.3, "unit": "cm", "threshold": 3.33, "op": "<=",
+                "margin": 3.13, "objects": ["cubeA", "cubeB"],
+            },
+            "gap_z_cm": {
+                "value": 11.0, "sigma": 0.4, "unit": "cm", "threshold": 0.5, "op": "<=",
+                "margin": -10.5, "objects": ["cubeA", "cubeB"],
+            },
+            "blame_class": {"value": "place_z", "unit": "class", "basis": "x"},
+        },
+        "moves_with(gripper, cubeA)",
+    )
+    h = make_hint(ft)
+    assert h is not None and h.variable == "release_height"
+    assert h.delta == pytest.approx(0.5 - 0.4 - 11.0)
+    assert "z gap 11.0 \u00b1 0.4 cm" in h.basis
+
+
+def test_t01_release_before_place_uses_dt_objects_for_target_name() -> None:
+    ft = _ft(
+        {
+            "xy_offset_cm": _fact(9.0, 0.3, "cm", threshold=3.33),
+            "dt_before_reference_s": {
+                "value": 1.2, "sigma": 0.07, "unit": "s", "objects": ["gripper", "cubeB"],
+            },
+            "blame_class": {"value": "release_before_place"},
+        },
+        "moves_with(gripper, cubeA)",
+    )
+    h = make_hint(ft)
+    assert h is not None and h.variable == "release_order"
+    assert h.delta == pytest.approx(1.27) and "reaching cubeB" in h.basis
+
+
+def test_op_in_fact_overrides_default_direction() -> None:
+    # a '>=' op on the xy component flips the bound: need value >= threshold + sigma
+    ft = _ft(
+        {"xy_offset_cm": _fact(1.0, 0.5, "cm", threshold=3.0, op=">=")}, "on(cubeA, cubeB)"
+    )
+    h = make_hint(ft)
+    assert h is not None and h.delta == pytest.approx(3.0 + 0.5 - 1.0)
+
+
+def test_blame_class_without_numbers_returns_none() -> None:
+    assert make_hint(_ft({"blame_class": {"value": "grasp"}}, "moves_with(gripper, cubeA)")) is None
+    assert make_hint(_ft({"blame_class": {"value": "near"}}, "near(gripper, cubeA)")) is None

@@ -1,4 +1,4 @@
-﻿"""Code-location tests: unit cases plus the B01-B10 accuracy validation on the kinematic MOCK sim.
+"""Code-location tests: unit cases plus the B01-B10 accuracy validation on the kinematic MOCK sim.
 
 Validation honesty (Law 1): every number comes from `KinematicMockEnv` (`is_mock=True`).
 The onset frame/component for each bug are derived from *privileged mock state* by a small
@@ -134,6 +134,22 @@ def test_component_for_facts_disambiguation() -> None:
     explicit = _ft({"blame_class": {"value": "z_gap"}})
     assert component_for_facts(explicit) == "on.gap"
     assert component_for_facts(_ft({}, literal="dwell(cubeA, cubeB, for_s=0.5)")) == "dwell.duration"
+
+
+def test_component_for_facts_maps_t01_blame_classes() -> None:
+    for cls, comp in [
+        ("release_before_place", "moves_with.slip"),
+        ("xy_offset", "on.align_xy"),
+        ("place_z", "on.gap"),
+        ("lift_height", "lifted.height"),
+        ("grasp", "moves_with.slip"),
+        ("near", "near.distance"),
+    ]:
+        assert component_for_facts(_ft({"blame_class": {"value": cls}})) == comp
+    dwell = _ft({"blame_class": {"value": "dwell"}, "dwell_s": {"value": 0.2}})
+    assert component_for_facts(dwell) == "dwell.duration"
+    speed_only = _ft({"blame_class": {"value": "dwell"}, "speed_cm_s": {"value": 2.0}})
+    assert component_for_facts(speed_only) == "dwell.speed"
 
 
 def test_locate_from_fact_table_uses_frame_and_component() -> None:
