@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "Kodiac": {
+      "command": "Kodiac",
+      "args": ["mcp"],
+      "env": {
+        "MODEL_API_KEY": "${MODEL_API_KEY}",
+        "KODIAC_ENV_FILE": "${KODIAC_ENV_FILE}"
+      }
+    }
+  }
+}

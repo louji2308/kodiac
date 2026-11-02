@@ -1,0 +1,7 @@
+{
+  "_comment": "Arguments for `Kodiac gate --init`. A HUMAN (or the eval harness) runs the init: the pins are stored outside the workspace so the agent cannot weaken them. Contains no secrets.",
+  "test": "{{test}}",
+  "sim_script": "{{sim_script}}",
+  "seed": {{seed}},
+  "max_blocks": {{max_blocks}}
+}
