@@ -6,7 +6,7 @@
   <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
    <cc:Work>
     <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
-    <dc:date>2026-11-02T09:09:47.999038</dc:date>
+    <dc:date>2026-11-02T09:11:08.713785</dc:date>
     <dc:format>image/svg+xml</dc:format>
     <dc:creator>
      <cc:Agent>
@@ -41,12 +41,12 @@ z
     <g id="xtick_1">
      <g id="line2d_1">
       <defs>
-       <path id="mcff0906d0d" d="M 0 0 
+       <path id="m244c79e524" d="M 0 0 
 L 0 3.5 
 " style="stroke: #000000; stroke-width: 0.8"/>
       </defs>
       <g>
-       <use xlink:href="#mcff0906d0d" x="55.48" y="426.54" style="stroke: #000000; stroke-width: 0.8"/>
+       <use xlink:href="#m244c79e524" x="55.48" y="426.54" style="stroke: #000000; stroke-width: 0.8"/>
       </g>
      </g>
      <g id="text_1">
@@ -56,7 +56,7 @@ L 0 3.5
     <g id="xtick_2">
      <g id="line2d_2">
       <g>
-       <use xlink:href="#mcff0906d0d" x="212.648" y="426.54" style="stroke: #000000; stroke-width: 0.8"/>
+       <use xlink:href="#m244c79e524" x="212.648" y="426.54" style="stroke: #000000; stroke-width: 0.8"/>
       </g>
      </g>
      <g id="text_2">
@@ -66,7 +66,7 @@ L 0 3.5
     <g id="xtick_3">
      <g id="line2d_3">
       <g>
-       <use xlink:href="#mcff0906d0d" x="369.816" y="426.54" style="stroke: #000000; stroke-width: 0.8"/>
+       <use xlink:href="#m244c79e524" x="369.816" y="426.54" style="stroke: #000000; stroke-width: 0.8"/>
       </g>
      </g>
      <g id="text_3">
@@ -76,7 +76,7 @@ L 0 3.5
     <g id="xtick_4">
      <g id="line2d_4">
       <g>
-       <use xlink:href="#mcff0906d0d" x="526.984" y="426.54" style="stroke: #000000; stroke-width: 0.8"/>
+       <use xlink:href="#m244c79e524" x="526.984" y="426.54" style="stroke: #000000; stroke-width: 0.8"/>
       </g>
      </g>
      <g id="text_4">
@@ -86,7 +86,7 @@ L 0 3.5
     <g id="xtick_5">
      <g id="line2d_5">
       <g>
-       <use xlink:href="#mcff0906d0d" x="684.152" y="426.54" style="stroke: #000000; stroke-width: 0.8"/>
+       <use xlink:href="#m244c79e524" x="684.152" y="426.54" style="stroke: #000000; stroke-width: 0.8"/>
       </g>
      </g>
      <g id="text_5">
@@ -96,7 +96,7 @@ L 0 3.5
     <g id="xtick_6">
      <g id="line2d_6">
       <g>
-       <use xlink:href="#mcff0906d0d" x="841.32" y="426.54" style="stroke: #000000; stroke-width: 0.8"/>
+       <use xlink:href="#m244c79e524" x="841.32" y="426.54" style="stroke: #000000; stroke-width: 0.8"/>
       </g>
      </g>
      <g id="text_6">
@@ -111,12 +111,12 @@ L 0 3.5
     <g id="ytick_1">
      <g id="line2d_7">
       <defs>
-       <path id="m31d1463a55" d="M 0 0 
+       <path id="m312e9b3f57" d="M 0 0 
 L -3.5 0 
 " style="stroke: #000000; stroke-width: 0.8"/>
       </defs>
       <g>
-       <use xlink:href="#m31d1463a55" x="55.48" y="426.54" style="stroke: #000000; stroke-width: 0.8"/>
+       <use xlink:href="#m312e9b3f57" x="55.48" y="426.54" style="stroke: #000000; stroke-width: 0.8"/>
       </g>
      </g>
      <g id="text_8">
@@ -126,7 +126,7 @@ L -3.5 0
     <g id="ytick_2">
      <g id="line2d_8">
       <g>
-       <use xlink:href="#m31d1463a55" x="55.48" y="354.320352" style="stroke: #000000; stroke-width: 0.8"/>
+       <use xlink:href="#m312e9b3f57" x="55.48" y="354.320352" style="stroke: #000000; stroke-width: 0.8"/>
       </g>
      </g>
      <g id="text_9">
@@ -136,7 +136,7 @@ L -3.5 0
     <g id="ytick_3">
      <g id="line2d_9">
       <g>
-       <use xlink:href="#m31d1463a55" x="55.48" y="282.100703" style="stroke: #000000; stroke-width: 0.8"/>
+       <use xlink:href="#m312e9b3f57" x="55.48" y="282.100703" style="stroke: #000000; stroke-width: 0.8"/>
       </g>
      </g>
      <g id="text_10">
@@ -146,7 +146,7 @@ L -3.5 0
     <g id="ytick_4">
      <g id="line2d_10">
       <g>
-       <use xlink:href="#m31d1463a55" x="55.48" y="209.881055" style="stroke: #000000; stroke-width: 0.8"/>
+       <use xlink:href="#m312e9b3f57" x="55.48" y="209.881055" style="stroke: #000000; stroke-width: 0.8"/>
       </g>
      </g>
      <g id="text_11">
@@ -156,7 +156,7 @@ L -3.5 0
     <g id="ytick_5">
      <g id="line2d_11">
       <g>
-       <use xlink:href="#m31d1463a55" x="55.48" y="137.661406" style="stroke: #000000; stroke-width: 0.8"/>
+       <use xlink:href="#m312e9b3f57" x="55.48" y="137.661406" style="stroke: #000000; stroke-width: 0.8"/>
       </g>
      </g>
      <g id="text_12">
@@ -166,7 +166,7 @@ L -3.5 0
     <g id="ytick_6">
      <g id="line2d_12">
       <g>
-       <use xlink:href="#m31d1463a55" x="55.48" y="65.441758" style="stroke: #000000; stroke-width: 0.8"/>
+       <use xlink:href="#m312e9b3f57" x="55.48" y="65.441758" style="stroke: #000000; stroke-width: 0.8"/>
       </g>
      </g>
      <g id="text_13">
@@ -218,7 +218,7 @@ z
    <text style="font-size: 13px; font-family: 'DejaVu Sans', 'Bitstream Vera Sans', 'Computer Modern Sans Serif', 'Lucida Grande', 'Verdana', 'Geneva', 'Lucid', 'Arial', 'Helvetica', 'Avant Garde', sans-serif; text-anchor: middle" x="432" y="19.597969" transform="rotate(-0 432 19.597969)">Headline experiment: “Same robot, same practice data, only the judge changed”</text>
   </g>
   <g id="text_18">
-   <text style="font-size: 8px; font-family: 'DejaVu Sans', 'Bitstream Vera Sans', 'Computer Modern Sans Serif', 'Lucida Grande', 'Verdana', 'Geneva', 'Lucid', 'Arial', 'Helvetica', 'Avant Garde', sans-serif; text-anchor: start; fill: #555555" x="8.64" y="481.14" transform="rotate(-0 8.64 481.14)">status: NOT_MEASURED  ·  git 1161e3854eb3  ·  python -m Kodiac_robotics.proof.chart --real-state</text>
+   <text style="font-size: 8px; font-family: 'DejaVu Sans', 'Bitstream Vera Sans', 'Computer Modern Sans Serif', 'Lucida Grande', 'Verdana', 'Geneva', 'Lucid', 'Arial', 'Helvetica', 'Avant Garde', sans-serif; text-anchor: start; fill: #555555" x="8.64" y="481.14" transform="rotate(-0 8.64 481.14)">status: NOT_MEASURED  ·  git 77aa8e7fd392  ·  python -m Kodiac_robotics.proof.chart --real-state</text>
   </g>
  </g>
 </svg>

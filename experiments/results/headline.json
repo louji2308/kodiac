@@ -10,9 +10,9 @@
   "delta": null,
   "dose_response": [],
   "gate_failures": [],
-  "generated_at": "2026-11-02T03:39:45+00:00",
+  "generated_at": "2026-11-02T03:41:05+00:00",
   "generated_by": "python -m Kodiac_robotics.proof.chart --real-state",
-  "git_head": "1161e3854eb3bd398826e553b791099a551cda6c",
+  "git_head": "77aa8e7fd392b2acfa0c171105f388a86e873e82",
   "inputs": {
     "eval_arms": [],
     "evals_dir": "experiments/evals",
