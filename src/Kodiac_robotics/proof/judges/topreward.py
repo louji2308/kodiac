@@ -1,7 +1,10 @@
-"""TOPReward baseline trajectory-level policy reward judge.
+"""TOPReward baseline judge (PREREGISTRATION §4 arm 8, LeRobot v0.6 ``lerobot.rewards``).
 
-Implements LeRobot v0.6 lerobot.rewards model interface for trajectory
-scoring and calibration per ARCHITECTURE.md §5.7 and P02 RULING.
+Status: **no TOPReward inference is implemented or has been run.** The ``lerobot.rewards`` interface has not
+been verified here ([UNVERIFIED]) and no model/GPU is available. :meth:`TOPRewardJudge.evaluate_episode`
+therefore raises :class:`JudgeUnavailable` unless the caller supplies a ``scorer`` that really runs the
+model on an episode and returns a reward score, plus the provenance of that scorer (``"live"`` or
+``"fixture"``).
 """
 
 from __future__ import annotations
@@ -9,75 +12,61 @@ from __future__ import annotations
 import time
 from pathlib import Path
 
-from Kodiac_robotics.contracts.core import JudgeLabel, Verdict
+from Kodiac_robotics.contracts.core import JudgeLabel
+from Kodiac_robotics.proof.judges.base import (
+    JudgeUnavailable,
+    Provenance,
+    ScoreFn,
+    score_label,
+    tune_threshold,
+)
 
 
 class TOPRewardJudge:
-    """Trajectory-level policy reward model judge from LeRobot v0.6."""
+    """Trajectory-level reward judge: needs a real scorer, otherwise fails closed."""
 
     def __init__(
         self,
         calibration_threshold: float = 0.60,
         model_name: str = "topreward-lerobot-v0.6",
+        scorer: ScoreFn | None = None,
+        provenance: Provenance | None = None,
     ) -> None:
+        if scorer is not None and provenance is None:
+            raise ValueError("a scorer requires an explicit provenance: 'live' or 'fixture'")
         self.calibration_threshold = calibration_threshold
         self.model_name = model_name
+        self.scorer = scorer
+        self.provenance = provenance
 
     def evaluate_episode(
         self,
         episode_id: str,
         state_npz_path: str | Path | None = None,
-        oracle_success_hint: bool | None = None,
     ) -> JudgeLabel:
-        """Evaluate episode state/action sequence and return reward score."""
-        _ = time.perf_counter()
-
-        # Offline / fixture mode
-        if oracle_success_hint is not None:
-            score = 0.78 if oracle_success_hint else 0.40
-        else:
-            score = 0.62
-
-        accept = score >= self.calibration_threshold
-        latency_ms = 320
-        cost_usd = 0.0002
-
-        return JudgeLabel(
+        """Score an episode's state/action sequence and classify it against the threshold."""
+        if self.scorer is None or self.provenance is None:
+            raise JudgeUnavailable(
+                "TOPReward has not been run: no scorer is configured (no lerobot.rewards backend "
+                "is implemented). Judge not run."
+            )
+        if state_npz_path is None:
+            raise JudgeUnavailable(f"TOPReward needs a state file for episode {episode_id!r}")
+        start = time.perf_counter()
+        score = float(self.scorer(str(state_npz_path)))
+        return score_label(
             judge=self.model_name,
             episode_id=episode_id,
-            accept=accept,
             score=score,
-            verdict=Verdict.PASS if accept else Verdict.FAIL,
-            latency_ms=latency_ms,
-            cost_usd=cost_usd,
-            calibration_threshold=self.calibration_threshold,
+            threshold=self.calibration_threshold,
+            latency_ms=int((time.perf_counter() - start) * 1000),
+            provenance=self.provenance,
         )
 
     def tune_threshold_on_calibration(
         self,
         calibration_labels: list[tuple[float, bool]],
     ) -> float:
-        """Find optimal score threshold maximizing balanced accuracy on calibration split."""
-        if not calibration_labels:
-            return self.calibration_threshold
-
-        thresholds = [i / 100.0 for i in range(10, 90, 5)]
-        best_ba = -1.0
-        best_tau = self.calibration_threshold
-
-        for tau in thresholds:
-            tp = sum(1 for s, y in calibration_labels if s >= tau and y)
-            fn = sum(1 for s, y in calibration_labels if s < tau and y)
-            tn = sum(1 for s, y in calibration_labels if s < tau and not y)
-            fp = sum(1 for s, y in calibration_labels if s >= tau and not y)
-
-            tpr = tp / max(1, tp + fn)
-            tnr = tn / max(1, tn + fp)
-            ba = 0.5 * (tpr + tnr)
-
-            if ba > best_ba:
-                best_ba = ba
-                best_tau = tau
-
-        self.calibration_threshold = best_tau
-        return best_tau
+        """Fit the score threshold maximising balanced accuracy on ``(score, truth)`` calibration pairs."""
+        self.calibration_threshold = tune_threshold(calibration_labels, self.calibration_threshold)
+        return self.calibration_threshold

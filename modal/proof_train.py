@@ -1,7 +1,8 @@
 """Modal proof policy training job with L4 GPU budget guards.
 
-Trains state-based Diffusion Policy on accepted demonstration sets for
+Intended to train a state-based Diffusion Policy on accepted demonstration sets for
 pre-registered proof arms per ARCHITECTURE.md §5.7, ADR-0007, and P02 RULING.
+NOT IMPLEMENTED YET: the job reports status="not_trained" and produces no metrics (Law 1).
 Enforces:
 - Max wall-clock per run <= 20 minutes (timeout=1200)
 - Cumulative GPU budget <= 12 GPU-hours on Modal L4
@@ -95,7 +96,9 @@ def train_proof_policy(
     checkpoint_steps: List[int] | None = None,
     eval_episodes: int = 50,
 ) -> Dict[str, Any]:
-    """Train state-based diffusion policy on accepted practice pool episodes.
+    """Placeholder for state-based diffusion policy training on accepted practice pool episodes.
+
+    STATUS: no training is implemented; the job returns ``status="not_trained"`` with no metrics.
 
     Args:
         arm_name: Identifier of benchmark arm (e.g. 'kodiac_cloud', 'single_pass_spark').
@@ -131,15 +134,15 @@ def train_proof_policy(
     if elapsed_minutes > MAX_RUN_MINUTES:
         raise TimeoutError(f"Training exceeded maximum allowed runtime of {MAX_RUN_MINUTES} minutes")
 
-    # Record mock checkpoint evaluations for offline verification
+    # Law 1: no training loop is implemented here, so nothing was trained or evaluated. The old code
+    # returned a made-up success curve; that fabrication is removed. Success rates are None, never a number.
     for step in checkpoint_steps:
-        # Checkpoint evaluation entry
         checkpoints_log.append(
             {
                 "step": step,
                 "eval_episodes": eval_episodes,
-                "oracle_success_rate": min(0.65, 0.25 + 0.35 * (step / total_steps)),
-                "val_loss": 0.05 * (total_steps / step),
+                "oracle_success_rate": None,
+                "val_loss": None,
                 "timestamp_s": round(time.time() - start_time, 2),
             }
         )
@@ -148,7 +151,10 @@ def train_proof_policy(
     gpu_hours = duration_s / 3600.0
 
     return {
-        "status": "completed",
+        "status": "not_trained",
+        "reason": "no policy training/eval loop is implemented in this job; no metrics were produced",
+        "is_mock": True,
+        "evidence_type": "synthetic",
         "arm_name": arm_name,
         "seed": seed,
         "total_steps": total_steps,
@@ -157,9 +163,8 @@ def train_proof_policy(
         "gpu_budget_remaining_hours": max(0.0, MAX_GPU_BUDGET_HOURS - gpu_hours),
         "device": str(device),
         "checkpoints": checkpoints_log,
-        "final_success_rate": checkpoints_log[-1]["oracle_success_rate"] if checkpoints_log else 0.0,
+        "final_success_rate": None,
     }
-
 
 @app.local_entrypoint()
 def main(arm: str = "kodiac_cloud", seed: int = 42) -> None:

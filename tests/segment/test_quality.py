@@ -183,8 +183,8 @@ def test_cyclic_tracking_consistency_assembly() -> None:
     assert len(cube_track.frames) == 30
 
 
-def test_assemble_proof_arms_all_ten_arms() -> None:
-    """Verify assemble_proof_arms produces valid partitions for all 10 benchmark arms."""
+def test_assemble_proof_arms_fails_closed_without_judge_labels() -> None:
+    """With no judge labels only oracle-derived arms exist; judge arms are absent, never fabricated."""
     with tempfile.TemporaryDirectory() as tmpdir:
         tmp_path = Path(tmpdir)
         manifest_path = generate_mock_pool(
@@ -199,10 +199,14 @@ def test_assemble_proof_arms_all_ten_arms() -> None:
 
         arms = assemble_proof_arms(manifest_path, labels_dir, train_split_only=True)
 
-        # 10 pre-registered benchmark arms per PREREGISTRATION.md §4
-        expected_arms = [
-            "oracle",
-            "accept_all",
+        for arm in ("oracle", "accept_all", "oracle_k_5", "oracle_k_10", "oracle_k_20", "oracle_k_30"):
+            if arm.startswith("oracle_k_") and arm not in arms:
+                assert arm in arms.absent
+                continue
+            assert arm in arms and isinstance(arms[arm], list)
+            assert arms.provenance[arm]["is_mock"] is True
+
+        for arm in (
             "kodiac_cloud",
             "kodiac_open_weights",
             "kodiac_salvage",
@@ -210,19 +214,9 @@ def test_assemble_proof_arms_all_ten_arms() -> None:
             "robometer_4b",
             "topreward",
             "size_matched_control",
-            "oracle_k_percent",
-        ]
+        ):
+            assert arm not in arms, f"{arm} must not be built without judge labels"
+            assert arm in arms.absent
 
-        for arm in expected_arms:
-            assert arm in arms, f"Missing required pre-registered arm: {arm}"
-            assert isinstance(arms[arm], list), f"Arm {arm} must return a list of episode IDs"
-
-        # Invariant checks
-        # Size-matched control must have exact same count as Kodiac
-        assert len(arms["size_matched_control"]) == len(arms["kodiac_cloud"])
-
-        # Accept-all must contain all train episodes
         assert len(arms["accept_all"]) >= len(arms["oracle"])
-
-        # All IDs in oracle must be non-empty
         assert len(arms["oracle"]) > 0

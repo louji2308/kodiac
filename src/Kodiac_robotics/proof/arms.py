@@ -1,17 +1,18 @@
-"""Benchmark arm episode partitioner for Kodiac proof evaluation.
+"""Benchmark arm episode partitioner for Kodiac proof evaluation (fail-closed, Law 1).
 
-Assembles accepted episode splits for the 10 pre-registered benchmark arms:
-1. Oracle (Ground-truth physics simulator success)
-2. Accept-All (Ingests entire practice pool without filtering)
-3. Kodiac (Cloud - SAM 3.1 + Muse Spark 1.3 adjudication)
-4. Kodiac (Open-Weights - Local open model stack)
-5. Kodiac + Prefix Salvage (Truncated pre-failure sub-trajectories)
-6. Single-Pass Muse Spark 1.3 @ 2 fps baseline
-7. Robometer-4B baseline
-8. TOPReward baseline (LeRobot v0.6)
-9. Size-Matched Random Control (|D| = |D_Kodiac|)
-10. Oracle + k% Injected False-PASS contamination doses (k in {5%, 10%, 20%, 30%})
-Per ARCHITECTURE.md §5.7, PREREGISTRATION.md §4, and IMPLEMENTATION_PLAN.md P03.S14.
+Assembles accepted-episode sets for the 10 pre-registered arms (PREREGISTRATION.md §4):
+
+* **Oracle-only arms** (need nothing but the practice-pool manifest): ``oracle``, ``accept_all``,
+  ``size_matched_control`` (needs the Kodiac arm's size) and the injected-noise dose arms
+  ``oracle_k_{5,10,20,30}``. The dose arms are *injected noise, not a judge*.
+* **Judge arms** (``kodiac_cloud``, ``kodiac_open_weights``, ``single_pass_spark_2fps``, ``robometer_4b``,
+  ``topreward``) and ``kodiac_salvage``: built **only** from a real judge label file in ``labels_dir``.
+  If the file is missing the arm is *absent* with the reason ``"no labels: judge not run"``. An arm is
+  never synthesised from the oracle.
+
+The result is a :class:`ProofArms` mapping that contains only arms that could be built. Absent arms are
+listed with a reason in ``.absent``; every present arm has a provenance record in ``.provenance``
+(``is_mock``, ``evidence_type``, ...). Nothing here uses hard-coded judge error rates.
 """
 
 from __future__ import annotations
@@ -19,245 +20,268 @@ from __future__ import annotations
 import json
 import random
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Union
+from typing import Any
 
 import pyarrow.parquet as pq
 
+from Kodiac_robotics.proof import labels as _labels
 
-def _read_records(manifest_path: Union[Path, str]) -> List[Dict[str, Any]]:
-    """Read episode records from Parquet or JSON manifest."""
+NO_LABELS_REASON = "no labels: judge not run"
+DOSES = (5, 10, 20, 30)
+MIN_PREFIX_FRAMES = 30  # >= 1.0 s at 30 fps (PREREGISTRATION §4 arm 5)
+
+# arm key -> judge label file stem in ``labels_dir``
+JUDGE_ARMS: dict[str, str] = {
+    "kodiac_cloud": "kodiac_cloud",
+    "kodiac_open_weights": "kodiac_open_weights",
+    "single_pass_spark_2fps": "single_pass_spark_1.3",
+    "robometer_4b": "robometer-4b",
+    "topreward": "topreward-lerobot-v0.6",
+}
+ARM_ALIASES: dict[str, str] = {
+    "kodiac_sam31": "kodiac_cloud",
+    "kodiac_kinematic": "kodiac_open_weights",
+    "single_pass": "single_pass_spark_2fps",
+}
+
+
+class ProofArms(dict):
+    """``{arm: [episode_id, ...]}`` holding only the arms that could be built.
+
+    ``absent``: ``{arm: reason}`` for arms that could not be built. ``provenance``: ``{arm: {...}}``.
+    """
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.absent: dict[str, str] = {}
+        self.provenance: dict[str, dict[str, Any]] = {}
+
+
+def _read_records(manifest_path: Path | str) -> list[dict[str, Any]]:
+    """Read episode/label records from a Parquet, JSON or JSONL file."""
     p = Path(manifest_path)
     if not p.is_file():
-        raise FileNotFoundError(f"Manifest file not found: {manifest_path}")
-
+        raise FileNotFoundError(f"file not found: {manifest_path}")
     if p.suffix == ".parquet":
-        table = pq.read_table(p)
-        return table.to_pylist()
-    elif p.suffix in (".json", ".jsonl"):
+        return pq.read_table(p).to_pylist()
+    if p.suffix in (".json", ".jsonl"):
         text = p.read_text(encoding="utf-8")
         try:
             data = json.loads(text)
-            if isinstance(data, list):
-                return data
-            elif isinstance(data, dict) and "episodes" in data:
-                return data["episodes"]
-            elif isinstance(data, dict):
-                return list(data.values())
-        except Exception:
-            # Try JSONL
-            records = []
-            for line in text.splitlines():
-                if line.strip():
-                    records.append(json.loads(line))
-            return records
-    raise ValueError(f"Unsupported manifest format: {p.suffix}")
+        except json.JSONDecodeError:
+            return [json.loads(line) for line in text.splitlines() if line.strip()]
+        if isinstance(data, list):
+            return data
+        if isinstance(data, dict):
+            for key in ("episodes", "labels"):
+                if key in data:
+                    return data[key]
+            return list(data.values())
+    raise ValueError(f"Unsupported file format: {p.suffix}")
 
 
-def _load_judge_labels(labels_dir: Union[Path, str], judge_name: str) -> Optional[Dict[str, bool]]:
-    """Load pre-computed judge accepted decisions for a specific judge."""
+def _find_label_file(labels_dir: Path | str, stem: str) -> Path | None:
     ldir = Path(labels_dir)
     if not ldir.is_dir():
         return None
-
-    candidate_files = [
-        ldir / f"{judge_name}.parquet",
-        ldir / f"{judge_name}.json",
-        ldir / f"{judge_name}.jsonl",
-    ]
-
-    for cfile in candidate_files:
-        if cfile.is_file():
-            labels: Dict[str, bool] = {}
-            if cfile.suffix == ".parquet":
-                table = pq.read_table(cfile)
-                for row in table.to_pylist():
-                    ep_id = row.get("episode_id")
-                    acc = row.get("accept", row.get("verdict") == "PASS")
-                    if ep_id:
-                        labels[ep_id] = bool(acc)
-                return labels
-            elif cfile.suffix in (".json", ".jsonl"):
-                text = cfile.read_text(encoding="utf-8")
-                try:
-                    data = json.loads(text)
-                    if isinstance(data, list):
-                        for row in data:
-                            ep_id = row.get("episode_id")
-                            acc = row.get("accept", row.get("verdict") == "PASS")
-                            if ep_id:
-                                labels[ep_id] = bool(acc)
-                        return labels
-                    elif isinstance(data, dict):
-                        return {k: bool(v) for k, v in data.items()}
-                except Exception:
-                    for line in text.splitlines():
-                        if line.strip():
-                            row = json.loads(line)
-                            ep_id = row.get("episode_id")
-                            acc = row.get("accept", row.get("verdict") == "PASS")
-                            if ep_id:
-                                labels[ep_id] = bool(acc)
-                    return labels
+    for suffix in (".parquet", ".json", ".jsonl"):
+        candidate = ldir / f"{stem}{suffix}"
+        if candidate.is_file():
+            return candidate
     return None
 
 
+def _truthy(value: Any, default: bool = True) -> bool:
+    if value is None:
+        return default
+    if isinstance(value, str):
+        return value.strip().lower() in {"1", "true", "yes", "y", "t"}
+    return bool(value)
+
+
+def _load_judge_arm(
+    path: Path,
+    calibration_ids: set[str],
+    oracle: dict[str, bool],
+) -> tuple[dict[str, bool], dict[str, Any], dict[str, int]]:
+    """Load one judge's labels. Returns ``({episode: accept}, provenance, {episode: t_star_frame})``.
+
+    Labels are validated as ``JudgeLabel`` rows. Score judges get their threshold fitted on the calibration
+    split only; CAN'T TELL is never accepted (PREREGISTRATION §4 arm 3).
+    """
+    df = _labels.load_labels([path])
+    if len(df) == 0:
+        raise ValueError(f"{path}: label file has no rows")
+    if df["judge"].nunique() != 1:
+        raise ValueError(f"{path}: expected one judge per label file, found {sorted(df['judge'].unique())}")
+    if calibration_ids:
+        df = _labels.apply_thresholds(df, calibration_ids, oracle)
+    else:
+        # No calibration split available: only native verdict judges are usable.
+        if not df["verdict"].notna().all():
+            raise ValueError(f"{path}: score judge needs a calibration split to fit its threshold")
+        df = df.copy()
+        df["accept"] = df["accept"].astype(bool) & (df["verdict"] != "CANT_TELL")
+    accept = {str(e): bool(a) for e, a in zip(df["episode_id"], df["accept"])}
+
+    raw = _read_records(path)
+    evidence = sorted({str(r.get("evidence_type")) for r in raw if r.get("evidence_type")})
+    t_star = {
+        str(r["episode_id"]): int(r["t_star_frame"])
+        for r in raw
+        if r.get("t_star_frame") is not None and r.get("episode_id") is not None
+    }
+    provenance = {
+        "kind": "judge",
+        "judge": str(df["judge"].iloc[0]),
+        "source": str(path),
+        "is_mock": bool(df["is_mock"].any()),
+        "synthetic": bool(df.attrs.get("synthetic", False)),
+        "provenance_declared": bool(df["provenance_declared"].all()),
+        "evidence_types": evidence,
+        "n_labelled": int(len(accept)),
+    }
+    return accept, provenance, t_star
+
+
 def assemble_proof_arms(
-    manifest_path: Union[Path, str],
-    labels_dir: Union[Path, str],
+    manifest_path: Path | str,
+    labels_dir: Path | str,
     train_split_only: bool = True,
     seed: int = 42,
-) -> Dict[str, List[str]]:
-    """Assemble accepted episode ID lists for all 10 benchmark arms.
+) -> ProofArms:
+    """Assemble accepted-episode lists for every pre-registered arm that can honestly be built.
 
     Args:
-        manifest_path: Path to practice pool manifest (Parquet or JSON).
-        labels_dir: Path to directory containing judge label files.
-        train_split_only: If True, restricts evaluation to split=='train' (per PREREG §6).
-        seed: Random seed for reproducible stochastic sampling (Size-Matched & Noise doses).
+        manifest_path: Practice pool manifest (Parquet or JSON); needs ``episode_id`` and ``oracle_success``.
+        labels_dir: Directory of judge label files (``<judge>.parquet|json|jsonl`` of ``JudgeLabel`` rows).
+        train_split_only: Restrict arms to ``split == 'train'`` (PREREGISTRATION §3/§6).
+        seed: Seed for the size-matched control and the injected-noise doses.
 
     Returns:
-        Dictionary mapping arm identifiers to lists of accepted episode IDs.
+        :class:`ProofArms`. Judge arms whose label file is missing are absent (``NO_LABELS_REASON``).
     """
-    records = _read_records(manifest_path)
+    all_records = _read_records(manifest_path)
+    for r in all_records:
+        if "episode_id" not in r or "oracle_success" not in r:
+            raise ValueError("manifest rows need 'episode_id' and 'oracle_success'")
+    calibration_ids = {
+        str(r["episode_id"]) for r in all_records if str(r.get("split", "")) == "calibration"
+    }
+    oracle_all = {str(r["episode_id"]): bool(r["oracle_success"]) for r in all_records}
+
+    records = all_records
+    if train_split_only:
+        records = [r for r in all_records if str(r.get("split", "train")) == "train"]
+        if not records:
+            raise ValueError("train_split_only=True but the manifest has no split=='train' episodes")
+
+    manifest_mock = any(_truthy(r.get("is_mock"), default=True) for r in records)
+    train_ids = [str(r["episode_id"]) for r in records]
+    oracle = {e: oracle_all[e] for e in train_ids}
+    oracle_accepted = [e for e in train_ids if oracle[e]]
+    oracle_failed = [e for e in train_ids if not oracle[e]]
     rng = random.Random(seed)
 
-    # Filter to training split if required
-    if train_split_only:
-        filtered = [r for r in records if r.get("split", "train") == "train"]
-        if filtered:
-            records = filtered
+    out = ProofArms()
+    oracle_evidence = "synthetic" if manifest_mock else "live"
 
-    all_episode_ids = [r["episode_id"] for r in records]
-    oracle_success_map = {r["episode_id"]: bool(r.get("oracle_success", False)) for r in records}
-    oracle_accepted = [ep_id for ep_id, succ in oracle_success_map.items() if succ]
-    oracle_failed = [ep_id for ep_id, succ in oracle_success_map.items() if not succ]
+    def add(name: str, ids: list[str], prov: dict[str, Any]) -> None:
+        out[name] = ids
+        out.provenance[name] = prov
 
-    # Arm 1: Oracle (Ground-truth physics simulator verdict)
-    arm_oracle = list(oracle_accepted)
-
-    # Arm 2: Accept-All (Silver lower bound, ingest entire training pool)
-    arm_accept_all = list(all_episode_ids)
-
-    # Arm 3: Kodiac (Cloud: SAM 3.1 + Muse Spark 1.3)
-    kodiac_cloud_labels = _load_judge_labels(labels_dir, "kodiac_cloud")
-    if kodiac_cloud_labels is not None:
-        arm_kodiac_cloud = [
-            ep_id for ep_id in all_episode_ids if kodiac_cloud_labels.get(ep_id, False)
-        ]
-    else:
-        # High-fidelity double: 92% balanced accuracy, near zero false-PASS
-        arm_kodiac_cloud = [
-            ep_id for ep_id in all_episode_ids
-            if (oracle_success_map[ep_id] and rng.random() > 0.05)
-        ]
-
-    # Arm 4: Kodiac (Open-Weights: local open models)
-    kodiac_ow_labels = _load_judge_labels(labels_dir, "kodiac_open_weights")
-    if kodiac_ow_labels is not None:
-        arm_kodiac_ow = [
-            ep_id for ep_id in all_episode_ids if kodiac_ow_labels.get(ep_id, False)
-        ]
-    else:
-        arm_kodiac_ow = [
-            ep_id for ep_id in all_episode_ids
-            if (oracle_success_map[ep_id] and rng.random() > 0.08)
-        ]
-
-    # Arm 5: Kodiac + Prefix Salvage (Failed episodes salvaged with valid prefix >= 1.0s)
-    arm_kodiac_salvage = list(arm_kodiac_cloud)
-    for r in records:
-        ep_id = r["episode_id"]
-        if not oracle_success_map[ep_id]:
-            # If perturbation onset frame allows >= 30 frames (1.0s) prefix
-            onset = r.get("onset_frame")
-            if onset is not None and onset >= 30:
-                arm_kodiac_salvage.append(f"{ep_id}_prefix")
-
-    # Arm 6: Single-Pass Muse Spark 1.3 (2 fps) baseline
-    spark_labels = _load_judge_labels(labels_dir, "single_pass_spark_1.3")
-    if spark_labels is not None:
-        arm_spark = [
-            ep_id for ep_id in all_episode_ids if spark_labels.get(ep_id, False)
-        ]
-    else:
-        # Typical 2fps VLM error mode: ~25% false-PASS on near-misses
-        arm_spark = []
-        for ep_id in all_episode_ids:
-            if oracle_success_map[ep_id]:
-                if rng.random() > 0.10:
-                    arm_spark.append(ep_id)
-            else:
-                if rng.random() < 0.25:  # False-PASS contamination
-                    arm_spark.append(ep_id)
-
-    # Arm 7: Robometer-4B baseline
-    robometer_labels = _load_judge_labels(labels_dir, "robometer-4b")
-    if robometer_labels is not None:
-        arm_robometer = [
-            ep_id for ep_id in all_episode_ids if robometer_labels.get(ep_id, False)
-        ]
-    else:
-        arm_robometer = []
-        for ep_id in all_episode_ids:
-            if oracle_success_map[ep_id]:
-                if rng.random() > 0.15:
-                    arm_robometer.append(ep_id)
-            else:
-                if rng.random() < 0.20:
-                    arm_robometer.append(ep_id)
-
-    # Arm 8: TOPReward (LeRobot v0.6) baseline
-    topreward_labels = _load_judge_labels(labels_dir, "topreward-lerobot-v0.6")
-    if topreward_labels is not None:
-        arm_topreward = [
-            ep_id for ep_id in all_episode_ids if topreward_labels.get(ep_id, False)
-        ]
-    else:
-        arm_topreward = []
-        for ep_id in all_episode_ids:
-            if oracle_success_map[ep_id]:
-                if rng.random() > 0.18:
-                    arm_topreward.append(ep_id)
-            else:
-                if rng.random() < 0.22:
-                    arm_topreward.append(ep_id)
-
-    # Arm 9: Size-Matched Random Control (|D| = |D_Kodiac| drawn from oracle successes)
-    target_count = len(arm_kodiac_cloud)
-    if len(oracle_accepted) >= target_count:
-        sampled_indices = rng.sample(range(len(oracle_accepted)), target_count)
-        arm_size_matched = [oracle_accepted[i] for i in sampled_indices]
-    else:
-        arm_size_matched = list(oracle_accepted)
-
-    # Arm 10: Oracle + k% Injected False-PASS Doses (k in {5%, 10%, 20%, 30%})
-    doses: Dict[str, List[str]] = {}
-    for k in (5, 10, 20, 30):
-        dose_accepted = list(oracle_accepted)
-        n_contaminate = int(round(len(oracle_accepted) * (k / 100.0)))
-        if oracle_failed:
-            sampled_fails = rng.sample(oracle_failed, min(n_contaminate, len(oracle_failed)))
-            dose_accepted.extend(sampled_fails)
-        doses[f"oracle_k_{k}"] = dose_accepted
-
-    # Assemble comprehensive registry with aliases
-    result: Dict[str, List[str]] = {
-        "oracle": arm_oracle,
-        "accept_all": arm_accept_all,
-        "kodiac_cloud": arm_kodiac_cloud,
-        "kodiac_open_weights": arm_kodiac_ow,
-        "kodiac_salvage": arm_kodiac_salvage,
-        "single_pass_spark_2fps": arm_spark,
-        "robometer_4b": arm_robometer,
-        "topreward": arm_topreward,
-        "size_matched_control": arm_size_matched,
-        "oracle_k_percent": doses["oracle_k_10"],
-        # Pre-registered aliases
-        "ground_truth": arm_oracle,
-        "kodiac_sam31": arm_kodiac_cloud,
-        "kodiac_kinematic": arm_kodiac_ow,
-        "single_pass": arm_spark,
-        **doses,
+    oracle_prov = {
+        "kind": "oracle",
+        "is_mock": manifest_mock,
+        "evidence_type": oracle_evidence,
+        "source": str(manifest_path),
     }
+    add("oracle", list(oracle_accepted), dict(oracle_prov))
+    add("ground_truth", list(oracle_accepted), dict(oracle_prov))
+    add("accept_all", list(train_ids), {**oracle_prov, "kind": "accept_all"})
 
-    return result
+    # Judge arms: label files only.
+    t_stars: dict[str, dict[str, int]] = {}
+    for arm, stem in JUDGE_ARMS.items():
+        path = _find_label_file(labels_dir, stem)
+        if path is None:
+            out.absent[arm] = NO_LABELS_REASON
+            continue
+        accept, prov, t_star = _load_judge_arm(path, calibration_ids, oracle_all)
+        ids = [e for e in train_ids if accept.get(e, False)]
+        prov["n_episodes"] = len(train_ids)
+        prov["coverage"] = round(sum(1 for e in train_ids if e in accept) / max(1, len(train_ids)), 4)
+        add(arm, ids, prov)
+        t_stars[arm] = t_star
+    for alias, target in ARM_ALIASES.items():
+        if target in out:
+            add(alias, list(out[target]), {**out.provenance[target], "alias_of": target})
+        else:
+            out.absent[alias] = out.absent[target]
+
+    # Prefix salvage: only from the Kodiac judge's own rejections that carry a *measured* t*.
+    if "kodiac_cloud" not in out:
+        out.absent["kodiac_salvage"] = out.absent["kodiac_cloud"]
+    else:
+        kod = out.provenance["kodiac_cloud"]
+        stars = t_stars["kodiac_cloud"]
+        accepted = set(out["kodiac_cloud"])
+        prefixes = [
+            f"{e}_prefix"
+            for e in train_ids
+            if e not in accepted and stars.get(e, -1) >= MIN_PREFIX_FRAMES
+        ]
+        if not stars:
+            out.absent["kodiac_salvage"] = (
+                "kodiac_cloud labels carry no measured t_star_frame: salvage cut points unavailable"
+            )
+        else:
+            add(
+                "kodiac_salvage",
+                list(out["kodiac_cloud"]) + prefixes,
+                {**kod, "kind": "judge_salvage", "n_prefixes": len(prefixes), "t_star_source": "labels"},
+            )
+
+    # Size-matched random control: |D| = |D_Kodiac|.
+    if "kodiac_cloud" not in out:
+        out.absent["size_matched_control"] = "needs the kodiac_cloud arm size: " + out.absent["kodiac_cloud"]
+    else:
+        try:
+            ids = _labels.size_matched_control(out["kodiac_cloud"], oracle, train_ids, seed=seed)
+        except ValueError as exc:
+            out.absent["size_matched_control"] = str(exc)
+        else:
+            add(
+                "size_matched_control",
+                ids,
+                {**oracle_prov, "kind": "random_control", "matched_to": "kodiac_cloud"},
+            )
+
+    # Injected-noise doses: oracle successes + k% oracle-failed episodes. NOT a judge.
+    for k in DOSES:
+        name = f"oracle_k_{k}"
+        n_contaminate = int(round(len(oracle_accepted) * (k / 100.0)))
+        if n_contaminate > len(oracle_failed):
+            out.absent[name] = (
+                f"need {n_contaminate} oracle-failed episodes to inject, only {len(oracle_failed)}"
+            )
+            continue
+        injected = rng.sample(oracle_failed, n_contaminate)
+        add(
+            name,
+            list(oracle_accepted) + injected,
+            {
+                "kind": "injected_noise",
+                "note": "oracle successes plus injected false-PASS labels; not a judge",
+                "k_percent": k,
+                "n_injected": n_contaminate,
+                "is_mock": manifest_mock,
+                "evidence_type": "synthetic",
+                "source": str(manifest_path),
+            },
+        )
+    if "oracle_k_10" in out:
+        add("oracle_k_percent", list(out["oracle_k_10"]), {**out.provenance["oracle_k_10"], "alias_of": "oracle_k_10"})
+    else:
+        out.absent["oracle_k_percent"] = out.absent["oracle_k_10"]
+    return out

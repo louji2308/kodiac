@@ -14,3 +14,12 @@ Artifacts, manifests, pre-registration protocols, and analysis scripts for the K
 - This is **not valid for the headline proof**: ADR-0004 rejects mock episodes from the pool and the target size is 600-1000. It must be regenerated on ManiSkill (via Modal) before any proof use.
 - **No model arm has been trained**, so there is no "+Y points" result. `Y` stays a placeholder.
 - `artifacts/p04/validation.json` was computed on this pool with tracks synthesised from privileged state (no perception in the loop); it measures engine geometry only.
+
+## Judge baselines status (honest, as of 2026-11-02)
+
+- **No baseline judge has been run.** No single-pass Muse Spark, Robometer-4B, or TOPReward label exists, and no Kodiac batch labelling has been run on the pool. `experiments/labels/` holds no pool judge labels.
+- `proof/judges/*` fail closed: with no API key, model, or GPU they raise `JudgeUnavailable`. The old offline stand-ins copied the oracle answer or returned a constant PASS; they are removed. An oracle-copying test double exists only as `proof/judges/_test_doubles.py` (every label `is_mock=True, evidence_type="synthetic"`, name suffixed "(oracle-copy test double)"), is unreachable from production code, and is audited by `tests/proof/test_no_oracle_leak.py`.
+- `proof/arms.assemble_proof_arms` builds a judge arm (`kodiac_cloud`, `kodiac_open_weights`, `single_pass_spark_2fps`, `robometer_4b`, `topreward`, and the dependent `kodiac_salvage` / `size_matched_control`) **only from a real label file**; otherwise the arm is absent with the reason `"no labels: judge not run"`. Prefix salvage needs a measured `t_star_frame` in the Kodiac labels, never the manifest's injected onset.
+- Arms that need only the oracle remain: `oracle`, `accept_all`, and the `oracle_k_{5,10,20,30}` doses. The doses are **injected noise, not a judge** (`evidence_type="synthetic"`). Every arm carries provenance (`is_mock`, `evidence_type`) in `ProofArms.provenance`.
+- `modal/proof_train.py` trains nothing: it returns `status="not_trained"` with no success rates (its earlier made-up success curve is removed).
+- The headline arms cannot be built, and no "+Y points" claim can be made, until the baseline judges and Kodiac have produced labels on the pool (this needs Modal and Meta credentials, a non-mock pool, and a real training loop).
