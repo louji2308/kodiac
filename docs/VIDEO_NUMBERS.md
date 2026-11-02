@@ -10,7 +10,7 @@
 | Hero Test Block Size | 4.0 | cm | - | design constant | `docs/DEMO_FILMING_GUIDE.md` | pending | Registered |
 
 > **Not registered (must not appear on screen as measured):**
-> - the 5.82 s two-stage p95 in `artifacts/p03/sam_bench.json` (`evidence_type: fixture_replay`, `is_real_sam_latency: false`: random draws, not SAM timings);
+> - the 5.82 s two-stage p95 in `artifacts/p03/sam_bench.json` (`evidence_type: simulated_timings`, `is_real_sam_latency: false`: random draws, not SAM timings);
 > - BA 1.0 / coverage 1.0 / 0 false-PASS in `artifacts/p04/validation.json` (`evidence_type: synthetic_tracks_from_privileged_state`, mock sim, no perception in the loop).
 >
-> `Evidence Type` values: `live` | `unit_tests` | `fixture_replay` | `synthetic` | `mock_sim` | `design constant` | `none (target)`.
+> `Evidence Type` values: `live` | `unit_tests` | `fixture_replay` | `simulated_timings` | `synthetic` | `mock_sim` | `design constant` | `none (target)`.

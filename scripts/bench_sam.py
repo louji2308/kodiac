@@ -69,7 +69,7 @@ def run_benchmark(
         backend_name = "api (live sam-3.1)"
     else:
         backend = FixtureBackend()
-        backend_name = "fixture (deterministic replay)"
+        backend_name = "fixture (SIMULATED timings, not measured)"
 
     print(f"Running benchmark with backend: {backend_name}, trials: {n_trials}")
 
@@ -200,7 +200,7 @@ def run_benchmark(
     bench_payload = {
         "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
         "backend": backend_name,
-        "evidence_type": "fixture_replay" if is_fixture else "live",
+        "evidence_type": "simulated_timings" if is_fixture else "live",
         "is_real_sam_latency": not is_fixture,
         "clip": {
             "sha256": clip.sha256,

@@ -1,7 +1,7 @@
 {
   "timestamp": "2026-10-28T16:22:03Z",
-  "backend": "fixture (deterministic replay)",
-  "evidence_type": "fixture_replay",
+  "backend": "fixture (SIMULATED timings, not measured)",
+  "evidence_type": "simulated_timings",
   "is_real_sam_latency": false,
   "clip": {
     "sha256": "6b28a831148885bfc67936b677fe5d0a0c1afef3fcb585500c427a97e0190b24",
