@@ -34,4 +34,28 @@ def create_app(settings: AppSettings | None = None) -> FastAPI
 - [ ] `site/` builds from the script; its HTML contains the FIXTURE/CACHED badge text for every card (test).
 - [ ] ruff clean; no `TODO|NotImplemented`; full suite green. Committed `feat(p09/t11): …`.
 
-## Report (filled by owner at DONE)
+## Report (filled by ORCH at DONE, 2026-11-02; owner session died at final-reply step)
+
+### What was built
+- `src/Kodiac_robotics/app/`: `settings.py`, `server.py` (FastAPI: `/health`, `POST /grade`, `GET /replay/{id}`), `service.py` (grade
+  pipeline with per-run dirs, wall-clock `timer_ms`, transcode, retention reaper), `guards.py` (per-IP token bucket, size/length caps,
+  typed errors), `occlusion.py` (rectangle brush applied to all frames), `replay.py` (content-addressed `ReplayStore`), `ui.py`
+  (Gradio Blocks: Dataset / Upload / Webcam / Teach it), `site.py`, `precompute.py`, `content.py`, `client.py`, `errors.py`, `core.py`.
+- `scripts/precompute_replays.py`, `site/` (static mirror + 6 cached replays), `modal/app_deploy.py` (CPU image, `max_inputs=20`,
+  `min_containers` from env, scheduled reaper), `.github/workflows/pages.yml`.
+- `tests/app/`, `tests/e2e/` (FastAPI `TestClient`; UI/E2E marked slow, skip with reason when gradio is absent).
+
+### Evidence (re-verified by ORCH after the owner died)
+- `python -m pytest tests/app tests/e2e -q` → **50 passed, 2 skipped, 1 xfailed** (skips: `gradio is not installed in this environment`).
+- `site/replays.json` → 6 cached replays, every one with `is_fixture: true`, `backend: "cached_replay"`, badges
+  `[FIXTURE REPLAY]` + `[REPLAY: CACHED SAM 3.1 TRACKS]` + `[GEOMETRY: TIER C · UNCALIBRATED CAMERA]`. The static page states in a banner
+  that every card is a precomputed cached replay, never a live grade.
+- `correct_run` replay carries an explicit note that the engine's FAIL on the reference clip is a known limitation, "not a PASS".
+- Last increment committed by ORCH: `7f873e4` (Windows directory-move retry).
+
+### Known limits / follow-ups
+- **Replays predate the engine fix**: generated at `cb44d53`, i.e. before T13. `scripts/precompute_replays.py` must be re-run after T13 lands,
+  and `correct_run`'s verdict will change (Tier C should abstain, not FAIL).
+- Gradio and Playwright are not installed, so the UI visual tests never ran here; they are written and skip with a reason.
+- Nothing was deployed: no Modal token, no hosted URL. `modal/app_deploy.py` is import-guarded and unit-tested on pure helpers only.
+- No live grade exists anywhere (no API key); every path is fixture/cached and labelled as such.
