@@ -1,0 +1,210 @@
+{
+  "backend": "kinematic_mock",
+  "is_mock": true,
+  "evidence_type": "mock_sim_privileged_state",
+  "note": "Onset frame/component derived from privileged KinematicMockEnv state by a step-machine in tests/blame/test_codeloc.py (not the Kodiac blame engine, not real SAM tracks). Expected lines anchored by source text in examples/sim/pick_place.py. B09 is an omission bug: the expected line is the manifestation (retract drags the cube), per the bug registry.",
+  "n_correct": 10,
+  "n_total": 10,
+  "bugs": [
+    {
+      "bug": "B01",
+      "name": "early_release",
+      "seed": 0,
+      "onset_frame": 119,
+      "onset_rule": "broken_prerequisite",
+      "component": "moves_with.slip",
+      "expected_line": 83,
+      "expected_code": "robot.gripper.open(steps=15)",
+      "located_line": 83,
+      "stable_frame_window": [
+        112,
+        126
+      ],
+      "located_code": "robot.gripper.open(steps=15)",
+      "located_span_class": "gripper.open",
+      "registry_expected_span_class": "gripper.open",
+      "match": true,
+      "match_registry_span_class": true
+    },
+    {
+      "bug": "B02",
+      "name": "xy_offset",
+      "seed": 0,
+      "onset_frame": 166,
+      "onset_rule": "broken_prerequisite",
+      "component": "on.align_xy",
+      "expected_line": 104,
+      "expected_code": "robot.arm.move_to(place_pose)",
+      "located_line": 104,
+      "stable_frame_window": [
+        135,
+        233
+      ],
+      "located_code": "robot.arm.move_to(place_pose)",
+      "located_span_class": "arm.move_to",
+      "registry_expected_span_class": "arm.move_to",
+      "match": true,
+      "match_registry_span_class": true
+    },
+    {
+      "bug": "B03",
+      "name": "low_lift",
+      "seed": 0,
+      "onset_frame": 87,
+      "onset_rule": "unmet@step1",
+      "component": "lifted.height",
+      "expected_line": 66,
+      "expected_code": "robot.arm.lift(distance=0.005)",
+      "located_line": 66,
+      "stable_frame_window": [
+        59,
+        190
+      ],
+      "located_code": "robot.arm.lift(distance=0.005)",
+      "located_span_class": "arm.lift",
+      "registry_expected_span_class": "arm.lift",
+      "match": true,
+      "match_registry_span_class": true
+    },
+    {
+      "bug": "B04",
+      "name": "short_dwell",
+      "seed": 0,
+      "onset_frame": 174,
+      "onset_rule": "unmet@step3",
+      "component": "dwell.duration",
+      "expected_line": 118,
+      "expected_code": "robot.wait(duration_s=0.03)",
+      "located_line": 118,
+      "stable_frame_window": [
+        170,
+        212
+      ],
+      "located_code": "robot.wait(duration_s=0.03)",
+      "located_span_class": "wait",
+      "registry_expected_span_class": "wait",
+      "match": true,
+      "match_registry_span_class": true
+    },
+    {
+      "bug": "B05",
+      "name": "lift_before_close",
+      "seed": 0,
+      "onset_frame": 47,
+      "onset_rule": "unmet@step1",
+      "component": "lifted.height",
+      "expected_line": 58,
+      "expected_code": "robot.arm.lift(distance=0.12)",
+      "located_line": 58,
+      "stable_frame_window": [
+        44,
+        73
+      ],
+      "located_code": "robot.arm.lift(distance=0.12)",
+      "located_span_class": "arm.lift",
+      "registry_expected_span_class": "arm.lift",
+      "match": true,
+      "match_registry_span_class": true
+    },
+    {
+      "bug": "B06",
+      "name": "high_grasp",
+      "seed": 0,
+      "onset_frame": 29,
+      "onset_rule": "unmet@step1",
+      "component": "moves_with.slip",
+      "expected_line": 51,
+      "expected_code": "robot.arm.move_to(grasp_pose)",
+      "located_line": 51,
+      "stable_frame_window": [
+        13,
+        40
+      ],
+      "located_code": "robot.arm.move_to(grasp_pose)",
+      "located_span_class": "arm.move_to",
+      "registry_expected_span_class": "arm.move_to",
+      "match": true,
+      "match_registry_span_class": true
+    },
+    {
+      "bug": "B07",
+      "name": "missing_close",
+      "seed": 0,
+      "onset_frame": 47,
+      "onset_rule": "unmet@step1",
+      "component": "lifted.height",
+      "expected_line": 62,
+      "expected_code": "robot.arm.lift(distance=0.12)",
+      "located_line": 62,
+      "stable_frame_window": [
+        44,
+        214
+      ],
+      "located_code": "robot.arm.lift(distance=0.12)",
+      "located_span_class": "arm.lift",
+      "registry_expected_span_class": "arm.move_to",
+      "match": true,
+      "match_registry_span_class": false
+    },
+    {
+      "bug": "B08",
+      "name": "wrong_object",
+      "seed": 0,
+      "onset_frame": 6,
+      "onset_rule": "unmet@step1",
+      "component": "moves_with.slip",
+      "expected_line": 39,
+      "expected_code": "robot.arm.move_to(pre_grasp)",
+      "located_line": 39,
+      "stable_frame_window": [
+        0,
+        116
+      ],
+      "located_code": "robot.arm.move_to(pre_grasp)",
+      "located_span_class": "arm.move_to",
+      "registry_expected_span_class": "arm.move_to",
+      "match": true,
+      "match_registry_span_class": true
+    },
+    {
+      "bug": "B09",
+      "name": "never_opens",
+      "seed": 0,
+      "onset_frame": 178,
+      "onset_rule": "unmet@step3",
+      "component": "moves_with.slip",
+      "expected_line": 125,
+      "expected_code": "robot.arm.retract(distance=0.15)",
+      "located_line": 125,
+      "stable_frame_window": [
+        173,
+        214
+      ],
+      "located_code": "robot.arm.retract(distance=0.15)",
+      "located_span_class": "arm.retract",
+      "registry_expected_span_class": "arm.retract",
+      "match": true,
+      "match_registry_span_class": true
+    },
+    {
+      "bug": "B10",
+      "name": "high_release",
+      "seed": 0,
+      "onset_frame": 150,
+      "onset_rule": "broken_prerequisite",
+      "component": "on.gap",
+      "expected_line": 104,
+      "expected_code": "robot.arm.move_to(place_pose)",
+      "located_line": 104,
+      "stable_frame_window": [
+        135,
+        217
+      ],
+      "located_code": "robot.arm.move_to(place_pose)",
+      "located_span_class": "arm.move_to",
+      "registry_expected_span_class": "gripper.open",
+      "match": true,
+      "match_registry_span_class": false
+    }
+  ]
+}
