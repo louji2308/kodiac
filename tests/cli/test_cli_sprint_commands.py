@@ -193,3 +193,31 @@ def test_run_requires_exactly_one_input(runner: CliRunner) -> None:
     assert both.exit_code == 3
     assert "exactly one" in json.loads(both.stdout)["error"]
 
+
+def test_diff_sim_episode_shows_demo_only_and_attempt_only(runner: CliRunner) -> None:
+    """A buggy sim attempt diffs against the correct run: achieved events vs the failed one."""
+    res = runner.invoke(
+        app,
+        [
+            "diff",
+            TEST,
+            "--sim",
+            SIM,
+            "--bug",
+            "B01",
+            "--demo-sim",
+            SIM,
+            "--geometry",
+            "tier_a",
+            "--json",
+        ],
+    )
+    assert res.exit_code == 1, res.stdout
+    payload = json.loads(res.stdout)
+    assert payload["demo_source"].startswith("sim:")
+    body = payload["diff"]
+    assert "--- demo" in body and "+++ attempt" in body
+    assert "- [1] place:" in body, "the demonstration placed the cube and the attempt did not"
+    assert "+ [1] place:" in body
+    assert "failed" in body
+

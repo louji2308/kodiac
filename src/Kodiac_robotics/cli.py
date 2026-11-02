@@ -1206,24 +1206,66 @@ def blame_command(
 @app.command(name="diff")
 def diff_command(
     test_path: str = typer.Argument(..., help="Path to .green test specification."),
-    attempt_clip: str = typer.Argument(..., help="The robot's attempt clip."),
+    attempt_clip: str = typer.Argument(
+        None, help="The robot's attempt clip (omit when using --sim)."
+    ),
     demo_clip: str = typer.Option(None, "--demo", help="Reference demo clip (or use a <test>.green.lock sidecar)."),
+    sim: str = typer.Option(None, "--sim", help="Grade the attempt from this sim script instead of a clip."),
+    demo_sim: str = typer.Option(None, "--demo-sim", help="Reference demo from this sim script."),
+    seed: int = typer.Option(0, "--seed", help="Simulation seed (with --sim / --demo-sim)."),
+    bug: str = typer.Option(None, "--bug", help="Inject a seeded bug (B01..B10) into the attempt (with --sim)."),
+    demo_bug: str = typer.Option(None, "--demo-bug", help="Seeded bug for the demo script (usually none)."),
     camera_tier: str = typer.Option("tier_c", "--geometry", help="tier_a, tier_b or tier_c (controls direction words)."),
     json_output: bool = typer.Option(False, "--json", help="Emit pure JSON only."),
 ) -> None:
     """Show the attempt next to the demonstration as aligned events with measurements.
 
     Matched events that agree within k*sigma are context; diverging, missing and extra events are
-    shown as `-`/`+` lines. Demo events come from `--demo` or from a `<test>.green.lock` sidecar.
+    shown as `-`/`+` lines. Demo events come from `--demo` / `--demo-sim` or from a
+    `<test>.green.lock` sidecar. ``--sim ... --bug B01 --demo-sim ...`` diffs a buggy simulated
+    attempt against the same script run correctly.
     """
     from Kodiac_robotics.blame.diff import diff_events
     from Kodiac_robotics.compiler.lock import load_lockfile
 
+    if bool(sim) == bool(attempt_clip):
+        message = "pass exactly one of an attempt clip or --sim <script.py>"
+        if json_output:
+            typer.echo(json.dumps({"error": message, "exit_code": 3}))
+        else:
+            typer.echo(message, err=True)
+        raise typer.Exit(code=3)
+    if (bug or demo_bug) and not sim:
+        message = "--bug / --demo-bug need --sim <script.py>"
+        if json_output:
+            typer.echo(json.dumps({"error": message, "exit_code": 3}))
+        else:
+            typer.echo(message, err=True)
+        raise typer.Exit(code=3)
+    if demo_clip and demo_sim:
+        message = "pass at most one demo reference (--demo or --demo-sim)"
+        if json_output:
+            typer.echo(json.dumps({"error": message, "exit_code": 3}))
+        else:
+            typer.echo(message, err=True)
+        raise typer.Exit(code=3)
+
     try:
-        attempt = execute_run(test=test_path, clip=attempt_clip, backend="fixture")
+        if sim:
+            attempt, _ = _run_sim_episode(
+                test_path, sim, seed=seed, output_dir=None, bug=bug
+            )
+        else:
+            attempt = execute_run(test=test_path, clip=attempt_clip, backend="fixture")
         demo_events = None
         demo_source = None
-        if demo_clip:
+        if demo_sim:
+            demo, _ = _run_sim_episode(
+                test_path, demo_sim, seed=seed, output_dir=None, bug=demo_bug
+            )
+            demo_events = list(demo.events)
+            demo_source = f"sim:{demo_sim}" + (f"#{demo_bug.upper()}" if demo_bug else "")
+        elif demo_clip:
             demo = execute_run(test=test_path, clip=demo_clip, backend="fixture")
             demo_events = list(demo.events)
             demo_source = demo_clip
@@ -1231,8 +1273,8 @@ def diff_command(
             lock_path = Path(f"{test_path}.lock")
             if not lock_path.is_file():
                 message = (
-                    f"no demo reference: pass --demo <clip> or provide the sidecar {lock_path.name} "
-                    "(a .green.lock binds a demonstration to the test)"
+                    f"no demo reference: pass --demo <clip>, --demo-sim <script.py>, or provide the sidecar "
+                    f"{lock_path.name} (a .green.lock binds a demonstration to the test)"
                 )
                 if json_output:
                     typer.echo(json.dumps({"error": message, "exit_code": 3}))
