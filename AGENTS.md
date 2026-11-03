@@ -35,11 +35,11 @@ Three laws, in priority order:
 | 1 | `AGENTS.md` (this file) | Your role, protocol, and rules | Always, in full |
 | 2 | `.agents/STATE.md` | Current phase, stage, blockers, next action | Always |
 | 3 | `.agents/phases/P<NN>-<slug>/BRIEF.md` + your own role file (council / task card / review) | Your specific mission | Always |
-| 4 | `IDEA.md` | What we are building and why; the invariants | Always (council: in full; implementers: §0 and the features you touch) |
-| 5 | `ARCHITECTURE.md` | Components, contracts, data flow, key decisions | Always the sections you touch |
-| 6 | `IMPLEMENTATION_PLAN.md` | The current phase's steps and exit gate | Current phase in full |
-| 7 | `TOOLS_AND_REQUIREMENTS.md` | Approved tools, priorities, keys, budgets | Before choosing or installing any tool |
-| 8 | `HACKATHON.md` | Rules, judging criteria, the judge simulation | Council, reviewers, and anyone touching demo/video/README |
+| 4 | `docs/architecture/IDEA.md` (or `IDEA.md`) | What we are building and why; the invariants | Always (council: in full; implementers: §0 and the features you touch) |
+| 5 | `docs/architecture/ARCHITECTURE.md` (or `ARCHITECTURE.md`) | Components, contracts, data flow, key decisions | Always the sections you touch |
+| 6 | `docs/planning/IMPLEMENTATION_PLAN.md` | The current phase's steps and exit gate | Current phase in full |
+| 7 | `docs/architecture/TOOLS_AND_REQUIREMENTS.md` | Approved tools, priorities, keys, budgets | Before choosing or installing any tool |
+| 8 | `docs/governance/HACKATHON.md` | Rules, judging criteria, the judge simulation | Council, reviewers, and anyone touching demo/video/README |
 | 9 | `.agents/DECISIONS.md` | Past rulings, so you don't re-litigate them | Council and SDM: always. Others: if a decision seems odd |
 
 Do **not** re-derive facts that are already settled in `DECISIONS.md`. To challenge one, you need *new evidence*, and the challenge goes through the council.

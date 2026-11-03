@@ -45,7 +45,10 @@ def _rules(res: dict) -> set[str]:
 
 
 def test_banned_list_parsed_from_idea():
-    words = ls.parse_banned_words((REPO / "IDEA.md").read_text(encoding="utf-8"))
+    idea_path = REPO / "docs" / "architecture" / "IDEA.md"
+    if not idea_path.exists():
+        idea_path = REPO / "IDEA.md"
+    words = ls.parse_banned_words(idea_path.read_text(encoding="utf-8"))
     lowered = {w.lower() for w in words}
     assert {"receipts", "image analyzer", "unknown", "first ever", "muse alone"} <= lowered
 
@@ -80,7 +83,8 @@ def test_pending_marker_is_a_violation(tmp_path):
 def test_measured_registered_number_passes(tmp_path):
     root = tmp_path / "root"
     (root / "docs").mkdir(parents=True)
-    shutil.copy(REPO / "IDEA.md", root / "IDEA.md")
+    idea_src = REPO / "docs" / "architecture" / "IDEA.md"
+    shutil.copy(idea_src if idea_src.exists() else REPO / "IDEA.md", root / "IDEA.md")
     (root / "docs" / "VIDEO_NUMBERS.md").write_text(
         "| Item | Registered Value | Unit | CI | Evidence Type | Source | Git SHA | Status |\n"
         "|---|---|---|---|---|---|---|---|\n"
@@ -129,7 +133,8 @@ def test_draft_script_reports_pending_numbers_and_is_not_ok():
 def test_lineage_missing_is_unverifiable_in_script_lint(tmp_path):
     root = tmp_path / "root"
     root.mkdir()
-    shutil.copy(REPO / "IDEA.md", root / "IDEA.md")
+    idea_src = REPO / "docs" / "architecture" / "IDEA.md"
+    shutil.copy(idea_src if idea_src.exists() else REPO / "IDEA.md", root / "IDEA.md")
     sp, cp = _write_script(tmp_path)
     res = ls.lint(sp, cp, root)
     assert res["unverifiable"] and res["ok"] is False
@@ -306,9 +311,15 @@ def test_ps1_exit3_without_filter_repo_and_dry_run_otherwise():
 
 
 def test_docs_exist_and_carry_pending_markers():
-    sub = (REPO / "docs" / "SUBMISSION.md").read_text(encoding="utf-8")
+    sub_path = REPO / "docs" / "operations" / "SUBMISSION.md"
+    if not sub_path.exists():
+        sub_path = REPO / "docs" / "SUBMISSION.md"
+    sub = sub_path.read_text(encoding="utf-8")
     assert "[PENDING]" in sub and "Push the Frontier" in sub and "Indie" in sub
-    ops = (REPO / "docs" / "OPS_RUNBOOK.md").read_text(encoding="utf-8")
+    ops_path = REPO / "docs" / "operations" / "OPS_RUNBOOK.md"
+    if not ops_path.exists():
+        ops_path = REPO / "docs" / "OPS_RUNBOOK.md"
+    ops = ops_path.read_text(encoding="utf-8")
     assert "Nov 9" in ops and "CACHED" in ops
 
 

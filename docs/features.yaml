@@ -441,5 +441,5 @@
   tier: MVP
   status: partial
   evidence_type: unit_tests
-  evidence: README.md, docs/SUBMISSION.md
+  evidence: README.md, docs/operations/SUBMISSION.md
   note: README has a generated-from-registry status table; the write-up and submission text still contain [PENDING] links.

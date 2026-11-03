@@ -21,7 +21,15 @@ import sys
 from pathlib import Path
 
 MAX_BYTES = 20 * 1024 * 1024
-FORBIDDEN_PUBLIC = ["HACKATHON.md", "docs/research/", "docs/private/", ".agents/", "HUMAN_TODO.md"]
+FORBIDDEN_PUBLIC = [
+    "HACKATHON.md",
+    "docs/governance/HACKATHON.md",
+    "docs/research/",
+    "docs/private/",
+    ".agents/",
+    "HUMAN_TODO.md",
+    "docs/governance/HUMAN_TODO.md",
+]
 LINEAGE_REL = "docs/private/lineage_terms.txt"
 
 ASSIGN_RE = re.compile(

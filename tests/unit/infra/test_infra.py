@@ -162,8 +162,10 @@ def test_invoke_sdm_dry_run_cli(repo_root: Path):
 
 
 def test_demo_filming_guide_content(repo_root: Path):
-    """Verify docs/DEMO_FILMING_GUIDE.md exists and contains mandatory filming constraints."""
-    guide_path = repo_root / "docs" / "DEMO_FILMING_GUIDE.md"
+    """Verify docs/operations/DEMO_FILMING_GUIDE.md exists and contains mandatory filming constraints."""
+    guide_path = repo_root / "docs" / "operations" / "DEMO_FILMING_GUIDE.md"
+    if not guide_path.exists():
+        guide_path = repo_root / "docs" / "DEMO_FILMING_GUIDE.md"
     assert guide_path.exists(), "DEMO_FILMING_GUIDE.md must exist"
 
     text = guide_path.read_text(encoding="utf-8")

@@ -29,6 +29,8 @@ $forbidden = @(
     ".ruff_cache",
     "docs\research",
     "docs\private",
+    "docs\governance\HACKATHON.md",
+    "docs\governance\HUMAN_TODO.md",
     "HACKATHON.md",
     "HUMAN_TODO.md"
 )

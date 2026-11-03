@@ -223,7 +223,7 @@ tests/                 unit + integration, all offline (fixtures, mock sim, inje
 examples/              stackcube.green + a mock pick-and-place sim + 10 seeded bug patches
 artifacts/             evidence committed with its provenance label
 experiments/           pre-registered proof protocol; headline NOT MEASURED
-docs/                  features.yaml (ground truth), SUBMISSION.md, VIDEO_NUMBERS.md, runbook
+docs/                  features.yaml (ground truth), architecture/, planning/, operations/, governance/, research/
 site/                  static mirror of the hosted app with cached replays
 ```
 
@@ -360,5 +360,5 @@ site/                  static mirror of the hosted app with cached replays
 
 ## License
 
-Apache-2.0. Third-party components and their licences are listed in `ATTRIBUTIONS.md`; where a
+Apache-2.0. Third-party components and their licences are listed in `docs/governance/ATTRIBUTIONS.md`; where a
 licence could not be verified it says so instead of guessing.

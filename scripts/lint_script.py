@@ -110,7 +110,9 @@ def lint(script_path: Path, concepts_path: Path, root: Path) -> dict:
     def v(rule: str, msg: str, line: int | None = None) -> None:
         violations.append({"rule": rule, "line": line, "message": msg})
 
-    idea = root / "IDEA.md"
+    idea = root / "docs" / "architecture" / "IDEA.md"
+    if not idea.exists():
+        idea = root / "IDEA.md"
     if not idea.exists():
         raise LintSetupError(f"{idea} not found")
     banned = parse_banned_words(idea.read_text(encoding="utf-8"))
@@ -126,10 +128,12 @@ def lint(script_path: Path, concepts_path: Path, root: Path) -> dict:
     else:
         unverifiable.append("UNVERIFIABLE: docs/private/lineage_terms.txt missing")
 
-    nums_path = root / "docs" / "VIDEO_NUMBERS.md"
+    nums_path = root / "docs" / "operations" / "VIDEO_NUMBERS.md"
+    if not nums_path.exists():
+        nums_path = root / "docs" / "VIDEO_NUMBERS.md"
     registry = parse_numbers_registry(nums_path.read_text(encoding="utf-8")) if nums_path.exists() else {}
     if not nums_path.exists():
-        v("numbers", "docs/VIDEO_NUMBERS.md missing: no number can be verified")
+        v("numbers", "docs/operations/VIDEO_NUMBERS.md missing: no number can be verified")
 
     script = script_path.read_text(encoding="utf-8")
     beats = parse_beats(script)

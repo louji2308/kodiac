@@ -3,7 +3,7 @@
 > Nothing here has been submitted or posted. Submitting, posting, and making the repo public are **human-only** actions (AGENTS.md section 12.3).
 > `[PENDING]` = a value that does not exist yet. Do not replace with a guess.
 > Claim rule: only `docs/features.yaml` rows with `status: done` may be written as shipped; everything else is labelled "planned (not shipped)". Re-check `docs/features.yaml` immediately before pasting: it is the source of truth, this file is a snapshot (2026-11-02).
-> Every number must be `Measured` in `docs/VIDEO_NUMBERS.md` before it appears in any text below. At snapshot time none of the headline numbers are measured; none are written here.
+> Every number must be `Measured` in `docs/operations/VIDEO_NUMBERS.md` before it appears in any text below. At snapshot time none of the headline numbers are measured; none are written here.
 
 Submit at: `cerebralvalley.ai/e/meta-ai-developer-hackathon/hackathon/submit` · internal deadline Nov 4 17:00 UTC (official Nov 5 02:00 UTC).
 
@@ -47,12 +47,12 @@ Update this table to `live` only with evidence (artifact path + git sha).
 Post the link back into the form: X post URL [PENDING].
 
 ## 3. Gallery text (draft)
-**Kodiac: Robots can finally fail a test.** A test language for robot success: compile a demonstration into a `.green` test, grade every attempt with PASS / FAIL / CAN'T TELL, and (planned) point to the exact frame and measured cause where it went wrong. Simulation results are labelled simulated; cached replays are labelled cached. [PENDING: add one measured headline number only after it is registered in `docs/VIDEO_NUMBERS.md` as Measured.]
+**Kodiac: Robots can finally fail a test.** A test language for robot success: compile a demonstration into a `.green` test, grade every attempt with PASS / FAIL / CAN'T TELL, and (planned) point to the exact frame and measured cause where it went wrong. Simulation results are labelled simulated; cached replays are labelled cached. [PENDING: add one measured headline number only after it is registered in `docs/operations/VIDEO_NUMBERS.md` as Measured.]
 
 ## 4. Human checklist (nothing is ticked by an agent)
 - [ ] `python scripts/compliance_check.py` run on the final tree; every finding resolved or consciously accepted (lineage list present, ATTRIBUTIONS rows complete)
 - [ ] `python scripts/lint_script.py video/SCRIPT.md` is clean (all numbers Measured)
-- [ ] I16 closing line confirmed (HUMAN_TODO section 3)
+- [ ] I16 closing line confirmed (docs/governance/HUMAN_TODO.md section 3)
 - [ ] Mirror built with `scripts/make_public_mirror.* -Run/--run`, lint passed over full history and commit messages
 - [ ] Repo public (human action)
 - [ ] Video uploaded; link plays in incognito; <= 3:00

@@ -49,7 +49,9 @@ def check_first_commit(repo: Path) -> list[dict]:
 
 
 def check_build_log(repo: Path) -> list[dict]:
-    p = repo / "BUILD_LOG.md"
+    p = repo / "docs" / "planning" / "BUILD_LOG.md"
+    if not p.exists():
+        p = repo / "BUILD_LOG.md"
     if not p.exists():
         return [f("S0", "build-log", "BUILD_LOG.md missing")]
     n = len(re.findall(r"^#{2,4}\s+\d{4}-\d{2}-\d{2}", p.read_text(encoding="utf-8"), re.M))
@@ -59,7 +61,9 @@ def check_build_log(repo: Path) -> list[dict]:
 
 
 def check_attributions(repo: Path) -> list[dict]:
-    p = repo / "ATTRIBUTIONS.md"
+    p = repo / "docs" / "governance" / "ATTRIBUTIONS.md"
+    if not p.exists():
+        p = repo / "ATTRIBUTIONS.md"
     if not p.exists():
         return [f("S1", "attributions", "ATTRIBUTIONS.md missing")]
     rows = [r for r in p.read_text(encoding="utf-8").splitlines() if r.startswith("|")]
