@@ -49,6 +49,8 @@ class AppSettings(BaseModel):
         backend = os.environ.get("KODIAC_APP_BACKEND")
         if backend in ("fixture", "api", "modal"):
             kwargs["backend"] = backend
+        elif os.environ.get("MODEL_API_KEY") or os.environ.get("KODIAC_MODEL_API_KEY"):
+            kwargs["backend"] = "api"
         mode = os.environ.get("KODIAC_APP_MODE")
         if mode in ("live", "cache-only"):
             kwargs["mode"] = mode

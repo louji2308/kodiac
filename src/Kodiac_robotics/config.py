@@ -124,3 +124,52 @@ def get_settings() -> Settings:
     if _global_settings is None:
         _global_settings = Settings.load()
     return _global_settings
+
+
+def resolve_sam_backend(
+    requested: str | None = None, settings: Settings | None = None
+) -> Literal["api", "fixture", "modal"]:
+    """Resolve the effective SAM 3.1 perception backend.
+
+    If requested is explicitly 'api', 'fixture', or 'modal', uses that.
+    If requested is None or 'auto', automatically promotes to 'api' if MODEL_API_KEY
+    is set in environment or settings; otherwise defaults safely to 'fixture'.
+    """
+    cfg = settings or get_settings()
+    req = (requested or "").lower().strip()
+    if req in ("api", "fixture", "modal"):
+        return req  # type: ignore[return-value]
+
+    has_key = bool(
+        cfg.model_api_key
+        or os.environ.get("MODEL_API_KEY")
+        or os.environ.get("KODIAC_MODEL_API_KEY")
+    )
+    if has_key:
+        return "api"
+    return "fixture"
+
+
+def resolve_compiler_backend(
+    requested: str | None = None, settings: Settings | None = None
+) -> Literal["api", "fixture", "template"]:
+    """Resolve the effective .green compiler backend.
+
+    If requested is explicitly 'api', 'fixture', or 'template', uses that.
+    If requested is None or 'auto', automatically promotes to 'api' if MODEL_API_KEY
+    is set in environment or settings; otherwise defaults to 'template'.
+    """
+    cfg = settings or get_settings()
+    req = (requested or "").lower().strip()
+    if req in ("api", "fixture", "template"):
+        return req  # type: ignore[return-value]
+
+    has_key = bool(
+        cfg.model_api_key
+        or os.environ.get("MODEL_API_KEY")
+        or os.environ.get("KODIAC_MODEL_API_KEY")
+    )
+    if has_key:
+        return "api"
+    return "template"
+

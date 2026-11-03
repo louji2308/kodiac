@@ -157,7 +157,9 @@ class GradeService:
                 f"Keep the instruction under {MAX_INSTRUCTION_CHARS} characters.",
             )
         try:
-            test = text_compile(text, backend="template")
+            compiler_backend = "api" if self.settings.backend == "api" else "template"
+            test = text_compile(text, backend=compiler_backend)  # type: ignore[arg-type]
+            badges = ["[COMPILER: MUSE SPARK 1.3]"] if compiler_backend == "api" else [TEMPLATE_COMPILER_BADGE]
         except ValueError as err:
             msg = str(err)
             if msg.startswith("E001"):

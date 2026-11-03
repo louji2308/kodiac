@@ -34,6 +34,7 @@ from typing import TYPE_CHECKING, Any, Literal
 
 from pydantic import ValidationError
 
+from Kodiac_robotics.config import resolve_sam_backend
 from Kodiac_robotics.contracts.core import (
     Component,
     PredFrame,
@@ -410,7 +411,7 @@ def _verify_impl(req: VerifyRequest) -> dict[str, Any]:
         result = result.model_copy(update={"badges": badges, "backends": backends})
     else:
         assert clip_path is not None
-        backend: Literal["api", "modal", "fixture"] = os.environ.get("KODIAC_SEGMENT_BACKEND", "fixture")  # type: ignore[assignment]
+        backend: Literal["api", "modal", "fixture"] = resolve_sam_backend(os.environ.get("KODIAC_SEGMENT_BACKEND"))
         if backend not in ("api", "modal", "fixture"):
             return _error("bad_backend", f"KODIAC_SEGMENT_BACKEND={backend!r} is not api|modal|fixture")
         result = run(test=test_path, clip=clip_path, mode=req.mode, backend=backend, render_card=True, output_dir=work / "run")

@@ -26,7 +26,11 @@ from rich.panel import Panel  # noqa: E402
 from rich.table import Table  # noqa: E402
 
 from Kodiac_robotics import __version__  # noqa: E402
-from Kodiac_robotics.config import get_settings  # noqa: E402
+from Kodiac_robotics.config import (  # noqa: E402
+    get_settings,
+    resolve_compiler_backend,
+    resolve_sam_backend,
+)
 from Kodiac_robotics.contracts.core import Verdict  # noqa: E402
 from Kodiac_robotics.pipeline.run import run as execute_run  # noqa: E402
 
@@ -121,6 +125,12 @@ def run_command(
         "-o",
         help="Custom output directory for run artifacts (default: runs/<id>).",
     ),
+    backend: str = typer.Option(
+        "auto",
+        "--backend",
+        "-b",
+        help="Perception backend: 'auto' (promotes to api if MODEL_API_KEY set, else fixture), 'api', 'fixture', 'modal'.",
+    ),
 ) -> None:
     """Executes a Green test over a video clip or a simulated episode.
 
@@ -146,6 +156,7 @@ def run_command(
         raise typer.Exit(code=3)
 
     try:
+        effective_backend = resolve_sam_backend(backend)
         if sim:
             if mode == "fast":
                 typer.echo("--mode fast needs a clip (the bisect path has no sim segmenter)", err=True)
@@ -164,6 +175,7 @@ def run_command(
                 test_path,
                 clip_path,
                 camera=camera,
+                backend=effective_backend,
                 output_dir=output_dir,
             )
         else:
@@ -171,7 +183,7 @@ def run_command(
                 test=test_path,
                 clip=clip_path,
                 mode=mode,  # type: ignore[arg-type]
-                backend="fixture",
+                backend=effective_backend,
                 render_card=render_card,
                 output_dir=output_dir,
                 camera=camera,  # type: ignore[arg-type]
@@ -314,9 +326,9 @@ def test_command(
         help="Output path for compiled .green test specification (default: stdout).",
     ),
     backend: str = typer.Option(
-        "template",
+        "auto",
         "--backend",
-        help="Compiler backend: 'template', 'fixture', or 'api'.",
+        help="Compiler backend: 'auto' (promotes to api if MODEL_API_KEY set, else template), 'template', 'fixture', or 'api'.",
     ),
     first_frame: Path = typer.Option(
         None,
@@ -364,6 +376,8 @@ def test_command(
         )
         raise typer.Exit(code=1)
 
+    effective_compiler_backend = resolve_compiler_backend(backend)
+
     # 2. Text-Compile Mode (--from-text without --video)
     if video is None and from_text is not None:
         t0 = time.perf_counter()
@@ -371,14 +385,14 @@ def test_command(
             from Kodiac_robotics.compiler.printer import print_green
             from Kodiac_robotics.compiler.text_compile import text_compile
 
-            if backend == "template":
+            if effective_compiler_backend == "template":
                 err_console.print(
                     "  [bold yellow]⚠ [COMPILER: DETERMINISTIC TEMPLATE FALLBACK · LLM OFFLINE][/bold yellow]"
                 )
             test_ast = text_compile(
                 task=from_text,
                 first_frame_path=first_frame,
-                backend=backend,  # type: ignore[arg-type]
+                backend=effective_compiler_backend,  # type: ignore[arg-type]
             )
             dt = time.perf_counter() - t0
             err_console.print(
@@ -434,7 +448,7 @@ def test_command(
         else:
             turns = transcribe_demo_audio(
                 Path(clip.path_h264),
-                backend="fixture" if backend != "api" else "api",
+                backend="fixture" if effective_compiler_backend != "api" else "api",
             )
         dt_asr = time.perf_counter() - t_asr0
         err_console.print(
@@ -443,7 +457,7 @@ def test_command(
 
         # Step 3: Symbolic Compilation (compiled)
         t_comp0 = time.perf_counter()
-        if backend == "template":
+        if effective_compiler_backend == "template":
             err_console.print(
                 "  [bold yellow]⚠ [COMPILER: DETERMINISTIC TEMPLATE FALLBACK · LLM OFFLINE][/bold yellow]"
             )
@@ -453,7 +467,7 @@ def test_command(
             try:
                 skeleton = compile_speech_to_skeleton(
                     turns=turns,
-                    backend="api" if backend == "api" else "fixture",
+                    backend="api" if effective_compiler_backend == "api" else "fixture",
                 )
             except Exception:
                 err_console.print(
@@ -892,6 +906,7 @@ def _execute_fast(
     clip_path: str,
     *,
     camera: str | None,
+    backend: str = "fixture",
     output_dir: Path | None,
 ):
     """Two-stage bisect fast path (keyframes + halving + one dense window).
@@ -901,13 +916,25 @@ def _execute_fast(
     """
     from Kodiac_robotics.io.clip import open_clip
     from Kodiac_robotics.pipeline.bisect import run_fast
-    from Kodiac_robotics.segment.fixture import FixtureBackend
 
     clip_obj = open_clip(clip_path)
+    if backend == "api":
+        from Kodiac_robotics.segment.api import HostedSamBackend
+
+        seg_backend = HostedSamBackend()
+    elif backend == "modal":
+        from Kodiac_robotics.segment.modal_backend import ModalSamBackend
+
+        seg_backend = ModalSamBackend()
+    else:
+        from Kodiac_robotics.segment.fixture import FixtureBackend
+
+        seg_backend = FixtureBackend()
+
     fast = run_fast(
         test_path,
         clip_obj,
-        FixtureBackend(),
+        seg_backend,
         camera=camera,
         output_dir=output_dir,
     )
@@ -1019,6 +1046,12 @@ def blame_command(
     ),
     camera: str = typer.Option(None, "--camera", "-c", help="Camera calibration tier: tier_a, tier_b, tier_c."),
     output_dir: Path = typer.Option(None, "--output", "-o", help="Run artifact directory."),
+    backend: str = typer.Option(
+        "auto",
+        "--backend",
+        "-b",
+        help="Perception backend: 'auto' (promotes to api if MODEL_API_KEY set, else fixture), 'api', 'fixture', 'modal'.",
+    ),
     json_output: bool = typer.Option(False, "--json", help="Emit pure JSON only."),
 ) -> None:
     """Attribute a FAIL to an exact onset frame t* and a measured physical cause.
@@ -1059,10 +1092,11 @@ def blame_command(
             fps = float(sim_res.fps)
             spans = _load_sim_spans(sim_res.spans_path)
         else:
+            effective_backend = resolve_sam_backend(backend)
             run_res = execute_run(
                 test=test_path,
                 clip=clip_path,
-                backend="fixture",
+                backend=effective_backend,
                 output_dir=output_dir,
                 camera=camera,  # type: ignore[arg-type]
             )
@@ -1216,6 +1250,12 @@ def diff_command(
     bug: str = typer.Option(None, "--bug", help="Inject a seeded bug (B01..B10) into the attempt (with --sim)."),
     demo_bug: str = typer.Option(None, "--demo-bug", help="Seeded bug for the demo script (usually none)."),
     camera_tier: str = typer.Option("tier_c", "--geometry", help="tier_a, tier_b or tier_c (controls direction words)."),
+    backend: str = typer.Option(
+        "auto",
+        "--backend",
+        "-b",
+        help="Perception backend: 'auto' (promotes to api if MODEL_API_KEY set, else fixture), 'api', 'fixture', 'modal'.",
+    ),
     json_output: bool = typer.Option(False, "--json", help="Emit pure JSON only."),
 ) -> None:
     """Show the attempt next to the demonstration as aligned events with measurements.
@@ -1251,12 +1291,13 @@ def diff_command(
         raise typer.Exit(code=3)
 
     try:
+        effective_backend = resolve_sam_backend(backend)
         if sim:
             attempt, _ = _run_sim_episode(
                 test_path, sim, seed=seed, output_dir=None, bug=bug
             )
         else:
-            attempt = execute_run(test=test_path, clip=attempt_clip, backend="fixture")
+            attempt = execute_run(test=test_path, clip=attempt_clip, backend=effective_backend)
         demo_events = None
         demo_source = None
         if demo_sim:
@@ -1266,7 +1307,7 @@ def diff_command(
             demo_events = list(demo.events)
             demo_source = f"sim:{demo_sim}" + (f"#{demo_bug.upper()}" if demo_bug else "")
         elif demo_clip:
-            demo = execute_run(test=test_path, clip=demo_clip, backend="fixture")
+            demo = execute_run(test=test_path, clip=demo_clip, backend=effective_backend)
             demo_events = list(demo.events)
             demo_source = demo_clip
         else:
