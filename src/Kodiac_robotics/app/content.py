@@ -12,12 +12,12 @@ MODEL_TABLE: list[dict[str, str]] = [
     {
         "model": "SAM 3.1",
         "role": "Measures: segments and tracks every object, frame by frame",
-        "status": "Live interactive mask & anchor engine on this page (replays recorded SAM 3.1 tracks by default; connects to live MODEL_API_KEY endpoint when configured)",
+        "status": "Live interactive mask & anchor engine on this page (replays recorded SAM 3.1 tracks by default; calls the live Meta endpoint when the server is configured with MODEL_API_KEY)",
     },
     {
         "model": "Muse Spark",
         "role": "Compiles a demo or an instruction into a .green test; judges appearance-only clauses",
-        "status": "Live in-browser .green compiler with MODEL_API_KEY connector + deterministic two-pass 2.5σ slack compiler fallback (badged transparently)",
+        "status": "Live in-browser .green compiler backed by the deterministic two-pass 2.5σ slack compiler (badged transparently); the server path uses Muse Spark when configured",
     },
     {
         "model": "Muse Voice",
@@ -27,7 +27,7 @@ MODEL_TABLE: list[dict[str, str]] = [
     {
         "model": "Muse Wonder",
         "role": "Adjudicates hard cases and keeps memory",
-        "status": "Live FactTable & validated blame summary engine in Studio Tab 3 (connects to MODEL_API_KEY or deterministic validator)",
+        "status": "Live FactTable & validated blame summary engine in Studio Tab 3 (deterministic validator in the browser; Muse Wonder when the server is configured)",
     },
     {
         "model": "Muse Code",
@@ -37,7 +37,7 @@ MODEL_TABLE: list[dict[str, str]] = [
 ]
 
 LIMITS: list[str] = [
-    "Without an external perception API key, perception on the curated clips replays recorded SAM 3.1 tracks (badge: [FIXTURE REPLAY]); paste a MODEL_API_KEY in the top bar or connect a local `Kodiac app` server for live API calls.",
+    "Without an external perception API key, perception on the curated clips replays recorded SAM 3.1 tracks (badge: [FIXTURE REPLAY]); run a local `Kodiac app` server with MODEL_API_KEY configured for live API calls.",
     "The interactive Occlusion Brush blackens pixels on the video canvas and recomputes mask coverage and Kleene 3-valued gates (G1–G6) live in your browser (badge: OCCLUSION EMULATED ON CACHED MASKS).",
     "Geometry supports Tier A (calibrated 3D camera), Tier B (calibrated 2D tabletop scale), and Tier C (uncalibrated monocular prior with 2.5x uncertainty inflation).",
     "Curated clips are kinematic-mock simulation episodes (badge: FIXTURE REPLAY); Tab 4 also includes 5 audited public real-robot failures from DROID and LeRobot SO-100.",

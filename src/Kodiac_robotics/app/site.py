@@ -370,9 +370,6 @@ def render_index(entries: list[ReplayEntry], store: ReplayStore | None = None) -
     </div>
     <div class="api-bar">
       <span class="status-dot" id="engine-status-pill"><span class="dot"></span><span id="engine-status-text">In-Browser Geometric Engine: READY</span></span>
-      <input type="password" id="meta-api-key-input" class="api-input" placeholder="Paste Meta MODEL_API_KEY (optional)..." autocomplete="off" aria-label="Meta model API key">
-      <button class="btn btn-primary" onclick="window.connectMetaKey()">Connect Meta API</button>
-      <button class="btn" id="clear-key-btn" style="display:none" onclick="window.clearMetaKey()">Disconnect</button>
     </div>
   </div>
 </header>
@@ -703,7 +700,7 @@ def render_index(entries: list[ReplayEntry], store: ReplayStore | None = None) -
   <section class="section" id="live-app">
     <div class="section-label"><span class="idx">07</span>Live app</div>
     <h2 class="section-title">Run it in the browser</h2>
-    <p class="prose"><!-- LIVE_APP_URL -->The interactive Studio above runs directly on this page (zero-install browser engine plus an optional Meta API key connector); you can also run the full FastAPI + Gradio server locally via <code>Kodiac app --port 7860</code>.</p>
+    <p class="prose"><!-- LIVE_APP_URL -->The interactive Studio above runs directly on this page (zero-install deterministic browser engine); you can also run the full FastAPI + Gradio server locally via <code>Kodiac app --port 7860</code>, where a server-configured Meta Model API key enables live SAM 3.1, Muse Spark and Muse Wonder calls.</p>
   </section>
 
   <section class="section" id="meta-models">
@@ -763,52 +760,13 @@ window.KODIAC_REPLAYS = {results_json};
     minCm: 2.0,
     alignXyCm: 3.33,
     gapCm: 0.50,
-    cameraTier: 'B',
-    metaApiKey: sessionStorage.getItem('KODIAC_META_API_KEY') || ''
+    cameraTier: 'B'
   }};
 
   const COLORS = {{
     gripper: '#b3c6e8',
     cube_a: '#bd7ad6',
     cube_b: '#70dab4'
-  }};
-
-  function updateApiStatusUI() {{
-    const txt = document.getElementById('engine-status-text');
-    const clearBtn = document.getElementById('clear-key-btn');
-    const inp = document.getElementById('meta-api-key-input');
-    const compBadge = document.getElementById('compiler-backend-badge');
-    if (state.metaApiKey) {{
-      const masked = state.metaApiKey.slice(0, 7) + '...' + state.metaApiKey.slice(-4);
-      txt.textContent = 'Meta API Key Active (' + masked + ') + Live Engine';
-      if (clearBtn) clearBtn.style.display = 'inline-block';
-      if (inp) inp.value = '';
-      if (compBadge) compBadge.textContent = '[MUSE SPARK API CONNECTOR + 2.5σ CALIBRATOR]';
-    }} else {{
-      txt.textContent = 'In-Browser Geometric Engine: READY';
-      if (clearBtn) clearBtn.style.display = 'none';
-      if (compBadge) compBadge.textContent = '[DETERMINISTIC + 2.5σ SLACK CALIBRATOR]';
-    }}
-  }}
-
-  window.connectMetaKey = function() {{
-    const inp = document.getElementById('meta-api-key-input');
-    const val = (inp && inp.value || '').trim();
-    if (!val) {{
-      alert('Paste your Meta MODEL_API_KEY into the input box first.');
-      return;
-    }}
-    state.metaApiKey = val;
-    sessionStorage.setItem('KODIAC_META_API_KEY', val);
-    updateApiStatusUI();
-    window.runLiveGrade();
-  }};
-
-  window.clearMetaKey = function() {{
-    state.metaApiKey = '';
-    sessionStorage.removeItem('KODIAC_META_API_KEY');
-    updateApiStatusUI();
-    window.runLiveGrade();
   }};
 
   window.switchStudioTab = function(tabName) {{
@@ -1502,7 +1460,7 @@ window.KODIAC_REPLAYS = {results_json};
     const alignVal = alignMatch ? parseFloat(alignMatch[1]).toFixed(2) : '3.33';
     const dwellVal = dwellMatch ? parseFloat(dwellMatch[1]).toFixed(2) : '0.50';
 
-    const backendBadge = state.metaApiKey ? '[COMPILER: MUSE SPARK 1.3 · LIVE KEY CONFIGURED]' : '[COMPILER: DETERMINISTIC TEMPLATE + 2.5σ CALIBRATOR]';
+    const backendBadge = '[COMPILER: DETERMINISTIC TEMPLATE + 2.5σ CALIBRATOR]';
     status.innerHTML = '<span style="color:var(--pass)">Compiled cleanly in 0.8 ms</span> · badge: <code>' + backendBadge + '</code>';
 
     if (lower.indexOf('inside') !== -1 || lower.indexOf('tray') !== -1) {{
@@ -1594,7 +1552,6 @@ window.KODIAC_REPLAYS = {results_json};
       if (target) target.scrollIntoView({{behavior: 'smooth', block: 'start'}});
     }});
   }});
-  updateApiStatusUI();
   bindCanvasBrush();
   renderStudioState();
   window.seekFrame(82);

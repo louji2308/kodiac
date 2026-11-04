@@ -213,9 +213,6 @@ tr:last-child td{border-bottom:0}
     </div>
     <div class="api-bar">
       <span class="status-dot" id="engine-status-pill"><span class="dot"></span><span id="engine-status-text">In-Browser Geometric Engine: READY</span></span>
-      <input type="password" id="meta-api-key-input" class="api-input" placeholder="Paste Meta MODEL_API_KEY (optional)..." autocomplete="off" aria-label="Meta model API key">
-      <button class="btn btn-primary" onclick="window.connectMetaKey()">Connect Meta API</button>
-      <button class="btn" id="clear-key-btn" style="display:none" onclick="window.clearMetaKey()">Disconnect</button>
     </div>
   </div>
 </header>
@@ -551,19 +548,19 @@ tr:last-child td{border-bottom:0}
   <section class="section" id="live-app">
     <div class="section-label"><span class="idx">07</span>Live app</div>
     <h2 class="section-title">Run it in the browser</h2>
-    <p class="prose"><!-- LIVE_APP_URL -->The interactive Studio above runs directly on this page (zero-install browser engine plus an optional Meta API key connector); you can also run the full FastAPI + Gradio server locally via <code>Kodiac app --port 7860</code>.</p>
+    <p class="prose"><!-- LIVE_APP_URL -->The interactive Studio above runs directly on this page (zero-install deterministic browser engine); you can also run the full FastAPI + Gradio server locally via <code>Kodiac app --port 7860</code>, where a server-configured Meta Model API key enables live SAM 3.1, Muse Spark and Muse Wonder calls.</p>
   </section>
 
   <section class="section" id="meta-models">
     <div class="section-label"><span class="idx">08</span>Model ledger</div>
     <h2 class="section-title">Which Meta model does what</h2>
-    <div class="table-wrap"><table class="ledger"><tr><th>Model</th><th>Role</th><th>On this hosted Studio today</th></tr><tr><td><b>SAM 3.1</b></td><td>Measures: segments and tracks every object, frame by frame</td><td>Live interactive mask &amp; anchor engine on this page (replays recorded SAM 3.1 tracks by default; connects to live MODEL_API_KEY endpoint when configured)</td></tr><tr><td><b>Muse Spark</b></td><td>Compiles a demo or an instruction into a .green test; judges appearance-only clauses</td><td>Live in-browser .green compiler with MODEL_API_KEY connector + deterministic two-pass 2.5σ slack compiler fallback (badged transparently)</td></tr><tr><td><b>Muse Voice</b></td><td>Anchors the spoken intent to timestamps</td><td>Live Web Speech API / Muse Voice microphone capture in Studio Tab 2 (or type any natural-language instruction)</td></tr><tr><td><b>Muse Wonder</b></td><td>Adjudicates hard cases and keeps memory</td><td>Live FactTable &amp; validated blame summary engine in Studio Tab 3 (connects to MODEL_API_KEY or deterministic validator)</td></tr><tr><td><b>Muse Code</b></td><td>Runs the /goal loop that is blocked until Kodiac run returns PASS</td><td>Interactive 10-bug repair loop &amp; 18/18 anti-cheat Done-Gate explorer in Studio Tab 4 + CLI (`Kodiac gate` / `Kodiac mcp`)</td></tr></table></div>
+    <div class="table-wrap"><table class="ledger"><tr><th>Model</th><th>Role</th><th>On this hosted Studio today</th></tr><tr><td><b>SAM 3.1</b></td><td>Measures: segments and tracks every object, frame by frame</td><td>Live interactive mask &amp; anchor engine on this page (replays recorded SAM 3.1 tracks by default; calls the live Meta endpoint when the server is configured with MODEL_API_KEY)</td></tr><tr><td><b>Muse Spark</b></td><td>Compiles a demo or an instruction into a .green test; judges appearance-only clauses</td><td>Live in-browser .green compiler backed by the deterministic two-pass 2.5σ slack compiler (badged transparently); the server path uses Muse Spark when configured</td></tr><tr><td><b>Muse Voice</b></td><td>Anchors the spoken intent to timestamps</td><td>Live Web Speech API / Muse Voice microphone capture in Studio Tab 2 (or type any natural-language instruction)</td></tr><tr><td><b>Muse Wonder</b></td><td>Adjudicates hard cases and keeps memory</td><td>Live FactTable &amp; validated blame summary engine in Studio Tab 3 (deterministic validator in the browser; Muse Wonder when the server is configured)</td></tr><tr><td><b>Muse Code</b></td><td>Runs the /goal loop that is blocked until Kodiac run returns PASS</td><td>Interactive 10-bug repair loop &amp; 18/18 anti-cheat Done-Gate explorer in Studio Tab 4 + CLI (`Kodiac gate` / `Kodiac mcp`)</td></tr></table></div>
   </section>
 
   <section class="section" id="limits">
     <div class="section-label"><span class="idx">09</span>Limits</div>
     <h2 class="section-title">Limits we are honest about</h2>
-    <ol class="prose-list numbered"><li>Without an external perception API key, perception on the curated clips replays recorded SAM 3.1 tracks (badge: [FIXTURE REPLAY]); paste a MODEL_API_KEY in the top bar or connect a local `Kodiac app` server for live API calls.</li><li>The interactive Occlusion Brush blackens pixels on the video canvas and recomputes mask coverage and Kleene 3-valued gates (G1–G6) live in your browser (badge: OCCLUSION EMULATED ON CACHED MASKS).</li><li>Geometry supports Tier A (calibrated 3D camera), Tier B (calibrated 2D tabletop scale), and Tier C (uncalibrated monocular prior with 2.5x uncertainty inflation).</li><li>Curated clips are kinematic-mock simulation episodes (badge: FIXTURE REPLAY); Tab 4 also includes 5 audited public real-robot failures from DROID and LeRobot SO-100.</li><li>CAN&#x27;T TELL is a first-class verdict: when evidence is occluded or below the measurement noise floor (|m| &lt; σ), Kodiac abstains with a typed reason code instead of guessing.</li><li>Every live evaluation displays its measured wall-clock execution time; precomputed gallery cards carry the ⚡ CACHED badge and report their original recording time.</li></ol>
+    <ol class="prose-list numbered"><li>Without an external perception API key, perception on the curated clips replays recorded SAM 3.1 tracks (badge: [FIXTURE REPLAY]); run a local `Kodiac app` server with MODEL_API_KEY configured for live API calls.</li><li>The interactive Occlusion Brush blackens pixels on the video canvas and recomputes mask coverage and Kleene 3-valued gates (G1–G6) live in your browser (badge: OCCLUSION EMULATED ON CACHED MASKS).</li><li>Geometry supports Tier A (calibrated 3D camera), Tier B (calibrated 2D tabletop scale), and Tier C (uncalibrated monocular prior with 2.5x uncertainty inflation).</li><li>Curated clips are kinematic-mock simulation episodes (badge: FIXTURE REPLAY); Tab 4 also includes 5 audited public real-robot failures from DROID and LeRobot SO-100.</li><li>CAN&#x27;T TELL is a first-class verdict: when evidence is occluded or below the measurement noise floor (|m| &lt; σ), Kodiac abstains with a typed reason code instead of guessing.</li><li>Every live evaluation displays its measured wall-clock execution time; precomputed gallery cards carry the ⚡ CACHED badge and report their original recording time.</li></ol>
   </section>
 
   <section class="section" id="privacy">
@@ -589,7 +586,7 @@ tr:last-child td{border-bottom:0}
     </nav>
   </div>
   <div class="footer-meta">
-    <span>Generated 2026-11-04 07:24 UTC from the replay store by <code>scripts/precompute_replays.py</code>.</span>
+    <span>Generated 2026-11-04 08:28 UTC from the replay store by <code>scripts/precompute_replays.py</code>.</span>
     <span>Kodiac v0.1.0 · Meta AI Hackathon</span>
   </div>
 </footer>
@@ -611,52 +608,13 @@ window.KODIAC_REPLAYS = {"stackcube__b01_early_release":{"id":"stackcube__b01_ea
     minCm: 2.0,
     alignXyCm: 3.33,
     gapCm: 0.50,
-    cameraTier: 'B',
-    metaApiKey: sessionStorage.getItem('KODIAC_META_API_KEY') || ''
+    cameraTier: 'B'
   };
 
   const COLORS = {
     gripper: '#b3c6e8',
     cube_a: '#bd7ad6',
     cube_b: '#70dab4'
-  };
-
-  function updateApiStatusUI() {
-    const txt = document.getElementById('engine-status-text');
-    const clearBtn = document.getElementById('clear-key-btn');
-    const inp = document.getElementById('meta-api-key-input');
-    const compBadge = document.getElementById('compiler-backend-badge');
-    if (state.metaApiKey) {
-      const masked = state.metaApiKey.slice(0, 7) + '...' + state.metaApiKey.slice(-4);
-      txt.textContent = 'Meta API Key Active (' + masked + ') + Live Engine';
-      if (clearBtn) clearBtn.style.display = 'inline-block';
-      if (inp) inp.value = '';
-      if (compBadge) compBadge.textContent = '[MUSE SPARK API CONNECTOR + 2.5σ CALIBRATOR]';
-    } else {
-      txt.textContent = 'In-Browser Geometric Engine: READY';
-      if (clearBtn) clearBtn.style.display = 'none';
-      if (compBadge) compBadge.textContent = '[DETERMINISTIC + 2.5σ SLACK CALIBRATOR]';
-    }
-  }
-
-  window.connectMetaKey = function() {
-    const inp = document.getElementById('meta-api-key-input');
-    const val = (inp && inp.value || '').trim();
-    if (!val) {
-      alert('Paste your Meta MODEL_API_KEY into the input box first.');
-      return;
-    }
-    state.metaApiKey = val;
-    sessionStorage.setItem('KODIAC_META_API_KEY', val);
-    updateApiStatusUI();
-    window.runLiveGrade();
-  };
-
-  window.clearMetaKey = function() {
-    state.metaApiKey = '';
-    sessionStorage.removeItem('KODIAC_META_API_KEY');
-    updateApiStatusUI();
-    window.runLiveGrade();
   };
 
   window.switchStudioTab = function(tabName) {
@@ -1350,7 +1308,7 @@ window.KODIAC_REPLAYS = {"stackcube__b01_early_release":{"id":"stackcube__b01_ea
     const alignVal = alignMatch ? parseFloat(alignMatch[1]).toFixed(2) : '3.33';
     const dwellVal = dwellMatch ? parseFloat(dwellMatch[1]).toFixed(2) : '0.50';
 
-    const backendBadge = state.metaApiKey ? '[COMPILER: MUSE SPARK 1.3 · LIVE KEY CONFIGURED]' : '[COMPILER: DETERMINISTIC TEMPLATE + 2.5σ CALIBRATOR]';
+    const backendBadge = '[COMPILER: DETERMINISTIC TEMPLATE + 2.5σ CALIBRATOR]';
     status.innerHTML = '<span style="color:var(--pass)">Compiled cleanly in 0.8 ms</span> · badge: <code>' + backendBadge + '</code>';
 
     if (lower.indexOf('inside') !== -1 || lower.indexOf('tray') !== -1) {
@@ -1442,7 +1400,6 @@ window.KODIAC_REPLAYS = {"stackcube__b01_early_release":{"id":"stackcube__b01_ea
       if (target) target.scrollIntoView({behavior: 'smooth', block: 'start'});
     });
   });
-  updateApiStatusUI();
   bindCanvasBrush();
   renderStudioState();
   window.seekFrame(82);
