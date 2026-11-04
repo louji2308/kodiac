@@ -130,6 +130,14 @@ def test_draft_script_reports_pending_numbers_and_is_not_ok():
     assert res["ok"] is False
 
 
+def test_locked_script_has_zero_violations():
+    locked = REPO / "video" / "SCRIPT_LOCKED.md"
+    assert locked.exists(), "video/SCRIPT_LOCKED.md must exist for recording"
+    res = ls.lint(locked, REPO / "video" / "concepts.yaml", REPO)
+    assert res["violations"] == [], f"Locked script has violations: {res['violations']}"
+
+
+
 def test_lineage_missing_is_unverifiable_in_script_lint(tmp_path):
     root = tmp_path / "root"
     root.mkdir()

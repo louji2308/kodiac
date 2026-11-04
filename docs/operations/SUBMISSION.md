@@ -15,9 +15,9 @@ Submit at: `cerebralvalley.ai/e/meta-ai-developer-hackathon/hackathon/submit` ·
 | One-liner | Tests, `git bisect`, and `git blame` for robots: robots can finally fail a test. |
 | Track | Indie Developer |
 | Theme | Push the Frontier |
-| Repo URL | [PENDING] (public mirror, created by the human via `scripts/make_public_mirror.*`) |
+| Repo URL | https://github.com/louji2308/kodiac |
 | Video URL | [PENDING] (<= 3:00; check in an incognito window) |
-| Live demo URL | [PENDING] (static site generated in `site/` with 6 cached replays; GitHub Pages URL pending) |
+| Live demo URL | https://louji2308.github.io/kodiac/ |
 | Contributors | [PENDING] (human lists every contributor) |
 | `pip install` | `pip install Kodiac-robotics` ([PENDING] PyPI publish is a human action; not published at snapshot) |
 
