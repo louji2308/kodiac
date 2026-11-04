@@ -30,16 +30,21 @@ if TYPE_CHECKING:
 
     from Kodiac_robotics.app.client import Client
 
-VERDICT_COLORS = {"PASS": "#1a9850", "FAIL": "#d73027", "CANT_TELL": "#e08a00"}
+VERDICT_COLORS = {"PASS": "#70dab4", "FAIL": "#bd7ad6", "CANT_TELL": "#b3c6e8"}
 VERDICT_LABEL = {"PASS": "PASS", "FAIL": "FAIL", "CANT_TELL": "CAN'T TELL"}
 
 CSS = """
-.kd-badge{display:inline-block;margin:2px 6px 2px 0;padding:2px 8px;border-radius:10px;
-  background:#263238;color:#e0f7fa;font:600 12px/1.6 ui-monospace,monospace}
-.kd-badge.kd-cached{background:#fff3cd;color:#7a5b00}
-.kd-timer{font:700 28px/1.2 ui-monospace,monospace}
-.kd-pill{display:inline-block;padding:4px 14px;border-radius:6px;color:#fff;font-weight:700;font-size:18px}
-.kd-note{color:#555;font-size:13px}
+:root{--kd-void:#000000;--kd-paper:#ffffff;--kd-bone:#e5e7eb;--kd-hair:rgba(229,231,235,.22)}
+.gradio-container{background:var(--kd-void)!important;color:var(--kd-paper)!important;
+  font-family:'Inter',ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,sans-serif!important;font-weight:300}
+.gradio-container h1,.gradio-container h2,.gradio-container h3{font-weight:300!important;letter-spacing:-.013em}
+.kd-badge{display:inline-block;margin:2px 6px 2px 0;padding:4px 10px;border:1px solid var(--kd-hair);border-radius:9999px;
+  background:transparent;color:var(--kd-bone);font:400 10px/1.5 ui-monospace,monospace;letter-spacing:.02em}
+.kd-badge.kd-cached{border-color:var(--kd-bone);color:var(--kd-paper)}
+.kd-timer{font:300 28px/1.2 'Inter',ui-sans-serif,system-ui,sans-serif;letter-spacing:-.013em}
+.kd-pill{display:inline-block;padding:5px 12px;border:1px solid currentColor;border-radius:9999px;background:transparent;
+  color:var(--kd-paper);font:400 11px/1.2 ui-monospace,monospace;letter-spacing:.08em;text-transform:uppercase}
+.kd-note{color:rgba(229,231,235,.62);font-size:13px}
 """
 
 TICK_START_JS = """() => {
@@ -48,7 +53,7 @@ TICK_START_JS = """() => {
   window.__kdT0 = performance.now();
   clearInterval(window.__kdTick);
   window.__kdTick = setInterval(() => {
-    el.textContent = '⏱ running… ' + ((performance.now() - window.__kdT0) / 1000).toFixed(1) + ' s';
+    el.textContent = 'running… ' + ((performance.now() - window.__kdT0) / 1000).toFixed(1) + ' s';
   }, 100);
 }"""
 TICK_STOP_JS = "() => { clearInterval(window.__kdTick); const el = document.getElementById('kd-live-timer'); if (el) el.textContent = ''; }"
@@ -81,7 +86,7 @@ def render_timer(payload: dict[str, Any], browser_ms: int | None = None) -> str:
     run_ms = payload.get("run", {}).get("timings_ms", {}).get("total_ms")
     inner = f" · engine {_fmt_s(run_ms)}" if run_ms is not None else ""
     return (
-        f'<div class="kd-timer">⏱ {_fmt_s(payload["timer_ms"])} measured wall-clock</div>'
+        f'<div class="kd-timer">{_fmt_s(payload["timer_ms"])} measured wall-clock</div>'
         f'<div class="kd-note">Server handler time{inner}{extra}. Shown as measured; no target is claimed.</div>'
     )
 
@@ -89,7 +94,7 @@ def render_timer(payload: dict[str, Any], browser_ms: int | None = None) -> str:
 def render_verdict(payload: dict[str, Any]) -> str:
     run = payload["run"]
     v = str(run["verdict"])
-    pill = f'<span class="kd-pill" style="background:{VERDICT_COLORS.get(v, "#555")}">{html.escape(VERDICT_LABEL.get(v, v))}</span>'
+    pill = f'<span class="kd-pill" style="color:{VERDICT_COLORS.get(v, "#e5e7eb")}">{html.escape(VERDICT_LABEL.get(v, v))}</span>'
     reasons = ", ".join(str(r) for r in run.get("reasons", []))
     why = f' <span class="kd-note">reason: {html.escape(reasons)}</span>' if reasons else ""
     return f"{pill}{why}<div>{_badge_html(payload.get('badges', []))}</div>"
@@ -266,11 +271,11 @@ def build_ui(api_base: str | None = None, client: "Client | None" = None) -> "gr
             with gr.Tab("Dataset"):
                 clip_dd = gr.Dropdown(clip_choices, value=clip_choices[0][1] if clip_choices else None, label="Curated clip")
                 test_dd = gr.Dropdown(test_choices, value=test_choices[0], label="Example test")
-                grade_ds = gr.Button("▶ GRADE (runs the engine now)", variant="primary")
+                grade_ds = gr.Button("GRADE (runs the engine now)", variant="primary")
             with gr.Tab("Upload"):
                 up_video = gr.Video(label="Upload a clip (≤ 20 s, ≤ 50 MB)", sources=["upload"])
                 up_test = gr.Dropdown(test_choices, value=test_choices[0], label="Example test")
-                grade_up = gr.Button("▶ GRADE", variant="primary")
+                grade_up = gr.Button("GRADE", variant="primary")
                 gr.Markdown(
                     "Without a perception key this deployment can only grade the curated clips; an arbitrary "
                     "upload gets a clear message, never an invented verdict."
@@ -278,7 +283,7 @@ def build_ui(api_base: str | None = None, client: "Client | None" = None) -> "gr
             with gr.Tab("Webcam"):
                 wc_video = gr.Video(label="Record ≤ 15 s (cover the lens to see CAN'T TELL)", sources=["webcam"])
                 wc_test = gr.Dropdown(test_choices, value=test_choices[0], label="Example test")
-                grade_wc = gr.Button("▶ GRADE", variant="primary")
+                grade_wc = gr.Button("GRADE", variant="primary")
             with gr.Tab("Teach it live"):
                 gr.Markdown(
                     "Voice needs the Muse Voice key, which is not available here. Type the instruction; the "
@@ -288,7 +293,7 @@ def build_ui(api_base: str | None = None, client: "Client | None" = None) -> "gr
                 compile_btn = gr.Button("Compile test")
                 compiled_md = gr.Markdown()
                 teach_clip = gr.Dropdown(clip_choices, value=clip_choices[0][1] if clip_choices else None, label="Curated clip to grade")
-                grade_teach = gr.Button("▶ GRADE with this instruction", variant="primary")
+                grade_teach = gr.Button("GRADE with this instruction", variant="primary")
 
         with gr.Accordion("Occlusion brush (apply a black rectangle to every frame)", open=False):
             use_brush = gr.Checkbox(label="Paint occluder", value=False)

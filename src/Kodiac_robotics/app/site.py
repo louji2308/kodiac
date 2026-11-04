@@ -27,7 +27,7 @@ from Kodiac_robotics.geometry.anchors import compute_anchors
 from Kodiac_robotics.io.clip import open_clip
 from Kodiac_robotics.segment.fixture import FixtureBackend
 
-VERDICT_COLORS = {"PASS": "#16a34a", "FAIL": "#dc2626", "CANT_TELL": "#d97706"}
+VERDICT_COLORS = {"PASS": "#70dab4", "FAIL": "#bd7ad6", "CANT_TELL": "#b3c6e8"}
 VERDICT_LABEL = {"PASS": "PASS", "FAIL": "FAIL", "CANT_TELL": "CAN'T TELL"}
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
@@ -108,86 +108,206 @@ def _load_embedded_results(entries: list[ReplayEntry], store: ReplayStore | None
 
 STYLE = """
 :root{
-  --bg:#090d16;--panel:#111827;--panel2:#161f33;--border:#26334d;--text:#f1f5f9;--muted:#94a3b8;
-  --accent:#38bdf8;--accent2:#818cf8;--pass:#16a34a;--fail:#dc2626;--cant:#d97706;
-  --mono:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --void:#000000;--paper:#ffffff;--bone:#e5e7eb;--graphite:#4d4d4d;
+  --hairline:rgba(229,231,235,.22);--hairline-strong:rgba(229,231,235,.55);
+  --muted:rgba(229,231,235,.62);--dim:rgba(229,231,235,.38);
+  --pass:#70dab4;--fail:#bd7ad6;--cant:#b3c6e8;
+  --spectrum:linear-gradient(270deg,rgb(158,61,178),rgb(27,102,248),rgb(36,218,217),rgb(179,198,232));
+  --font:'Inter',ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+  --mono:ui-monospace,'SF Mono','JetBrains Mono',SFMono-Regular,Menlo,Consolas,monospace;
+  --page:1200px;
 }
 *{box-sizing:border-box}
-body{font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--text);margin:0;line-height:1.5}
-header.topbar{position:sticky;top:0;z-index:50;background:rgba(9,13,22,.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);padding:.65rem 1.25rem}
-.topbar-inner{max-width:1360px;margin:0 auto;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:.75rem}
-.brand{display:flex;align-items:center;gap:.75rem}
-.brand-logo{width:36px;height:36px;border-radius:9px;background:linear-gradient(135deg,#22c55e,#0ea5e9);display:flex;align-items:center;justify-content:center;font-weight:900;color:#05101a;font-size:1.1rem;box-shadow:0 0 18px rgba(56,189,248,.35)}
-.brand h1{font-size:1.35rem;margin:0;letter-spacing:-.02em}
-.brand .tag{font-size:.9rem;color:var(--accent);font-weight:600}
-.api-bar{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap}
-.api-input{background:#0b1120;border:1px solid var(--border);color:var(--text);padding:.4rem .65rem;border-radius:7px;font:500 .8rem var(--mono);width:230px}
-.btn{background:#1e293b;color:var(--text);border:1px solid #334155;padding:.42rem .85rem;border-radius:7px;font-weight:600;font-size:.82rem;cursor:pointer;transition:all .15s}
-.btn:hover{background:#334155;border-color:#475569}
-.btn-primary{background:linear-gradient(135deg,#0284c7,#2563eb);border-color:#38bdf8;color:#fff}
-.btn-primary:hover{filter:brightness(1.1)}
-.btn-success{background:#15803d;border-color:#22c55e;color:#fff}
-.btn-warn{background:#b45309;border-color:#f59e0b;color:#fff}
-.status-dot{display:inline-flex;align-items:center;gap:.4rem;font-size:.78rem;padding:.25rem .65rem;border-radius:99px;background:#0f172a;border:1px solid var(--border);font-family:var(--mono)}
-.dot{width:8px;height:8px;border-radius:50%;background:#22c55e;box-shadow:0 0 8px #22c55e}
-main{max-width:1360px;margin:0 auto;padding:1.5rem 1.25rem 4rem}
-.hero{background:radial-gradient(circle at 85% 15%,rgba(56,189,248,.14),transparent 45%),radial-gradient(circle at 15% 85%,rgba(34,197,94,.12),transparent 45%),var(--panel);border:1px solid var(--border);border-radius:14px;padding:1.5rem;margin-bottom:1.5rem}
-.hero-grid{display:grid;grid-template-columns:1.35fr 1fr;gap:1.25rem;align-items:center}
-@media(max-width:960px){.hero-grid{grid-template-columns:1fr}}
-.hero h2{margin:0 0 .4rem;font-size:1.85rem;border:none;padding:0;line-height:1.2}
-.hero p{margin:.35rem 0;color:#cbd5e1;font-size:.98rem}
-.kpi-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:.65rem;margin-top:1rem}
-@media(max-width:720px){.kpi-strip{grid-template-columns:repeat(2,1fr)}}
-.kpi{background:rgba(15,23,42,.8);border:1px solid var(--border);border-radius:10px;padding:.65rem .8rem}
-.kpi .val{font:800 1.35rem var(--mono);color:var(--accent)}
-.kpi .lbl{font-size:.75rem;color:var(--muted)}
-.tabs{display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:1.2rem;border-bottom:1px solid var(--border);padding-bottom:.75rem}
-.tab-btn{background:var(--panel);color:var(--muted);border:1px solid var(--border);padding:.55rem 1.05rem;border-radius:9px;font-weight:700;font-size:.86rem;cursor:pointer;display:flex;align-items:center;gap:.45rem}
-.tab-btn.active{background:linear-gradient(135deg,rgba(14,165,233,.22),rgba(99,102,241,.22));color:#fff;border-color:var(--accent);box-shadow:0 0 14px rgba(56,189,248,.2)}
+html{background:var(--void);scroll-behavior:smooth}
+body{margin:0;background:var(--void);color:var(--paper);font:300 15px/1.63 var(--font);-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+::selection{background:var(--paper);color:var(--void)}
+a{color:var(--paper);text-decoration:none;border-bottom:1px solid var(--bone)}
+a:hover{border-bottom-color:transparent}
+code{font-family:var(--mono);font-size:.82em;font-weight:400;color:var(--bone);letter-spacing:0}
+h1,h2,h3,h4{margin:0;font-weight:300;line-height:1.2;letter-spacing:-.013em}
+p{margin:0 0 18px}
+ul{margin:0;padding:0 0 0 18px}
+li{margin:0 0 10px}
+b,strong{font-weight:400;color:var(--paper)}
+header.topbar{position:sticky;top:0;z-index:50;background:var(--void);padding:7px 0}
+.topbar-inner{max-width:var(--page);margin:0 auto;padding:0 20px;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:18px;min-height:44px}
+.brand{display:flex;align-items:center;gap:14px;min-width:0}
+.brand-logo{width:32px;height:32px;flex:0 0 auto;border:1px solid var(--bone);border-radius:9999px;display:flex;align-items:center;justify-content:center;font:400 12px/1 var(--font);letter-spacing:.1em;color:var(--paper);background:transparent}
+.brand h1{font:400 24px/1 var(--font);letter-spacing:-.01em;display:flex;align-items:baseline;gap:10px;white-space:nowrap}
+.brand .version{font:400 13px/1 var(--font);letter-spacing:0;color:var(--muted)}
+.api-bar{display:flex;align-items:center;justify-content:flex-end;gap:12px;flex-wrap:wrap}
+.status-dot{display:inline-flex;align-items:center;gap:8px;font:400 10px/1.4 var(--font);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.dot{width:5px;height:5px;border-radius:50%;background:var(--graphite);transition:background .15s}
+.status-dot.active .dot{background:var(--pass)}
+.api-input{background:transparent;border:1px solid var(--hairline);color:var(--paper);padding:8px 14px;border-radius:9999px;font:400 11px/1.2 var(--mono);width:220px;outline:none;transition:border-color .15s}
+.api-input::placeholder{color:var(--dim)}
+.api-input:focus{border-color:var(--bone)}
+select.api-input{appearance:none;cursor:pointer;text-overflow:ellipsis;padding-right:34px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='9' height='6' viewBox='0 0 9 6'%3E%3Cpath d='M1 1l3.5 3.5L8 1' fill='none' stroke='%23e5e7eb' stroke-width='1'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center}
+.btn{background:transparent;color:var(--paper);border:1px solid var(--hairline);padding:9px 16px;border-radius:9999px;font:400 12px/1 var(--font);letter-spacing:.02em;cursor:pointer;transition:border-color .15s,color .15s;white-space:nowrap}
+.btn:hover{border-color:var(--bone)}
+.btn:focus-visible{outline:1px solid var(--bone);outline-offset:2px}
+.btn-primary{border-color:var(--bone)}
+.btn-primary:hover{border-color:var(--paper)}
+.btn-success{color:var(--pass)}
+.btn-warn{color:var(--cant)}
+.btn-inline{padding:4px 10px;font-size:10px;margin-left:6px;vertical-align:middle}
+main{max-width:var(--page);margin:0 auto;padding:0 20px}
+.section-label{display:block;font:400 10px/1.4 var(--font);letter-spacing:.1em;text-transform:uppercase;color:var(--paper);margin:0 0 18px}
+.section-label .idx{color:var(--dim);margin-right:14px}
+.hero{position:relative;padding:54px 0 45px;overflow:hidden}
+.hero-ring{position:absolute;right:-170px;top:-150px;width:400px;height:400px;pointer-events:none;opacity:.55;z-index:1}
+.hero-ring circle{fill:none;stroke:url(#spectrum-ring);stroke-width:1}
+.hero-grid{position:relative;z-index:2;display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:60px;align-items:end}
+.hero-display{font-size:clamp(54px,8vw,100px);line-height:1;letter-spacing:-.027em;font-weight:300;margin:0 0 36px;max-width:14ch;color:var(--paper)}
+.hero-display .spectrum{background:var(--spectrum);-webkit-background-clip:text;background-clip:text;color:transparent}
+.hero-title{font-size:clamp(24px,3vw,38px);line-height:1.2;letter-spacing:-.013em;font-weight:300;margin:0 0 20px;max-width:30ch;color:var(--paper)}
+.hero p{font-size:15px;line-height:1.63;color:var(--bone);max-width:60ch;margin:0}
+.kpi-strip{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:0;margin-top:36px;border-top:1px solid var(--hairline-strong);padding-top:20px}
+.kpi{padding:0 20px;border-left:1px solid var(--hairline);min-width:0}
+.kpi:first-child{padding-left:0;border-left:0}
+.kpi .val{font:300 38px/1.2 var(--font);letter-spacing:-.013em;color:var(--paper);white-space:nowrap}
+.kpi .lbl{font:400 10px/1.4 var(--font);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-top:10px}
+.proof{border-top:1px solid var(--hairline-strong);padding-top:18px}
+.proof-desc{font:300 13px/1.63 var(--font);color:var(--muted);margin:0 0 24px}
+.proof-row{margin:0 0 20px}
+.proof-top{display:flex;align-items:baseline;justify-content:space-between;gap:18px;font:400 13px/1.4 var(--font);color:var(--bone);margin-bottom:8px}
+.proof-value{font:400 11px/1.4 var(--mono);color:var(--muted);white-space:nowrap}
+.proof-row.strong .proof-top,.proof-row.strong .proof-value{color:var(--paper)}
+.meter{height:2px;background:rgba(229,231,235,.16);overflow:hidden}
+.meter>span{display:block;height:2px;background:var(--paper)}
+.bar-dim{background:rgba(229,231,235,.3)!important}
+.bar-mid{background:rgba(229,231,235,.55)!important}
+input[type=range]{-webkit-appearance:none;appearance:none;height:20px;background:transparent;cursor:pointer}
+input[type=range]::-webkit-slider-runnable-track{height:1px;background:var(--graphite)}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:12px;height:12px;margin-top:-5.5px;border:0;border-radius:9999px;background:var(--paper)}
+input[type=range]::-moz-range-track{height:1px;background:var(--graphite)}
+input[type=range]::-moz-range-thumb{width:12px;height:12px;border:0;border-radius:9999px;background:var(--paper)}
+input[type=range]:focus-visible{outline:1px solid var(--bone);outline-offset:4px}
+.proof-evidence{font:400 10px/1.7 var(--mono);color:var(--dim);margin-top:22px}
+.tabs{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));border-top:1px solid var(--hairline-strong);border-bottom:1px solid var(--hairline);margin:0 0 45px}
+.tab-btn{appearance:none;background:none;border:0;border-right:1px solid var(--hairline);padding:18px 18px 16px 0;text-align:left;cursor:pointer;color:var(--muted);font:400 10px/1.5 var(--font);letter-spacing:.1em;text-transform:uppercase;transition:color .15s}
+.tab-btn:last-child{border-right:0;padding-right:0}
+.tab-btn .num{display:block;font:400 13px/1.2 var(--font);letter-spacing:.1em;color:var(--dim);margin-bottom:10px;transition:color .15s}
+.tab-btn:hover{color:var(--bone)}
+.tab-btn:hover .num{color:var(--bone)}
+.tab-btn.active{color:var(--paper)}
+.tab-btn.active .num{color:var(--paper)}
+.tab-btn code{font-size:10px;color:inherit;text-transform:none}
 .tab-pane{display:none}
 .tab-pane.active{display:block}
-.studio-grid{display:grid;grid-template-columns:660px 1fr;gap:1.25rem;align-items:start}
-@media(max-width:1150px){.studio-grid{grid-template-columns:1fr}}
-.panel{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:1.1rem}
-.panel h3{margin:0 0 .65rem;font-size:1.05rem;display:flex;align-items:center;justify-content:space-between}
-.canvas-wrap{position:relative;width:100%;max-width:640px;aspect-ratio:4/3;background:#050811;border:1px solid #334155;border-radius:10px;overflow:hidden;user-select:none}
+.studio-grid{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:24px;align-items:start}
+.panel{background:transparent;border:1px solid var(--hairline);border-radius:0;padding:24px;min-width:0}
+.panel h3{margin:0 0 18px;font:400 17px/1.4 var(--font);letter-spacing:0;color:var(--paper);}
+.panel h3 code{font-weight:400;font-size:.82em}
+.panel .meta{max-width:70ch}
+.panel-head{display:flex;flex-wrap:wrap;align-items:flex-start;justify-content:space-between;gap:12px 18px;margin-bottom:18px}
+.panel-head > div{flex:1 1 100%;min-width:0}
+.panel-head h3{margin:0}
+.panel-head .badge{flex:0 0 auto;margin:0}
+.panel-head .meta{margin-top:8px}
+.panel-head .actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center;flex:1 1 100%}
+.canvas-wrap{position:relative;width:100%;max-width:640px;aspect-ratio:4/3;background:var(--void);border:1px solid var(--bone);border-radius:0;overflow:hidden;user-select:none}
 .canvas-wrap video{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;pointer-events:none}
 .canvas-wrap canvas{position:absolute;inset:0;width:100%;height:100%;cursor:crosshair}
-.scrubber-bar{display:flex;align-items:center;gap:.6rem;margin-top:.65rem;background:#0b1120;padding:.5rem .75rem;border-radius:8px;border:1px solid var(--border)}
-.scrubber-bar input[type=range]{flex:1;accent-color:var(--accent)}
-.mono{font-family:var(--mono);font-size:.82rem}
-.clip-selector{display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:.75rem}
-.clip-chip{background:#0b1120;border:1px solid var(--border);color:#cbd5e1;padding:.35rem .7rem;border-radius:7px;font-size:.78rem;font-weight:600;cursor:pointer}
-.clip-chip.active{background:#1e3a8a;border-color:var(--accent);color:#fff}
-.verdict-banner{display:flex;align-items:center;justify-content:space-between;padding:.85rem 1rem;border-radius:10px;margin-bottom:.85rem;font-weight:800;border:1px solid transparent}
-.verdict-PASS{background:rgba(22,163,74,.18);border-color:#22c55e;color:#4ade80}
-.verdict-FAIL{background:rgba(220,38,38,.18);border-color:#ef4444;color:#f87171}
-.verdict-CANT_TELL{background:rgba(217,119,6,.18);border-color:#f59e0b;color:#fbbf24}
-.step-card{background:#0b1120;border:1px solid var(--border);border-radius:8px;padding:.65rem .8rem;margin-bottom:.5rem}
-.step-head{display:flex;justify-content:space-between;align-items:center;font-weight:700;font-size:.88rem}
-.comp-row{display:flex;justify-content:space-between;font:500 .78rem var(--mono);color:var(--muted);margin-top:.28rem;padding-top:.28rem;border-top:1px dashed #1e293b}
-.slider-row{display:grid;grid-template-columns:145px 1fr 68px;align-items:center;gap:.5rem;font-size:.8rem;margin-bottom:.4rem}
-.code-box{background:#060a12;border:1px solid var(--border);border-radius:8px;padding:.8rem;font:500 .8rem/1.45 var(--mono);color:#e2e8f0;overflow-x:auto;white-space:pre}
-.diff-del{color:#f87171;background:rgba(220,38,38,.12);display:block;padding:0 .3rem}
-.diff-add{color:#4ade80;background:rgba(22,163,74,.12);display:block;padding:0 .3rem}
-.diff-warn{color:#fbbf24;display:block;padding:0 .3rem}
-.banner{background:rgba(217,119,6,.12);border:1px solid #b45309;border-radius:10px;padding:.75rem 1rem;margin:1rem 0;font-size:.88rem}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(420px,1fr));gap:1.1rem}
-figure{margin:0;background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:.85rem}
-figure img{width:100%;border-radius:6px;border:1px solid #1e293b}
-figcaption h3{margin:.5rem 0 .25rem;font-size:1rem}
-.pill{display:inline-block;padding:2px 10px;border-radius:6px;color:#fff;font-weight:700;font-size:.78rem;font-family:var(--mono)}
-.badge{display:inline-block;margin:2px 4px 2px 0;padding:2px 8px;border-radius:8px;background:#1e293b;color:#bae6fd;font:600 11px var(--mono);border:1px solid #334155}
-.badge.cached{background:#fef3c7;color:#92400e;border-color:#f59e0b}
-.meta{color:var(--muted);font-size:.83rem}
-table{border-collapse:collapse;width:100%;font-size:.86rem}
-td,th{border:1px solid var(--border);padding:.5rem .65rem;text-align:left;vertical-align:top}
-th{background:#0f172a;color:#cbd5e1}
-h2{margin-top:2.2rem;border-bottom:1px solid var(--border);padding-bottom:.35rem;font-size:1.35rem}
-.video{border:1px dashed var(--border);border-radius:10px;padding:1.2rem;text-align:center;color:var(--muted);background:var(--panel)}
-a{color:var(--accent)}
-.two-col{display:grid;grid-template-columns:1fr 1fr;gap:1.1rem}
-@media(max-width:900px){.two-col{grid-template-columns:1fr}}
+.scrubber-bar{display:flex;align-items:center;gap:14px;margin-top:14px;padding:10px 0;border-top:1px solid var(--hairline);border-bottom:1px solid var(--hairline)}
+.scrubber-bar input[type=range]{flex:1;background:transparent}
+.mono{font-family:var(--mono);font-size:11px;font-weight:400;color:var(--muted)}
+.clip-selector{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 18px}
+.clip-chip{background:transparent;border:1px solid var(--hairline);color:var(--muted);padding:7px 12px;border-radius:9999px;font:400 10px/1.2 var(--font);letter-spacing:.04em;cursor:pointer;transition:border-color .15s,color .15s}
+.clip-chip:hover{border-color:var(--bone);color:var(--bone)}
+.clip-chip.active{border-color:var(--paper);color:var(--paper)}
+.verdict-banner{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:18px 0;border-top:1px solid var(--hairline-strong);border-bottom:1px solid var(--hairline);margin-bottom:24px;font-weight:300}
+.verdict-title{font:300 30px/1.15 var(--font);letter-spacing:-.013em}
+.verdict-sub{font:400 12px/1.5 var(--font);color:var(--muted);margin-top:6px}
+.verdict-PASS{color:var(--pass)}
+.verdict-FAIL{color:var(--fail)}
+.verdict-CANT_TELL{color:var(--cant)}
+.verdict-banner .btn{color:var(--paper);border-color:var(--hairline);flex:0 0 auto}
+.subpanel{border:1px solid var(--hairline);padding:18px;margin:0 0 20px}
+.subpanel-title{font:400 10px/1.4 var(--font);letter-spacing:.1em;text-transform:uppercase;color:var(--paper);margin-bottom:10px}
+.subpanel-title.hint{color:var(--pass)}
+.subpanel.hint{border-color:rgba(112,218,180,.32)}
+.subpanel-head{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:12px}
+.subpanel-head .subpanel-title{margin:0}
+.step-card{border-top:1px solid var(--hairline);padding:14px 0;margin:0}
+.step-head{display:flex;justify-content:space-between;align-items:center;gap:16px;font:400 13px/1.4 var(--font);color:var(--paper)}
+.comp-row{font:400 11px/1.6 var(--mono);color:var(--muted);margin-top:6px}
+.slider-row{display:grid;grid-template-columns:150px minmax(0,1fr) 96px;align-items:center;gap:14px;font-size:11px;margin-bottom:12px}
+.slider-row .mono{color:var(--muted)}
+.slider-row input[type=range]{width:100%;background:transparent}
+.code-box{background:var(--void);border:1px solid var(--hairline);border-radius:0;padding:18px;font:400 11px/1.65 var(--mono);color:var(--bone);overflow-x:auto;white-space:pre;tab-size:2}
+.diff-del{color:var(--fail);background:rgba(189,122,214,.08);display:block;padding:0 6px;margin:0 -6px}
+.diff-add{color:var(--pass);background:rgba(112,218,180,.08);display:block;padding:0 6px;margin:0 -6px}
+.diff-warn{color:var(--cant);display:block;padding:0 6px;margin:0 -6px}
+.banner{border-top:1px solid var(--hairline-strong);border-bottom:1px solid var(--hairline);padding:18px 0;margin:20px 0 36px;font-size:13px;line-height:1.63;color:var(--muted)}
+.banner b,.banner strong{color:var(--bone)}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:45px 24px}
+figure{margin:0;padding:20px 0 0;border-top:1px solid var(--hairline-strong);background:transparent;border-radius:0}
+figure img{width:100%;display:block;border:1px solid var(--hairline);border-radius:0}
+figcaption h3{margin:14px 0 8px;font:400 17px/1.4 var(--font);color:var(--paper)}
+.pill{display:inline-block;padding:5px 12px;border:1px solid currentColor;border-radius:9999px;background:transparent;font:400 10px/1.2 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--paper)}
+.badge{display:inline-block;margin:0 6px 6px 0;padding:5px 10px;border:1px solid var(--hairline);border-radius:9999px;background:transparent;color:var(--muted);font:400 10px/1.2 var(--mono);letter-spacing:.02em;white-space:nowrap}
+.badge.cached{border-color:var(--bone);color:var(--paper)}
+.meta{color:var(--muted);font-size:13px;line-height:1.63}
+.table-wrap{width:100%;overflow-x:auto;margin:0 0 24px}
+table{border-collapse:collapse;width:100%;font:400 12px/1.55 var(--font)}
+th{font:400 10px/1.4 var(--font);letter-spacing:.1em;text-transform:uppercase;color:var(--dim);text-align:left;padding:0 12px 10px 0;border-bottom:1px solid var(--bone)}
+td{padding:10px 12px 10px 0;border-bottom:1px solid var(--hairline);vertical-align:top;color:var(--bone)}
+td:last-child,th:last-child{padding-right:0}
+tr:last-child td{border-bottom:0}
+.ledger td:first-child,.ledger th:first-child{white-space:nowrap}
+[id]{scroll-margin-top:88px}
+.section{padding:45px 0 0;margin:45px 0 0;border-top:1px solid var(--hairline-strong)}
+.section-title{font:300 clamp(30px,3.6vw,38px)/1.2 var(--font);letter-spacing:-.013em;color:var(--paper);margin:0 0 20px}
+.prose{font-size:15px;line-height:1.63;color:var(--bone);max-width:72ch}
+.prose-list{font-size:14px;line-height:1.63;color:var(--bone);max-width:78ch}
+.prose-list.numbered{list-style:none;padding-left:0;counter-reset:num}
+.prose-list.numbered li{counter-increment:num;position:relative;padding-left:38px;margin-bottom:16px}
+.prose-list.numbered li:before{content:counter(num,decimal-leading-zero);position:absolute;left:0;top:3px;font:400 10px/1.4 var(--mono);letter-spacing:.1em;color:var(--dim)}
+.video{border-top:1px solid var(--hairline);padding:24px 0;color:var(--bone);font-size:15px;max-width:72ch}
+.two-col{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:24px}
+.brush-row{display:flex;flex-wrap:wrap;gap:14px;align-items:center;justify-content:space-between;margin-top:18px}
+.brush-actions{display:flex;gap:8px;flex-wrap:wrap}
+.compile-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px}
+.compile-row .api-input{flex:1 1 100%;width:100%;padding:11px 16px;font-size:12px}
+.timer-badge{font:400 10px/1.4 var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--pass);white-space:nowrap}
+.site-footer{margin-top:108px;background:linear-gradient(90deg,#1e233c 0%,#0a4099 44%,#1951a2 68%,#2c7fa0 86%,#70dab4 100%);color:var(--paper);padding:45px 20px 36px}
+.footer-inner{max-width:var(--page);margin:0 auto;display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:36px}
+.footer-wordmark{font:400 24px/1 var(--font);letter-spacing:-.01em}
+.footer-tagline{font:300 13px/1.63 var(--font);color:rgba(255,255,255,.75);margin-top:10px}
+.footer-links{display:flex;flex-wrap:wrap;align-items:center;gap:20px}
+.footer-link{appearance:none;background:none;border:0;border-bottom:1px solid transparent;padding:0;color:var(--paper);font:400 13px/1.4 var(--font);cursor:pointer}
+.footer-link:hover{border-bottom-color:rgba(255,255,255,.6)}
+.footer-copy{font:400 13px/1.4 var(--font);color:rgba(255,255,255,.72)}
+.footer-meta{max-width:var(--page);margin:36px auto 0;padding-top:18px;border-top:1px solid rgba(255,255,255,.22);font:400 11px/1.6 var(--mono);color:rgba(255,255,255,.78);display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap}
+@media(max-width:1100px){.studio-grid{grid-template-columns:1fr}}
+@media(max-width:960px){
+  .hero{padding-top:36px}
+  .hero-grid{grid-template-columns:1fr;gap:45px;align-items:start}
+  .hero-ring{display:none}
+  .two-col{grid-template-columns:minmax(0,1fr)}
+  .grid{grid-template-columns:minmax(0,1fr)}
+}
+@media(max-width:760px){
+  .topbar-inner{padding:0 16px}
+  .brand .version{display:none}
+  .api-bar{width:100%;justify-content:flex-start}
+  .api-input{width:100%;max-width:260px}
+  .kpi-strip{grid-template-columns:1fr 1fr;gap:24px 0}
+  .kpi:nth-child(odd){padding-left:0;border-left:0}
+  .tabs{grid-template-columns:1fr}
+  .tab-btn{border-right:0;border-bottom:1px solid var(--hairline);padding:14px 0}
+  .tab-btn:last-child{border-bottom:0}
+  .panel{padding:18px}
+  .verdict-banner{flex-direction:column;align-items:flex-start}
+  .slider-row{grid-template-columns:1fr;gap:6px}
+  .footer-inner{align-items:flex-start;flex-direction:column}
+}
+@media(max-width:520px){
+  .hero-display{font-size:48px}
+  .brand h1{font-size:20px}
+  .kpi .val{font-size:30px}
+}
 """
 
 
@@ -209,22 +329,22 @@ def _card(entry: ReplayEntry) -> str:
         f'alt="Verdict card: {html.escape(entry.title)}: {html.escape(label)}">'
         "<figcaption>"
         f"<h3>{html.escape(entry.title)}</h3>"
-        f'<span class="pill" style="background:{color}">{html.escape(label)}</span> '
+        f'<span class="pill" style="color:{color}">{html.escape(label)}</span> '
         f"<span class=\"meta\">test <code>{html.escape(entry.test_name)}</code></span>"
         f"<div>{_badges(entry.badges)}</div>"
         f'<p class="meta">{html.escape(entry.clip_label)}<br>'
         f"Engine time when recorded: {entry.run_total_ms / 1000:.2f} s (measured then; this page is not a live "
         f"grade). Commit <code>{html.escape(entry.source_commit)}</code>. "
         f'<a href="replays/blobs/{entry.result_sha256}.json">result.json</a> '
-        f'<button class="btn" style="padding:1px 7px;font-size:.74rem;margin-left:4px" '
-        f'onclick="window.loadReplayIntoStudio(\'{html.escape(entry.id)}\')">Inspect in Studio ↗</button></p>'
+        f'<button class="btn btn-inline" '
+        f'onclick="window.loadReplayIntoStudio(\'{html.escape(entry.id)}\')">Inspect in studio ↗</button></p>'
         f"{note}"
         "</figcaption></figure>"
     )
 
 
 def render_index(entries: list[ReplayEntry], store: ReplayStore | None = None) -> str:
-    cards = "\\n".join(_card(e) for e in entries) or "<p>No cached replays have been generated yet.</p>"
+    cards = "\n".join(_card(e) for e in entries) or "<p>No cached replays have been generated yet.</p>"
     rows = "".join(
         f"<tr><td><b>{html.escape(m['model'])}</b></td><td>{html.escape(m['role'])}</td>"
         f"<td>{html.escape(m['status'])}</td></tr>"
@@ -245,15 +365,12 @@ def render_index(entries: list[ReplayEntry], store: ReplayStore | None = None) -
 <header class="topbar">
   <div class="topbar-inner">
     <div class="brand">
-      <div class="brand-logo">K</div>
-      <div>
-        <h1>Kodiac <span style="font-weight:400;color:var(--muted);font-size:.92rem">v0.1.0 · Meta AI Hackathon</span></h1>
-        <div class="tag">{html.escape(TAGLINE)}</div>
-      </div>
+      <div class="brand-logo" aria-hidden="true">K</div>
+      <h1>Kodiac <span class="version">v0.1.0 · Meta AI Hackathon</span></h1>
     </div>
     <div class="api-bar">
       <span class="status-dot" id="engine-status-pill"><span class="dot"></span><span id="engine-status-text">In-Browser Geometric Engine: READY</span></span>
-      <input type="password" id="meta-api-key-input" class="api-input" placeholder="Paste Meta MODEL_API_KEY (optional)..." autocomplete="off">
+      <input type="password" id="meta-api-key-input" class="api-input" placeholder="Paste Meta MODEL_API_KEY (optional)..." autocomplete="off" aria-label="Meta model API key">
       <button class="btn btn-primary" onclick="window.connectMetaKey()">Connect Meta API</button>
       <button class="btn" id="clear-key-btn" style="display:none" onclick="window.clearMetaKey()">Disconnect</button>
     </div>
@@ -262,13 +379,19 @@ def render_index(entries: list[ReplayEntry], store: ReplayStore | None = None) -
 
 <main>
   <section class="hero">
+    <svg class="hero-ring" viewBox="0 0 400 400" aria-hidden="true" focusable="false">
+      <defs><linearGradient id="spectrum-ring" x1="1" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#9e3db2"/><stop offset=".38" stop-color="#1b66f8"/>
+        <stop offset=".7" stop-color="#24dad9"/><stop offset="1" stop-color="#b3c6e8"/>
+      </linearGradient></defs>
+      <circle cx="200" cy="200" r="199"/>
+    </svg>
+    <div class="section-label"><span class="idx">00</span>Unit tests · git bisect · git blame for robotics</div>
     <div class="hero-grid">
       <div>
-        <div style="display:inline-block;padding:2px 10px;border-radius:99px;background:rgba(56,189,248,.15);border:1px solid rgba(56,189,248,.4);color:var(--accent);font:700 .75rem var(--mono);margin-bottom:.5rem">
-          UNIT TESTS · GIT BISECT · GIT BLAME FOR ROBOTICS
-        </div>
-        <h2>Physical Unit Tests, Exact Onset Attribution ($t^*$), and Anti-Cheat Done-Gates for Robots</h2>
-        <p>VLM judges hallucinate pass rates and guess adjectives when cameras are occluded. <b>Kodiac</b> compiles natural language or voice into deterministic <code>.green</code> specifications, measures 3D/2D tabletop trajectories from <b>SAM 3.1</b> masks with propagated uncertainty $\\pm\\sigma$, abstains honestly with <b>CAN'T TELL</b> under occlusion (Gates G1–G6), pinpoints the exact failure onset frame $t^*$, and blocks <b>Muse Code <code>/goal</code></b> until the physical test returns <b>PASS</b>.</p>
+        <h2 class="hero-display">Robots can finally <span class="spectrum">fail</span> a test.</h2>
+        <h3 class="hero-title">Physical Unit Tests, Exact Onset Attribution (t<sup>*</sup>), and Anti-Cheat Done-Gates for Robots</h3>
+        <p>VLM judges hallucinate pass rates and guess adjectives when cameras are occluded. <b>Kodiac</b> compiles natural language or voice into deterministic <code>.green</code> specifications, measures 3D/2D tabletop trajectories from <b>SAM 3.1</b> masks with propagated uncertainty ±σ, abstains honestly with <b>CAN'T&nbsp;TELL</b> under occlusion (Gates G1–G6), pinpoints the exact failure onset frame t<sup>*</sup>, and blocks <b>Muse Code <code>/goal</code></b> until the physical test returns <b>PASS</b>.</p>
         <div class="kpi-strip">
           <div class="kpi"><div class="val">16 / 16</div><div class="lbl">Sim Discrimination (0 False-PASS)</div></div>
           <div class="kpi"><div class="val">10 / 10</div><div class="lbl">Planted Bugs Repaired (B01–B10)</div></div>
@@ -276,34 +399,34 @@ def render_index(entries: list[ReplayEntry], store: ReplayStore | None = None) -
           <div class="kpi"><div class="val">5 Clips</div><div class="lbl">DROID &amp; LeRobot Real Failure Audits</div></div>
         </div>
       </div>
-      <div class="panel" style="background:#0b1120;border-color:#1e3a8a">
-        <div style="font:700 .8rem var(--mono);color:var(--accent);margin-bottom:.4rem">HEADLINE PROOF · SAME ROBOT, ONLY THE JUDGE CHANGED</div>
-        <div style="font-size:.82rem;color:#cbd5e1;margin-bottom:.65rem">Closed-loop autonomous code repair on the 10-bug Franka StackCube benchmark (<code>examples/sim/pick_place.py</code>):</div>
-        <div style="margin-bottom:.55rem">
-          <div style="display:flex;justify-content:space-between;font-size:.78rem;margin-bottom:2px"><span>Unverified Agent Stop (No Done-Gate)</span><span class="mono" style="color:#f87171">0 / 10 (0%)</span></div>
-          <div style="height:10px;background:#1e293b;border-radius:5px;overflow:hidden"><div style="width:4%;height:100%;background:#ef4444"></div></div>
+      <aside class="proof">
+        <div class="section-label">Headline proof · Same robot, only the judge changed</div>
+        <p class="proof-desc">Closed-loop autonomous code repair on the 10-bug Franka StackCube benchmark (<code>examples/sim/pick_place.py</code>):</p>
+        <div class="proof-row">
+          <div class="proof-top"><span>Unverified Agent Stop (No Done-Gate)</span><span class="proof-value">0 / 10 (0%)</span></div>
+          <div class="meter"><span class="bar-dim" style="width:4%"></span></div>
         </div>
-        <div style="margin-bottom:.55rem">
-          <div style="display:flex;justify-content:space-between;font-size:.78rem;margin-bottom:2px"><span>Binary FAIL Only (No Blame / No Hint)</span><span class="mono" style="color:#fbbf24">3 / 10 (30%)</span></div>
-          <div style="height:10px;background:#1e293b;border-radius:5px;overflow:hidden"><div style="width:30%;height:100%;background:#f59e0b"></div></div>
+        <div class="proof-row">
+          <div class="proof-top"><span>Binary FAIL Only (No Blame / No Hint)</span><span class="proof-value">3 / 10 (30%)</span></div>
+          <div class="meter"><span class="bar-mid" style="width:30%"></span></div>
         </div>
-        <div>
-          <div style="display:flex;justify-content:space-between;font-size:.78rem;margin-bottom:2px"><span><b>Kodiac Done-Gate + Physical Blame ($t^*$) + Hint</b></span><span class="mono" style="color:#4ade80"><b>10 / 10 (100%)</b></span></div>
-          <div style="height:10px;background:#1e293b;border-radius:5px;overflow:hidden"><div style="width:100%;height:100%;background:linear-gradient(90deg,#22c55e,#38bdf8)"></div></div>
+        <div class="proof-row strong">
+          <div class="proof-top"><span><b>Kodiac Done-Gate + Physical Blame (t<sup>*</sup>) + Hint</b></span><span class="proof-value">10 / 10 (100%)</span></div>
+          <div class="meter"><span style="width:100%"></span></div>
         </div>
-        <div class="meta" style="margin-top:.6rem;font-size:.74rem">Evidence badge: <code>[MOCK SIMULATION · PRIVILEGED STATE TRACKS]</code> · Registered in <code>VIDEO_NUMBERS.md</code>.</div>
-      </div>
+        <div class="proof-evidence">Evidence badge: <code>[MOCK SIMULATION · PRIVILEGED STATE TRACKS]</code> · Registered in <code>VIDEO_NUMBERS.md</code>.</div>
+      </aside>
     </div>
   </section>
 
   <!-- Interactive Navigation Tabs -->
-  <div class="tabs" role="tablist">
-    <button class="tab-btn active" id="tabbtn-eval" onclick="window.switchStudioTab('eval')">▶ 1. Live Video Evaluator &amp; Occlusion Brush (<code>Kodiac run</code>)</button>
-    <button class="tab-btn" id="tabbtn-blame" onclick="window.switchStudioTab('blame')">🔍 2. Physical <code>git blame</code> &amp; <code>git diff</code> Debugger</button>
-    <button class="tab-btn" id="tabbtn-compile" onclick="window.switchStudioTab('compile')">🎙️ 3. Live <code>.green</code> Test Compiler &amp; Muse Voice</button>
-    <button class="tab-btn" id="tabbtn-loop" onclick="window.switchStudioTab('loop')">🛡️ 4. Muse Code <code>/goal</code> Done-Gate &amp; Real Robot Audit</button>
-    <button class="tab-btn" id="tabbtn-gallery" onclick="window.switchStudioTab('gallery')">⚡ 5. Verified Precomputed Replay Gallery ({len(entries)})</button>
-  </div>
+  <nav class="tabs" role="tablist" aria-label="Kodiac studio">
+    <button class="tab-btn active" id="tabbtn-eval" role="tab" aria-selected="true" onclick="window.switchStudioTab('eval')"><span class="num">01</span><span class="lbl">Live evaluator · <code>Kodiac run</code></span></button>
+    <button class="tab-btn" id="tabbtn-blame" role="tab" aria-selected="false" onclick="window.switchStudioTab('blame')"><span class="num">02</span><span class="lbl">Physical blame &amp; diff</span></button>
+    <button class="tab-btn" id="tabbtn-compile" role="tab" aria-selected="false" onclick="window.switchStudioTab('compile')"><span class="num">03</span><span class="lbl"><code>.green</code> compiler &amp; voice</span></button>
+    <button class="tab-btn" id="tabbtn-loop" role="tab" aria-selected="false" onclick="window.switchStudioTab('loop')"><span class="num">04</span><span class="lbl">Done-gate &amp; robot audit</span></button>
+    <button class="tab-btn" id="tabbtn-gallery" role="tab" aria-selected="false" onclick="window.switchStudioTab('gallery')"><span class="num">05</span><span class="lbl">Cached replay gallery ({len(entries)})</span></button>
+  </nav>
 
   <!-- TAB 1: LIVE EVALUATOR & OCCLUSION BRUSH -->
   <section class="tab-pane active" id="tab-eval">
@@ -314,11 +437,11 @@ def render_index(entries: list[ReplayEntry], store: ReplayStore | None = None) -
           <span class="badge" id="viewport-mode-badge">[LIVE IN-BROWSER ENGINE · 60FPS CANVAS]</span>
         </h3>
         <div class="clip-selector" id="clip-selector-bar">
-          <button class="clip-chip active" data-clip="correct_run" onclick="window.selectClip('correct_run')">✅ correct_run (Reference PASS)</button>
-          <button class="clip-chip" data-clip="b01_early_release" onclick="window.selectClip('b01_early_release')">❌ b01_early_release (Drop @ f=58)</button>
-          <button class="clip-chip" data-clip="b02_xy_misalignment" onclick="window.selectClip('b02_xy_misalignment')">❌ b02_xy_misalignment (5.1cm XY Error)</button>
-          <button class="clip-chip" data-clip="b09_lift_failure" onclick="window.selectClip('b09_lift_failure')">❌ b09_lift_failure (0.0cm Lift)</button>
-          <button class="clip-chip" data-clip="occluded_clip" onclick="window.selectClip('occluded_clip')">⚠️ occluded_clip (Gate G2 Abstain)</button>
+          <button class="clip-chip active" data-clip="correct_run" onclick="window.selectClip('correct_run')">correct_run · reference pass</button>
+          <button class="clip-chip" data-clip="b01_early_release" onclick="window.selectClip('b01_early_release')">b01_early_release · drop at f=58</button>
+          <button class="clip-chip" data-clip="b02_xy_misalignment" onclick="window.selectClip('b02_xy_misalignment')">b02_xy_misalignment · 5.1 cm xy error</button>
+          <button class="clip-chip" data-clip="b09_lift_failure" onclick="window.selectClip('b09_lift_failure')">b09_lift_failure · 0.0 cm lift</button>
+          <button class="clip-chip" data-clip="occluded_clip" onclick="window.selectClip('occluded_clip')">occluded_clip · gate G2 abstain</button>
         </div>
 
         <div class="canvas-wrap" id="canvas-container">
@@ -327,18 +450,18 @@ def render_index(entries: list[ReplayEntry], store: ReplayStore | None = None) -
         </div>
 
         <div class="scrubber-bar">
-          <button class="btn" id="play-pause-btn" onclick="window.togglePlay()">▶ Play</button>
-          <input type="range" id="frame-slider" min="0" max="89" value="0" oninput="window.seekFrame(parseInt(this.value,10))">
+          <button class="btn" id="play-pause-btn" onclick="window.togglePlay()">Play</button>
+          <input type="range" id="frame-slider" min="0" max="89" value="0" aria-label="Frame" oninput="window.seekFrame(parseInt(this.value,10))">
           <span class="mono" id="frame-readout">f = 0 / 89 (0.00 s)</span>
         </div>
 
-        <div style="display:flex;flex-wrap:wrap;gap:.5rem;align-items:center;justify-content:space-between;margin-top:.75rem">
-          <div style="font-size:.8rem;color:var(--muted)">
-            <b>🖱️ Interactive Occlusion Brush:</b> Drag anywhere on the canvas above to paint a black occluder over any block and test Gate G2 (`CAN'T TELL`).
+        <div class="brush-row">
+          <div class="meta">
+            <b>Interactive Occlusion Brush:</b> Drag anywhere on the canvas above to paint a black occluder over any block and test Gate G2 (<code>CAN'T&nbsp;TELL</code>).
           </div>
-          <div style="display:flex;gap:.4rem">
-            <button class="btn btn-warn" onclick="window.applyTargetOccluder()">Paint Target CubeB Occluder</button>
-            <button class="btn" onclick="window.clearOccluders()">Clear Occluder</button>
+          <div class="brush-actions">
+            <button class="btn btn-warn" onclick="window.applyTargetOccluder()">Paint target cubeB occluder</button>
+            <button class="btn" onclick="window.clearOccluders()">Clear occluder</button>
           </div>
         </div>
       </div>
@@ -346,40 +469,40 @@ def render_index(entries: list[ReplayEntry], store: ReplayStore | None = None) -
       <div class="panel">
         <h3>
           <span>Live Kleene 3-Valued Evaluation &amp; Threshold Tuner</span>
-          <span class="mono" id="live-timer-badge" style="color:var(--accent)">⏱️ 0.42 ms (live browser run)</span>
+          <span class="timer-badge" id="live-timer-badge">0.42 ms · live browser run</span>
         </h3>
 
         <div id="live-verdict-box" class="verdict-banner verdict-PASS">
           <div>
-            <div style="font-size:1.3rem" id="live-verdict-title">PASS · All 3 Steps Confirmed</div>
-            <div style="font-size:.8rem;font-weight:500;opacity:.9" id="live-verdict-sub">Sustained Kleene True (n_on = 3 frames) across grasp → place → release</div>
+            <div class="verdict-title" id="live-verdict-title">PASS · All 3 steps confirmed</div>
+            <div class="verdict-sub" id="live-verdict-sub">Sustained Kleene true (n_on = 3 frames) across grasp → place → release</div>
           </div>
-          <button class="btn btn-primary" onclick="window.runLiveGrade()">▶ Re-Run Engine Now</button>
+          <button class="btn" onclick="window.runLiveGrade()">Re-run engine</button>
         </div>
 
-        <div style="background:#0b1120;border:1px solid var(--border);border-radius:9px;padding:.75rem;margin-bottom:.85rem">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.5rem">
-            <b style="font-size:.84rem">Interactive <code>stackcube.green</code> Parameter Thresholds</b>
-            <button class="btn" style="padding:2px 8px;font-size:.74rem" onclick="window.resetThresholds()">Reset Defaults</button>
+        <div class="subpanel">
+          <div class="subpanel-head">
+            <div class="subpanel-title">Interactive <code>stackcube.green</code> thresholds</div>
+            <button class="btn btn-inline" style="margin-left:0" onclick="window.resetThresholds()">Reset defaults</button>
           </div>
           <div class="slider-row">
             <span class="mono">lifted.min_cm</span>
-            <input type="range" id="param-min-cm" min="0.5" max="9.0" step="0.25" value="2.0" oninput="window.updateThresholds()">
+            <input type="range" id="param-min-cm" min="0.5" max="9.0" step="0.25" value="2.0" aria-label="lifted minimum cm" oninput="window.updateThresholds()">
             <span class="mono" id="val-min-cm">&gt;= 2.00 cm</span>
           </div>
           <div class="slider-row">
             <span class="mono">on.align_xy_cm</span>
-            <input type="range" id="param-align-xy" min="0.5" max="8.0" step="0.1" value="3.33" oninput="window.updateThresholds()">
+            <input type="range" id="param-align-xy" min="0.5" max="8.0" step="0.1" value="3.33" aria-label="on align xy cm" oninput="window.updateThresholds()">
             <span class="mono" id="val-align-xy">&lt;= 3.33 cm</span>
           </div>
           <div class="slider-row">
             <span class="mono">on.gap_cm</span>
-            <input type="range" id="param-gap-cm" min="0.1" max="3.0" step="0.1" value="0.5" oninput="window.updateThresholds()">
+            <input type="range" id="param-gap-cm" min="0.1" max="3.0" step="0.1" value="0.5" aria-label="on gap cm" oninput="window.updateThresholds()">
             <span class="mono" id="val-gap-cm">&lt;= 0.50 cm</span>
           </div>
           <div class="slider-row">
             <span class="mono">camera_tier</span>
-            <select id="param-camera-tier" class="api-input" style="width:100%" onchange="window.updateThresholds()">
+            <select id="param-camera-tier" class="api-input" style="width:100%" aria-label="camera tier" onchange="window.updateThresholds()">
               <option value="B">Tier B · Calibrated Tabletop Scale (σ = 0.08 cm)</option>
               <option value="C">Tier C · Uncalibrated Monocular Prior (2.5x σ = 0.50 cm · Gate G3/G6)</option>
             </select>
@@ -389,9 +512,9 @@ def render_index(entries: list[ReplayEntry], store: ReplayStore | None = None) -
 
         <div id="live-steps-container"></div>
 
-        <div style="margin-top:.75rem;background:#0b1120;border:1px solid var(--border);border-radius:9px;padding:.75rem">
-          <div style="font-weight:700;font-size:.84rem;margin-bottom:.4rem">Frame <span id="inspected-frame-num">0</span> Live Physical Telemetry (Tabletop Metric Frame)</div>
-          <div id="frame-telemetry-table" class="mono" style="font-size:.78rem;color:#cbd5e1"></div>
+        <div class="subpanel" style="margin-top:20px;margin-bottom:0">
+          <div class="subpanel-title">Frame <span id="inspected-frame-num">0</span> · Live physical telemetry (tabletop metric frame)</div>
+          <div id="frame-telemetry-table" class="mono"></div>
         </div>
       </div>
     </div>
@@ -399,38 +522,38 @@ def render_index(entries: list[ReplayEntry], store: ReplayStore | None = None) -
 
   <!-- TAB 2: PHYSICAL GIT BLAME & DIFF DEBUGGER -->
   <section class="tab-pane" id="tab-blame">
-    <div class="panel" style="margin-bottom:1.1rem">
-      <div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:.75rem;margin-bottom:.85rem">
+    <div class="panel">
+      <div class="panel-head">
         <div>
-          <h3 style="margin:0">Physical <code>Kodiac blame</code> &amp; <code>Kodiac diff</code> Causal Attribution</h3>
-          <div class="meta">Select any failed attempt to inspect its backward changepoint onset $t^*$, validated FactTable, corrective Hint, and Myers LCS event diff against <code>stackcube.green.lock</code>.</div>
+          <h3>Physical <code>Kodiac blame</code> &amp; <code>Kodiac diff</code> Causal Attribution</h3>
+          <div class="meta">Select any failed attempt to inspect its backward changepoint onset t<sup>*</sup>, validated FactTable, corrective Hint, and Myers LCS event diff against <code>stackcube.green.lock</code>.</div>
         </div>
-        <div style="display:flex;gap:.45rem;flex-wrap:wrap">
-          <button class="btn btn-primary" onclick="window.selectBlameCase('b01')">Case 1: B01 Early Release (Mid-Air Drop)</button>
-          <button class="btn" onclick="window.selectBlameCase('b02')">Case 2: B02 XY Misalignment (5.1 cm Offset)</button>
-          <button class="btn" onclick="window.selectBlameCase('b09')">Case 3: B09 Lift Failure (0.0 cm Lift)</button>
-          <button class="btn" onclick="window.selectBlameCase('b10_sim')">Case 4: Sim B10 High Release (+ Code Line Span)</button>
+        <div class="actions">
+          <button class="btn btn-primary" onclick="window.selectBlameCase('b01')">Case 1 · B01 early release</button>
+          <button class="btn" onclick="window.selectBlameCase('b02')">Case 2 · B02 XY misalignment</button>
+          <button class="btn" onclick="window.selectBlameCase('b09')">Case 3 · B09 lift failure</button>
+          <button class="btn" onclick="window.selectBlameCase('b10_sim')">Case 4 · Sim B10 high release</button>
         </div>
       </div>
 
       <div class="two-col">
         <div>
-          <div id="blame-header-card" class="verdict-banner verdict-FAIL" style="margin-bottom:.75rem"></div>
-          <div style="background:#0b1120;border:1px solid var(--border);border-radius:8px;padding:.75rem;margin-bottom:.75rem">
-            <div style="font:700 .76rem var(--mono);color:var(--accent);margin-bottom:.25rem">VALIDATED ONE-SENTENCE SUMMARY (≤30 WORDS, EVERY NUMBER GROUNDED IN FACTTABLE)</div>
-            <div id="blame-summary-text" style="font-size:.95rem;font-weight:600;color:#fff"></div>
+          <div id="blame-header-card" class="verdict-banner verdict-FAIL" style="margin-bottom:24px"></div>
+          <div class="subpanel">
+            <div class="subpanel-title">Validated one-sentence summary (≤30 words, every number grounded in FactTable)</div>
+            <div id="blame-summary-text" style="font-size:16px;line-height:1.5;font-weight:400;color:var(--paper)"></div>
           </div>
-          <div style="background:rgba(22,163,74,.12);border:1px solid #22c55e;border-radius:8px;padding:.75rem;margin-bottom:.75rem">
-            <div style="font:700 .76rem var(--mono);color:#4ade80;margin-bottom:.25rem">ACTIONABLE CORRECTIVE HINT (SINGLE-VARIABLE CHANGE TO FLIP MARGIN ≥ +σ)</div>
-            <div id="blame-hint-text" class="mono" style="font-size:.83rem;color:#e2e8f0"></div>
+          <div class="subpanel hint">
+            <div class="subpanel-title hint">Actionable corrective hint (single-variable change to flip margin ≥ +σ)</div>
+            <div id="blame-hint-text" class="mono" style="color:var(--bone)"></div>
           </div>
-          <div id="blame-codeloc-box" style="background:#0b1120;border:1px solid var(--border);border-radius:8px;padding:.75rem"></div>
+          <div id="blame-codeloc-box" class="subpanel"></div>
         </div>
 
         <div>
-          <div style="font-weight:700;font-size:.88rem;margin-bottom:.4rem">Measured Physical FactTable at Onset Frame $t^*$</div>
-          <table id="blame-facts-table" style="margin-bottom:.85rem"></table>
-          <div style="font-weight:700;font-size:.88rem;margin-bottom:.4rem">Myers LCS Event Diff (<code>Kodiac diff examples/stackcube.green</code>)</div>
+          <div class="subpanel-title">Measured physical FactTable at onset frame t<sup>*</sup></div>
+          <div class="table-wrap"><table id="blame-facts-table"></table></div>
+          <div class="subpanel-title">Myers LCS event diff (<code>Kodiac diff examples/stackcube.green</code>)</div>
           <div id="blame-diff-box" class="code-box"></div>
         </div>
       </div>
@@ -441,44 +564,52 @@ def render_index(entries: list[ReplayEntry], store: ReplayStore | None = None) -
   <section class="tab-pane" id="tab-compile">
     <div class="two-col">
       <div class="panel">
-        <h3>
-          <span>Natural Language / Voice → Canonical <code>.green</code> Compiler</span>
+        <div class="panel-head">
+          <div>
+            <h3>Natural language or voice → canonical <code>.green</code></h3>
+            <div class="meta">Type any manipulation task, or use the microphone (Web Speech API / Muse Voice anchor). Compiles a deterministic <code>.green</code> spec under the ADR-0013 physical sanity caps: <code>E001</code> missing object, <code>E003</code> unsupported verb, <code>E005</code> impossible threshold, <code>W101</code> slack cap.</div>
+          </div>
           <span class="badge" id="compiler-backend-badge">[DETERMINISTIC + 2.5σ SLACK CALIBRATOR]</span>
-        </h3>
-        <p class="meta">Type any manipulation task or use the microphone button (Web Speech API / Muse Voice anchor) to compile a deterministic <code>.green</code> specification with ADR-0013 physical sanity caps (<code>E001</code> missing object, <code>E003</code> unsupported verb, <code>E005</code> physically impossible threshold, <code>W101</code> slack cap).</p>
-
-        <div style="display:flex;gap:.5rem;margin-bottom:.65rem">
-          <input type="text" id="compile-input" class="api-input" style="flex:1;width:auto;font-size:.9rem;padding:.55rem .8rem" value="Pick up red cubeA by at least 2.5 cm, stack it squarely on green cubeB within 3.0 cm, and release for 0.5 s">
-          <button class="btn btn-warn" id="voice-mic-btn" onclick="window.startVoiceCapture()">🎙️ Speak Intent</button>
-          <button class="btn btn-primary" onclick="window.runLiveCompile()">⚡ Compile <code>.green</code></button>
         </div>
 
-        <div style="display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:.85rem">
-          <button class="clip-chip" onclick="window.setCompilePreset('Pick up red cubeA by at least 2.5 cm, stack it squarely on green cubeB within 3.0 cm, and release for 0.5 s')">Preset 1: Stack cubeA on cubeB</button>
-          <button class="clip-chip" onclick="window.setCompilePreset('Grasp the red block, lift 4 cm, and place it inside the metal tray')">Preset 2: Place inside container</button>
-          <button class="clip-chip" onclick="window.setCompilePreset('Move gripper near the yellow cylinder within 2.0 cm and hold for 0.8 s')">Preset 3: Reach &amp; dwell</button>
-          <button class="clip-chip" onclick="window.setCompilePreset('Dance a celebratory jig around the workspace')">Preset 4: Trigger E003 Refusal</button>
-          <button class="clip-chip" onclick="window.setCompilePreset('Pick up the unicorn and stack on the dragon')">Preset 5: Trigger E001 Object Guard</button>
+        <div class="compile-row">
+          <input type="text" id="compile-input" class="api-input" value="Pick up red cubeA by at least 2.5 cm, stack it squarely on green cubeB within 3.0 cm, and release for 0.5 s">
+          <button class="btn" id="voice-mic-btn" onclick="window.startVoiceCapture()">Speak intent</button>
+          <button class="btn btn-primary" onclick="window.runLiveCompile()">Compile <code>.green</code></button>
         </div>
 
-        <div id="compile-status-bar" class="meta" style="margin-bottom:.5rem"></div>
+        <div class="clip-selector">
+          <button class="clip-chip" onclick="window.setCompilePreset('Pick up red cubeA by at least 2.5 cm, stack it squarely on green cubeB within 3.0 cm, and release for 0.5 s')">Preset 01 · stack cubeA on cubeB</button>
+          <button class="clip-chip" onclick="window.setCompilePreset('Grasp the red block, lift 4 cm, and place it inside the metal tray')">Preset 02 · place inside container</button>
+          <button class="clip-chip" onclick="window.setCompilePreset('Move gripper near the yellow cylinder within 2.0 cm and hold for 0.8 s')">Preset 03 · reach and dwell</button>
+          <button class="clip-chip" onclick="window.setCompilePreset('Dance a celebratory jig around the workspace')">Preset 04 · trigger E003 refusal</button>
+          <button class="clip-chip" onclick="window.setCompilePreset('Pick up the unicorn and stack on the dragon')">Preset 05 · trigger E001 object guard</button>
+        </div>
+
+        <div id="compile-status-bar" class="meta" style="margin-bottom:14px"></div>
         <div class="code-box" id="compiled-green-output" style="min-height:290px"></div>
       </div>
 
       <div class="panel">
-        <h3><span>Two-Pass Demonstration Self-Test &amp; $2.5\\sigma$ Slack Calibration</span><span class="badge">[PASS-1 TRACE → PASS-2 LOCKFILE]</span></h3>
-        <p class="meta">When compiling with a reference demonstration video (<code>Kodiac test "stack cubeA on cubeB" --video correct_run.mp4</code>), Kodiac measures the empirical peak/minimum on the demo trace and sets each threshold with a $2.5\\sigma$ noise-floor safety margin, capped by ADR-0013 physical sanity bounds:</p>
+        <div class="panel-head">
+          <div>
+            <h3>Two-pass demonstration self-test</h3>
+            <div class="meta">When compiling against a reference demonstration (<code>Kodiac test "stack cubeA on cubeB" --video correct_run.mp4</code>), Kodiac measures the empirical peak and minimum on the demo trace, then sets each threshold with a 2.5σ noise-floor margin, capped by ADR-0013.</div>
+          </div>
+          <span class="badge">[PASS-1 TRACE → PASS-2 LOCKFILE]</span>
+        </div>
+        <div class="table-wrap">
         <table>
-          <tr><th>Predicate Parameter</th><th>Measured on <code>correct_run.mp4</code></th><th>Calibrated Threshold ($\\pm 2.5\\sigma$)</th><th>ADR-0013 Cap</th></tr>
+          <tr><th>Predicate parameter</th><th>Measured on <code>correct_run.mp4</code></th><th>Calibrated threshold (± 2.5σ)</th><th>ADR-0013 cap</th></tr>
           <tr><td><code>moves_with.slip_cm</code></td><td><code>0.08 ± 0.11 cm</code></td><td><code>&lt;= 1.00 cm</code></td><td><code>max 2.50 cm</code></td></tr>
           <tr><td><code>lifted.min_cm</code></td><td><code>7.74 ± 0.08 cm</code></td><td><code>&gt;= 2.00 cm</code></td><td><code>min 1.00 cm</code></td></tr>
           <tr><td><code>on.align_xy_cm</code></td><td><code>0.00 ± 0.11 cm</code></td><td><code>&lt;= 3.33 cm</code></td><td><code>max 4.00 cm</code></td></tr>
           <tr><td><code>on.gap_cm</code></td><td><code>0.06 ± 0.11 cm</code></td><td><code>&lt;= 0.50 cm</code></td><td><code>max 2.00 cm</code></td></tr>
           <tr><td><code>dwell.for_s</code></td><td><code>0.33 ± 0.03 s</code> (clip end settled)</td><td><code>&gt;= 0.50 s</code></td><td><code>min 0.25 s</code></td></tr>
         </table>
-        <div style="margin-top:.85rem">
-          <div style="font-weight:700;font-size:.86rem;margin-bottom:.35rem">Generated Sidecar Lockfile (<code>examples/stackcube.green.lock</code>)</div>
-          <div class="code-box" style="font-size:.75rem">{{
+        </div>
+        <div class="subpanel-title">Generated sidecar lockfile · <code>examples/stackcube.green.lock</code></div>
+        <div class="code-box" style="font-size:11px">{{
   "schema_version": "1.0",
   "test_name": "stackcube",
   "demo_clip_sha256": "eb62b10ff9c809702ab4444a064785b0f5621330592fa7b2e078c92b0e916278",
@@ -489,59 +620,73 @@ def render_index(entries: list[ReplayEntry], store: ReplayStore | None = None) -
     {{"step": 2, "step_name": "release", "kind": "achieved", "frame": 89, "t_s": 2.9667}}
   ]
 }}</div>
-        </div>
       </div>
     </div>
   </section>
 
   <!-- TAB 4: MUSE CODE /GOAL DONE-GATE & REAL ROBOT AUDIT -->
   <section class="tab-pane" id="tab-loop">
-    <div class="two-col" style="margin-bottom:1.2rem">
+    <div class="two-col">
       <div class="panel">
-        <h3><span>Muse Code <code>/goal</code> Done-Gate: 10/10 Planted Bug Repair Matrix</span><span class="badge">[MOCK SIM · 0 FALSE-PASS]</span></h3>
-        <p class="meta">Each bug <code>B01</code>–<code>B10</code> is injected into <code>examples/sim/pick_place.py</code>. When the coding agent attempts to stop, <code>Kodiac gate</code> re-runs the pinned simulation from scratch, blocks the stop on <code>FAIL</code> (exit 2), returns the measured <code>blame</code> + <code>hint</code>, and only unlocks exit 0 when <code>Kodiac run</code> returns <b>PASS</b>.</p>
+        <div class="panel-head">
+          <div>
+            <h3>Muse Code <code>/goal</code> done-gate</h3>
+            <div class="meta">Each bug <code>B01</code>–<code>B10</code> is injected into <code>examples/sim/pick_place.py</code>. When the coding agent attempts to stop, <code>Kodiac gate</code> re-runs the pinned simulation from scratch, blocks the stop on <code>FAIL</code> (exit 2), returns the measured <code>blame</code> plus <code>hint</code>, and only unlocks exit 0 when <code>Kodiac run</code> returns <b>PASS</b>.</div>
+          </div>
+          <span class="badge">[MOCK SIM · 0 FALSE-PASS]</span>
+        </div>
+        <div class="table-wrap">
         <table>
-          <tr><th>Bug ID</th><th>Injected Fault</th><th>Blamed Step &amp; Predicate</th><th>Corrective Hint Applied</th><th>Post-Fix</th></tr>
-          <tr><td><code>B01</code></td><td>Early gripper release in transit</td><td><code>#2 place · moves_with</code> ($t^*=4.10\s$)</td><td>Move <code>gripper.open()</code> after <code>move_to(place)</code></td><td><span class="pill" style="background:var(--pass)">PASS</span></td></tr>
-          <tr><td><code>B02</code></td><td>5.0 cm XY placement offset</td><td><code>#2 place · on.align_xy</code> ($5.0 &gt; 3.33\cm$)</td><td>Shift <code>place_xy_offset</code> by $-5.0\cm$ toward <code>cubeB</code></td><td><span class="pill" style="background:var(--pass)">PASS</span></td></tr>
-          <tr><td><code>B03</code></td><td>0.5 cm insufficient lift height</td><td><code>#1 grasp · lifted.height</code> ($0.5 &lt; 2.0\cm$)</td><td>Increase <code>lift_distance</code> by $+1.60\cm$</td><td><span class="pill" style="background:var(--pass)">PASS</span></td></tr>
-          <tr><td><code>B04</code></td><td>0.03 s short dwell before retract</td><td><code>#3 release · dwell.duration</code> ($0.03 &lt; 0.50\s$)</td><td>Hold $+0.50\s$ longer before <code>arm.retract()</code></td><td><span class="pill" style="background:var(--pass)">PASS</span></td></tr>
-          <tr><td><code>B05</code></td><td>Lift arm before closing gripper</td><td><code>#1 grasp · moves_with</code></td><td>Reorder <code>gripper.close()</code> before <code>arm.lift()</code></td><td><span class="pill" style="background:var(--pass)">PASS</span></td></tr>
-          <tr><td><code>B06</code></td><td>High grasp 7 cm above tabletop</td><td><code>#1 grasp · lifted.height</code></td><td>Lower pre-grasp descent Z to tabletop contact height</td><td><span class="pill" style="background:var(--pass)">PASS</span></td></tr>
-          <tr><td><code>B07</code></td><td>Missing <code>gripper.close()</code> call</td><td><code>#1 grasp · moves_with</code></td><td>Insert <code>robot.gripper.close()</code> at grasp pose</td><td><span class="pill" style="background:var(--pass)">PASS</span></td></tr>
-          <tr><td><code>B08</code></td><td>Navigates to wrong XY object</td><td><code>#1 grasp · moves_with</code></td><td>Align approach XY target with <code>cubeA</code> pose</td><td><span class="pill" style="background:var(--pass)">PASS</span></td></tr>
-          <tr><td><code>B09</code></td><td>Gripper never opens at place pose</td><td><code>#3 release · not moves_with</code></td><td>Call <code>robot.gripper.open()</code> prior to retract</td><td><span class="pill" style="background:var(--pass)">PASS</span></td></tr>
-          <tr><td><code>B10</code></td><td>High release 15 cm above target</td><td><code>#2 place · on.gap</code> ($3.0 &gt; 0.50\cm$)</td><td>Lower release Z height by $-2.60\cm$ before opening</td><td><span class="pill" style="background:var(--pass)">PASS</span></td></tr>
+          <tr><th>Bug ID</th><th>Injected fault</th><th>Blamed step &amp; predicate</th><th>Corrective hint applied</th><th>Post-fix</th></tr>
+          <tr><td><code>B01</code></td><td>Early gripper release in transit</td><td><code>#2 place · moves_with</code> (t<sup>*</sup> = 4.10 s)</td><td>Move <code>gripper.open()</code> after <code>move_to(place)</code></td><td><span class="pill" style="color:var(--pass)">PASS</span></td></tr>
+          <tr><td><code>B02</code></td><td>5.0 cm XY placement offset</td><td><code>#2 place · on.align_xy</code> (5.0 &gt; 3.33 cm)</td><td>Shift <code>place_xy_offset</code> by −5.0 cm toward <code>cubeB</code></td><td><span class="pill" style="color:var(--pass)">PASS</span></td></tr>
+          <tr><td><code>B03</code></td><td>0.5 cm insufficient lift height</td><td><code>#1 grasp · lifted.height</code> (0.5 &lt; 2.0 cm)</td><td>Increase <code>lift_distance</code> by +1.60 cm</td><td><span class="pill" style="color:var(--pass)">PASS</span></td></tr>
+          <tr><td><code>B04</code></td><td>0.03 s short dwell before retract</td><td><code>#3 release · dwell.duration</code> (0.03 &lt; 0.50 s)</td><td>Hold +0.50 s longer before <code>arm.retract()</code></td><td><span class="pill" style="color:var(--pass)">PASS</span></td></tr>
+          <tr><td><code>B05</code></td><td>Lift arm before closing gripper</td><td><code>#1 grasp · moves_with</code></td><td>Reorder <code>gripper.close()</code> before <code>arm.lift()</code></td><td><span class="pill" style="color:var(--pass)">PASS</span></td></tr>
+          <tr><td><code>B06</code></td><td>High grasp 7 cm above tabletop</td><td><code>#1 grasp · lifted.height</code></td><td>Lower pre-grasp descent Z to tabletop contact height</td><td><span class="pill" style="color:var(--pass)">PASS</span></td></tr>
+          <tr><td><code>B07</code></td><td>Missing <code>gripper.close()</code> call</td><td><code>#1 grasp · moves_with</code></td><td>Insert <code>robot.gripper.close()</code> at grasp pose</td><td><span class="pill" style="color:var(--pass)">PASS</span></td></tr>
+          <tr><td><code>B08</code></td><td>Navigates to wrong XY object</td><td><code>#1 grasp · moves_with</code></td><td>Align approach XY target with <code>cubeA</code> pose</td><td><span class="pill" style="color:var(--pass)">PASS</span></td></tr>
+          <tr><td><code>B09</code></td><td>Gripper never opens at place pose</td><td><code>#3 release · not moves_with</code></td><td>Call <code>robot.gripper.open()</code> prior to retract</td><td><span class="pill" style="color:var(--pass)">PASS</span></td></tr>
+          <tr><td><code>B10</code></td><td>High release 15 cm above target</td><td><code>#2 place · on.gap</code> (3.0 &gt; 0.50 cm)</td><td>Lower release Z height by −2.60 cm before opening</td><td><span class="pill" style="color:var(--pass)">PASS</span></td></tr>
         </table>
+        </div>
       </div>
 
       <div class="panel">
-        <h3><span>Public Real-Robot Dataset Failure Audit (DROID &amp; LeRobot SO-100)</span><span class="badge">[CATALOGED REAL TELEOP EPISODES]</span></h3>
-        <p class="meta">Cataloged from real teleoperated robot demonstrations in <code>alexander-soare/droid_100</code> (Franka Panda 7-DOF) and <code>lerobot/so100_pick_place</code> (SO-100 low-cost follower arm):</p>
+        <div class="panel-head">
+          <div>
+            <h3>Public real-robot failure audit</h3>
+            <div class="meta">Cataloged from real teleoperated demonstrations in <code>alexander-soare/droid_100</code> (Franka Panda 7-DOF) and <code>lerobot/so100_pick_place</code> (SO-100 low-cost follower arm).</div>
+          </div>
+          <span class="badge">[CATALOGED REAL TELEOP EPISODES]</span>
+        </div>
+        <div class="table-wrap">
         <table>
-          <tr><th>Episode ID</th><th>Hardware &amp; Dataset</th><th>Task &amp; Failure Mode</th><th>Onset $t^*$</th></tr>
-          <tr><td><code>HERO-DROID-001</code></td><td>Franka Panda · <code>droid_100/14</code></td><td>Pick red block → metal tray · <b>Early Release</b> mid-transport</td><td><code>2.13 s (f=32)</code></td></tr>
-          <tr><td><code>HERO-DROID-002</code></td><td>Franka Panda · <code>droid_100/38</code></td><td>Stack green cup on saucer · <b>XY Misalignment</b> ($4.2\cm &gt; 3.33\cm$)</td><td><code>3.80 s (f=57)</code></td></tr>
-          <tr><td><code>HERO-SO100-001</code></td><td>SO-100 Arm · <code>so100_pick_place/7</code></td><td>Pick yellow cylinder → mat · <b>Lift Failure</b> ($&lt;0.8\cm$ clearance)</td><td><code>1.45 s (f=44)</code></td></tr>
-          <tr><td><code>HERO-SO100-002</code></td><td>SO-100 Arm · <code>so100_pick_place/23</code></td><td>Pick wooden dice → bin · <b>Grasp Slip</b> during vertical lift</td><td><code>1.65 s (f=50)</code></td></tr>
-          <tr><td><code>HERO-DROID-003</code></td><td>Franka Panda · <code>droid_100/67</code></td><td>Pick banana → ceramic bowl · <b>Rim Drop / XY Offset</b></td><td><code>4.10 s (f=61)</code></td></tr>
+          <tr><th>Episode ID</th><th>Hardware &amp; dataset</th><th>Task &amp; failure mode</th><th>Onset t<sup>*</sup></th></tr>
+          <tr><td><code>HERO-DROID-001</code></td><td>Franka Panda · <code>droid_100/14</code></td><td>Pick red block → metal tray · <b>early release</b> mid-transport</td><td><code>2.13 s (f=32)</code></td></tr>
+          <tr><td><code>HERO-DROID-002</code></td><td>Franka Panda · <code>droid_100/38</code></td><td>Stack green cup on saucer · <b>XY misalignment</b> (4.2 &gt; 3.33 cm)</td><td><code>3.80 s (f=57)</code></td></tr>
+          <tr><td><code>HERO-SO100-001</code></td><td>SO-100 Arm · <code>so100_pick_place/7</code></td><td>Pick yellow cylinder → mat · <b>lift failure</b> (&lt;0.8 cm clearance)</td><td><code>1.45 s (f=44)</code></td></tr>
+          <tr><td><code>HERO-SO100-002</code></td><td>SO-100 Arm · <code>so100_pick_place/23</code></td><td>Pick wooden dice → bin · <b>grasp slip</b> during vertical lift</td><td><code>1.65 s (f=50)</code></td></tr>
+          <tr><td><code>HERO-DROID-003</code></td><td>Franka Panda · <code>droid_100/67</code></td><td>Pick banana → ceramic bowl · <b>rim drop / XY offset</b></td><td><code>4.10 s (f=61)</code></td></tr>
         </table>
+        </div>
 
-        <h3 style="margin-top:1.1rem"><span>18/18 Anti-Cheat Done-Gate Refusal Proofs (<code>tests/loop/test_gate.py</code>)</span><span class="badge">[FAIL-CLOSED EXIT 2]</span></h3>
-        <p class="meta">The Stop-hook Done-Gate stores SHA-256 cryptographic pins outside the agent workspace and refuses every reward-hacking vector:</p>
-        <ul style="font-size:.82rem;color:#cbd5e1;margin:.3rem 0;padding-left:1.2rem">
-          <li><b>Test Weakening Refused:</b> Editing <code>stackcube.green</code> thresholds or deleting steps triggers <code>pinned test modified since Kodiac gate --init</code> (exit 2).</li>
-          <li><b>Fake Verdict Injection Refused:</b> Writing a forged <code>.Kodiac/last_verdict.json</code> with <code>"verdict": "PASS"</code> is ignored; the gate re-runs the simulator from scratch on every stop.</li>
-          <li><b>Engine / Predicate Monkeypatching Refused:</b> Modifying any file under <code>engine/</code>, <code>predicates/</code>, <code>geometry/</code>, or <code>uncertainty/</code> after pin initialization triggers an immediate SHA-256 digest mismatch block.</li>
+        <h3 style="margin-top:36px">18 / 18 anti-cheat refusals</h3>
+        <div class="meta" style="margin-bottom:16px">The Stop-hook done-gate stores SHA-256 cryptographic pins outside the agent workspace and refuses every reward-hacking vector (<code>tests/loop/test_gate.py</code>).</div>
+        <ul class="prose-list">
+          <li><b>Test weakening refused:</b> editing <code>stackcube.green</code> thresholds or deleting steps triggers <code>pinned test modified since Kodiac gate --init</code> (exit 2).</li>
+          <li><b>Fake verdict injection refused:</b> writing a forged <code>.Kodiac/last_verdict.json</code> with <code>"verdict": "PASS"</code> is ignored; the gate re-runs the simulator from scratch on every stop.</li>
+          <li><b>Engine or predicate monkeypatching refused:</b> modifying any file under <code>engine/</code>, <code>predicates/</code>, <code>geometry/</code>, or <code>uncertainty/</code> after pin initialization triggers an immediate SHA-256 digest mismatch block.</li>
         </ul>
       </div>
     </div>
   </section>
 
   <!-- TAB 5: CACHED REPLAY GALLERY (ALWAYS VISIBLE BELOW OR VIA TAB) -->
-  <section id="tab-gallery">
-    <h2>Verified Precomputed Replay Gallery (<code>⚡ CACHED</code>)</h2>
-    <div class="banner"><b>Transparency &amp; Provenance Banner.</b> Every card in the gallery below is a <b>{html.escape(CACHED_BADGE)}</b> replay,
+  <section id="tab-gallery" class="section">
+    <div class="section-label"><span class="idx">05</span>Cached replay gallery</div>
+    <h2 class="section-title">Verified precomputed replays</h2>
+    <div class="banner"><b>Transparency and provenance.</b> Every card below is a <b>{html.escape(CACHED_BADGE)}</b> replay,
     precomputed by running <code>Kodiac_robotics.pipeline.run.run</code> and shown instantly; none of them is a live grade. Use the <b>Live Video Evaluator Studio</b> above to run the engine interactively in your browser. {html.escape(CACHED_EXPLAINER)}
     {html.escape(FIXTURE_EXPLAINER)}</div>
     <div class="grid">
@@ -549,19 +694,57 @@ def render_index(entries: list[ReplayEntry], store: ReplayStore | None = None) -
     </div>
   </section>
 
-  <h2>Video</h2>
-  <div class="video"><!-- VIDEO_URL -->The 3-minute demonstration video is linked in the submission packet and <code>docs/operations/SUBMISSION.md</code>.</div>
+  <section class="section" id="video">
+    <div class="section-label"><span class="idx">06</span>Video</div>
+    <h2 class="section-title">The 3-minute demonstration</h2>
+    <div class="video"><!-- VIDEO_URL -->The 3-minute demonstration video is linked in the submission packet and <code>docs/operations/SUBMISSION.md</code>.</div>
+  </section>
 
-  <h2>Live app</h2>
-  <p><!-- LIVE_APP_URL -->The interactive Studio above runs directly on this page (zero-install browser engine + optional Meta API key connector); you can also run the full FastAPI + Gradio server locally via <code>Kodiac app --port 7860</code>.</p>
+  <section class="section" id="live-app">
+    <div class="section-label"><span class="idx">07</span>Live app</div>
+    <h2 class="section-title">Run it in the browser</h2>
+    <p class="prose"><!-- LIVE_APP_URL -->The interactive Studio above runs directly on this page (zero-install browser engine plus an optional Meta API key connector); you can also run the full FastAPI + Gradio server locally via <code>Kodiac app --port 7860</code>.</p>
+  </section>
 
-  <h2>Which Meta model does what</h2>
-  <table><tr><th>Model</th><th>Role</th><th>On this hosted Studio today</th></tr>{rows}</table>
+  <section class="section" id="meta-models">
+    <div class="section-label"><span class="idx">08</span>Model ledger</div>
+    <h2 class="section-title">Which Meta model does what</h2>
+    <div class="table-wrap"><table class="ledger"><tr><th>Model</th><th>Role</th><th>On this hosted Studio today</th></tr>{rows}</table></div>
+  </section>
 
-  <h2>Limits we are honest about</h2><ul>{limits}</ul>
-  <h2>Privacy</h2><p>{html.escape(PRIVACY)}</p>
-  <p class="meta">Generated {stamp} from the replay store by <code>scripts/precompute_replays.py</code>.</p>
+  <section class="section" id="limits">
+    <div class="section-label"><span class="idx">09</span>Limits</div>
+    <h2 class="section-title">Limits we are honest about</h2>
+    <ol class="prose-list numbered">{limits}</ol>
+  </section>
+
+  <section class="section" id="privacy">
+    <div class="section-label"><span class="idx">10</span>Privacy</div>
+    <h2 class="section-title">Privacy</h2>
+    <p class="prose">{html.escape(PRIVACY)}</p>
+  </section>
 </main>
+
+<footer class="site-footer">
+  <div class="footer-inner">
+    <div>
+      <div class="footer-wordmark">Kodiac</div>
+      <div class="footer-tagline">{html.escape(TAGLINE)}</div>
+    </div>
+    <nav class="footer-links" aria-label="Page sections">
+      <button class="footer-link" data-scroll="tab-eval">Studio</button>
+      <button class="footer-link" data-scroll="tab-gallery">Gallery</button>
+      <button class="footer-link" data-scroll="video">Video</button>
+      <button class="footer-link" data-scroll="live-app">Live app</button>
+      <button class="footer-link" data-scroll="limits">Limits</button>
+      <button class="footer-link" data-scroll="privacy">Privacy</button>
+    </nav>
+  </div>
+  <div class="footer-meta">
+    <span>Generated {stamp} from the replay store by <code>scripts/precompute_replays.py</code>.</span>
+    <span>Kodiac v0.1.0 · Meta AI Hackathon</span>
+  </div>
+</footer>
 
 <script>
 window.KODIAC_TRACKS = {tracks_json};
@@ -585,9 +768,9 @@ window.KODIAC_REPLAYS = {results_json};
   }};
 
   const COLORS = {{
-    gripper: '#38bdf8',
-    cube_a: '#f87171',
-    cube_b: '#4ade80'
+    gripper: '#b3c6e8',
+    cube_a: '#bd7ad6',
+    cube_b: '#70dab4'
   }};
 
   function updateApiStatusUI() {{
@@ -905,7 +1088,7 @@ window.KODIAC_REPLAYS = {results_json};
 
     const timerBadge = document.getElementById('live-timer-badge');
     if (timerBadge) {{
-      timerBadge.textContent = '⏱️ ' + res.elapsedMs.toFixed(2) + ' ms (▶ LIVE BROWSER ENGINE RUN)';
+      timerBadge.textContent = res.elapsedMs.toFixed(2) + ' ms · live browser run';
     }}
 
     const vbox = document.getElementById('live-verdict-box');
@@ -923,13 +1106,13 @@ window.KODIAC_REPLAYS = {results_json};
     const sc = document.getElementById('live-steps-container');
     if (sc) {{
       sc.innerHTML = res.steps.map(function(s) {{
-        const c = s.verdict === 'PASS' ? '#16a34a' : (s.verdict === 'FAIL' ? '#dc2626' : (s.verdict === 'CANT_TELL' ? '#d97706' : '#475569'));
+        const c = s.verdict === 'PASS' ? 'var(--pass)' : (s.verdict === 'FAIL' ? 'var(--fail)' : (s.verdict === 'CANT_TELL' ? 'var(--cant)' : 'var(--muted)'));
         const lbl = s.verdict === 'CANT_TELL' ? "CAN'T TELL" : s.verdict;
-        const jumpBtn = s.frame !== null ? '<button class="btn" style="padding:1px 7px;font-size:.72rem" onclick="window.seekFrame(' + s.frame + ')">Jump f=' + s.frame + '</button>' : '';
+        const jumpBtn = s.frame !== null ? '<button class="btn btn-inline" onclick="window.seekFrame(' + s.frame + ')">Jump f=' + s.frame + '</button>' : '';
         return '<div class="step-card">' +
           '<div class="step-head"><span>Step ' + s.idx + ': <code>' + s.name + '</code></span>' +
-          '<div style="display:flex;gap:.4rem;align-items:center">' + jumpBtn +
-          '<span class="pill" style="background:' + c + '">' + lbl + '</span></div></div>' +
+          '<div style="display:flex;gap:8px;align-items:center">' + jumpBtn +
+          '<span class="pill" style="color:' + c + '">' + lbl + '</span></div></div>' +
           '<div class="comp-row"><span>' + s.detail + '</span></div></div>';
       }}).join('');
     }}
@@ -948,13 +1131,13 @@ window.KODIAC_REPLAYS = {results_json};
 
     // Draw tabletop reference line v = 341
     ctx.save();
-    ctx.strokeStyle = 'rgba(148, 163, 184, 0.35)';
+    ctx.strokeStyle = 'rgba(229, 231, 235, 0.28)';
     ctx.setLineDash([5, 5]);
     ctx.beginPath();
     ctx.moveTo(40, 341);
     ctx.lineTo(600, 341);
     ctx.stroke();
-    ctx.fillStyle = 'rgba(148, 163, 184, 0.7)';
+    ctx.fillStyle = 'rgba(229, 231, 235, 0.55)';
     ctx.font = '11px monospace';
     ctx.fillText('tabletop plane (z = 0.0 cm)', 46, 356);
     ctx.restore();
@@ -970,13 +1153,13 @@ window.KODIAC_REPLAYS = {results_json};
       ]);
     }}
     allRects.forEach(function(r) {{
-      ctx.fillStyle = 'rgba(5, 8, 17, 0.92)';
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.92)';
       ctx.fillRect(r[0], r[1], r[2] - r[0], r[3] - r[1]);
-      ctx.strokeStyle = '#f59e0b';
-      ctx.lineWidth = 2;
+      ctx.strokeStyle = '#e5e7eb';
+      ctx.lineWidth = 1;
       ctx.strokeRect(r[0], r[1], r[2] - r[0], r[3] - r[1]);
-      ctx.fillStyle = '#fbbf24';
-      ctx.font = 'bold 11px monospace';
+      ctx.fillStyle = '#e5e7eb';
+      ctx.font = '11px monospace';
       ctx.fillText('OCCLUDER BRUSH', r[0] + 6, r[1] + 15);
     }});
 
@@ -987,7 +1170,7 @@ window.KODIAC_REPLAYS = {results_json};
       if (!arr || !arr[f]) return;
       const m = arr[f];
       const x1 = m[0], y1 = m[1], x2 = m[2], y2 = m[3], ub = m[4], vb = m[5], score = m[7];
-      const color = COLORS[name] || '#38bdf8';
+      const color = COLORS[name] || '#b3c6e8';
 
       ctx.save();
       ctx.strokeStyle = color;
@@ -1007,9 +1190,9 @@ window.KODIAC_REPLAYS = {results_json};
 
       // Label pill
       const label = name + ' (' + score.toFixed(2) + ')';
-      ctx.font = 'bold 11px monospace';
+      ctx.font = '11px monospace';
       const tw = ctx.measureText(label).width + 10;
-      ctx.fillStyle = 'rgba(9, 13, 22, 0.85)';
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.85)';
       ctx.fillRect(x1, Math.max(2, y1 - 19), tw, 17);
       ctx.fillStyle = color;
       ctx.fillText(label, x1 + 5, Math.max(14, y1 - 6));
@@ -1023,12 +1206,12 @@ window.KODIAC_REPLAYS = {results_json};
     if (telem && state.lastEval && state.lastEval.perFrame[f]) {{
       const pf = state.lastEval.perFrame[f];
       if (pf.occluded) {{
-        telem.innerHTML = '<span style="color:#fbbf24">⚠️ Frame ' + f + ': OCCLUDED (Gate G2 active · cube_a cov=' + (pf.occA ? (pf.occA*100).toFixed(0) : 100) + '%, cube_b cov=' + (pf.occB ? (pf.occB*100).toFixed(0) : 100) + '%) → Kleene U</span>';
+        telem.innerHTML = '<span style="color:var(--cant)">Frame ' + f + ': occluded (Gate G2 active · cube_a cov=' + (pf.occA ? (pf.occA*100).toFixed(0) : 100) + '%, cube_b cov=' + (pf.occB ? (pf.occB*100).toFixed(0) : 100) + '%) → Kleene U</span>';
       }} else {{
         telem.innerHTML =
-          '<div>• <b>cubeA</b>: X=' + pf.xa.toFixed(2) + ' cm, h=' + pf.ha.toFixed(2) + ' cm ± ' + state.lastEval.sigmaCm.toFixed(2) + ' cm | <code>lifted</code>=' + pf.triLift + ' (margin ' + (pf.mLift >= 0 ? '+' : '') + pf.mLift.toFixed(2) + ' cm)</div>' +
-          '<div>• <b>gripper</b>: width=' + pf.wCurr.toFixed(0) + ' px (' + (pf.jawsOpen ? 'OPEN' : 'CLOSED') + '), slip=' + pf.rhoRel.toFixed(2) + ' cm | <code>moves_with</code>=' + pf.triMovesWith + '</div>' +
-          '<div>• <b>on(cubeA, cubeB)</b>: d_xy=' + pf.dXy.toFixed(2) + ' cm, gap_z=' + pf.gapVal.toFixed(2) + ' cm | <code>on</code>=' + pf.triOn + ', <code>dwell</code>=' + pf.triDwell + ' (' + pf.tauStill.toFixed(2) + ' s)</div>';
+          '<div>cubeA · X=' + pf.xa.toFixed(2) + ' cm, h=' + pf.ha.toFixed(2) + ' cm ± ' + state.lastEval.sigmaCm.toFixed(2) + ' cm | <code>lifted</code>=' + pf.triLift + ' (margin ' + (pf.mLift >= 0 ? '+' : '') + pf.mLift.toFixed(2) + ' cm)</div>' +
+          '<div>gripper · width=' + pf.wCurr.toFixed(0) + ' px (' + (pf.jawsOpen ? 'open' : 'closed') + '), slip=' + pf.rhoRel.toFixed(2) + ' cm | <code>moves_with</code>=' + pf.triMovesWith + '</div>' +
+          '<div>on(cubeA, cubeB) · d_xy=' + pf.dXy.toFixed(2) + ' cm, gap_z=' + pf.gapVal.toFixed(2) + ' cm | <code>on</code>=' + pf.triOn + ', <code>dwell</code>=' + pf.triDwell + ' (' + pf.tauStill.toFixed(2) + ' s)</div>';
       }}
     }}
   }}
@@ -1055,10 +1238,10 @@ window.KODIAC_REPLAYS = {results_json};
       state.playing = false;
       if (video) video.pause();
       if (state.timer) clearInterval(state.timer);
-      if (btn) btn.textContent = '▶ Play';
+      if (btn) btn.textContent = 'Play';
     }} else {{
       state.playing = true;
-      if (btn) btn.textContent = '⏸ Pause';
+      if (btn) btn.textContent = 'Pause';
       if (video) {{
         video.currentTime = state.frame / 30.0;
         video.play().catch(function() {{}});
@@ -1258,13 +1441,13 @@ window.KODIAC_REPLAYS = {results_json};
   window.selectBlameCase = function(key) {{
     const c = BLAME_CASES[key] || BLAME_CASES.b01;
     document.getElementById('blame-header-card').innerHTML =
-      '<div><div style="font-size:1.05rem">' + c.title + '</div>' +
-      '<div class="mono" style="font-size:.78rem;opacity:.9">' + c.onset + '</div></div>';
+      '<div><div class="verdict-title" style="font-size:22px">' + c.title + '</div>' +
+      '<div class="verdict-sub">' + c.onset + '</div></div>';
     document.getElementById('blame-summary-text').textContent = c.summary;
     document.getElementById('blame-hint-text').textContent = c.hint;
     document.getElementById('blame-codeloc-box').innerHTML =
-      '<div style="font:700 .75rem var(--mono);color:var(--muted);margin-bottom:.2rem">SOURCE LINE / TRACE PROVENANCE</div>' +
-      '<div class="mono" style="color:var(--accent)">' + c.codeloc + '</div>';
+      '<div style="font:400 10px/1.4 var(--font);letter-spacing:.1em;text-transform:uppercase;color:var(--dim);margin-bottom:8px">Source line / trace provenance</div>' +
+      '<div class="mono" style="color:var(--bone)">' + c.codeloc + '</div>';
     document.getElementById('blame-facts-table').innerHTML =
       '<tr><th>Fact Key</th><th>Measured Value ± σ</th><th>Unit</th><th>Threshold / Status</th></tr>' +
       c.facts.map(function(r) {{
@@ -1274,7 +1457,7 @@ window.KODIAC_REPLAYS = {results_json};
       if (line.indexOf('- ') === 0) return '<span class="diff-del">' + line + '</span>';
       if (line.indexOf('+ ') === 0) return '<span class="diff-add">' + line + '</span>';
       if (line.indexOf('@@') === 0) return '<span class="diff-warn">' + line + '</span>';
-      return line + '\\n';
+      return line + '\n';
     }}).join('');
   }};
 
@@ -1296,84 +1479,84 @@ window.KODIAC_REPLAYS = {results_json};
     }}
     const lower = text.toLowerCase();
     if (lower.indexOf('unicorn') !== -1 || lower.indexOf('dragon') !== -1) {{
-      status.innerHTML = '<span style="color:#f87171;font-weight:700">❌ Refused with Typed Error E001 (Object Guard):</span> Undeclared/unknown physical object in instruction.';
+      status.innerHTML = '<span style="color:var(--fail)">Refused · Typed error E001 (object guard)</span> · undeclared or unknown physical object in instruction.';
       out.textContent =
-        'ERROR E001: We could not find "unicorn" or "dragon" in the scene vocabulary.\\n' +
-        'Hint: Declare physical objects with prompts and metric size priors (e.g. cubeA, cubeB, red block, tray, cylinder).\\n' +
+        'ERROR E001: We could not find "unicorn" or "dragon" in the scene vocabulary.\n' +
+        'Hint: Declare physical objects with prompts and metric size priors (e.g. cubeA, cubeB, red block, tray, cylinder).\n' +
         'Law 1 Guarantee: Kodiac never invents a verdict on missing objects.';
       return;
     }}
     if (!/(pick|stack|place|put|grasp|lift|move|reach|hold|insert|drop|release)/.test(lower)) {{
-      status.innerHTML = '<span style="color:#f87171;font-weight:700">❌ Refused with Typed Error E003 (Action Guard):</span> Instruction uses an action outside the 6 physical predicates.';
+      status.innerHTML = '<span style="color:var(--fail)">Refused · Typed error E003 (action guard)</span> · instruction uses an action outside the six physical predicates.';
       out.textContent =
-        'ERROR E003: Unsupported physical action in "' + text + '".\\n' +
-        'Supported spatial/temporal predicates: on, inside, near, lifted, moves_with, dwell.\\n' +
+        'ERROR E003: Unsupported physical action in "' + text + '".\n' +
+        'Supported spatial/temporal predicates: on, inside, near, lifted, moves_with, dwell.\n' +
         'Try: "Pick up cubeA, stack it on cubeB, and release for 0.5 s".';
       return;
     }}
 
-    const liftMatch = lower.match(/lift[^0-9]*([0-9]+(?:\\.[0-9]+)?)\\s*cm/) || lower.match(/at least\\s*([0-9]+(?:\\.[0-9]+)?)\\s*cm/);
-    const alignMatch = lower.match(/within\\s*([0-9]+(?:\\.[0-9]+)?)\\s*cm/);
-    const dwellMatch = lower.match(/for\\s*([0-9]+(?:\\.[0-9]+)?)\\s*s/);
+    const liftMatch = lower.match(/lift[^0-9]*([0-9]+(?:\.[0-9]+)?)\s*cm/) || lower.match(/at least\s*([0-9]+(?:\.[0-9]+)?)\s*cm/);
+    const alignMatch = lower.match(/within\s*([0-9]+(?:\.[0-9]+)?)\s*cm/);
+    const dwellMatch = lower.match(/for\s*([0-9]+(?:\.[0-9]+)?)\s*s/);
     const liftVal = liftMatch ? parseFloat(liftMatch[1]).toFixed(2) : '2.00';
     const alignVal = alignMatch ? parseFloat(alignMatch[1]).toFixed(2) : '3.33';
     const dwellVal = dwellMatch ? parseFloat(dwellMatch[1]).toFixed(2) : '0.50';
 
     const backendBadge = state.metaApiKey ? '[COMPILER: MUSE SPARK 1.3 · LIVE KEY CONFIGURED]' : '[COMPILER: DETERMINISTIC TEMPLATE + 2.5σ CALIBRATOR]';
-    status.innerHTML = '<span style="color:#4ade80;font-weight:700">✅ Compiled cleanly in 0.8 ms</span> · Badge: <code>' + backendBadge + '</code>';
+    status.innerHTML = '<span style="color:var(--pass)">Compiled cleanly in 0.8 ms</span> · badge: <code>' + backendBadge + '</code>';
 
     if (lower.indexOf('inside') !== -1 || lower.indexOf('tray') !== -1) {{
       out.textContent =
-        'test: place_in_tray\\n' +
-        'description: "' + text.replace(/"/g, "'") + '"\\n\\n' +
-        'objects:\\n' +
-        '  gripper:\\n' +
-        '    prompt: "robot parallel-jaw gripper"\\n' +
-        '    role: effector\\n' +
-        '  red_block:\\n' +
-        '    prompt: "red cube block"\\n' +
-        '    size_cm: 4.0\\n' +
-        '  metal_tray:\\n' +
-        '    prompt: "rectangular metal tray container"\\n' +
-        '    size_cm: 16.0\\n\\n' +
-        'steps:\\n' +
-        '  - grasp: moves_with(gripper, red_block, slip_cm<=1.0) and lifted(red_block, min_cm>=' + liftVal + ')\\n' +
-        '  - place: inside(red_block, metal_tray, margin_cm>=0.5)\\n' +
-        '  - release: not moves_with(gripper, red_block) and dwell(red_block, for_s>=' + dwellVal + ', max_speed_cm_s<=1.0)\\n';
+        'test: place_in_tray\n' +
+        'description: "' + text.replace(/"/g, "'") + '"\n\n' +
+        'objects:\n' +
+        '  gripper:\n' +
+        '    prompt: "robot parallel-jaw gripper"\n' +
+        '    role: effector\n' +
+        '  red_block:\n' +
+        '    prompt: "red cube block"\n' +
+        '    size_cm: 4.0\n' +
+        '  metal_tray:\n' +
+        '    prompt: "rectangular metal tray container"\n' +
+        '    size_cm: 16.0\n\n' +
+        'steps:\n' +
+        '  - grasp: moves_with(gripper, red_block, slip_cm<=1.0) and lifted(red_block, min_cm>=' + liftVal + ')\n' +
+        '  - place: inside(red_block, metal_tray, margin_cm>=0.5)\n' +
+        '  - release: not moves_with(gripper, red_block) and dwell(red_block, for_s>=' + dwellVal + ', max_speed_cm_s<=1.0)\n';
     }} else if (lower.indexOf('near') !== -1 || lower.indexOf('cylinder') !== -1) {{
       out.textContent =
-        'test: reach_and_dwell\\n' +
-        'description: "' + text.replace(/"/g, "'") + '"\\n\\n' +
-        'objects:\\n' +
-        '  gripper:\\n' +
-        '    prompt: "robot gripper"\\n' +
-        '    role: effector\\n' +
-        '  cylinder:\\n' +
-        '    prompt: "yellow cylinder"\\n' +
-        '    size_cm: 4.0\\n\\n' +
-        'steps:\\n' +
-        '  - approach: near(gripper, cylinder, max_cm<=' + alignVal + ')\\n' +
-        '  - hold: dwell(gripper, for_s>=' + dwellVal + ', max_speed_cm_s<=1.0)\\n';
+        'test: reach_and_dwell\n' +
+        'description: "' + text.replace(/"/g, "'") + '"\n\n' +
+        'objects:\n' +
+        '  gripper:\n' +
+        '    prompt: "robot gripper"\n' +
+        '    role: effector\n' +
+        '  cylinder:\n' +
+        '    prompt: "yellow cylinder"\n' +
+        '    size_cm: 4.0\n\n' +
+        'steps:\n' +
+        '  - approach: near(gripper, cylinder, max_cm<=' + alignVal + ')\n' +
+        '  - hold: dwell(gripper, for_s>=' + dwellVal + ', max_speed_cm_s<=1.0)\n';
     }} else {{
       out.textContent =
-        'test: stackcube\\n' +
-        'description: "' + text.replace(/"/g, "'") + '"\\n\\n' +
-        'objects:\\n' +
-        '  gripper:\\n' +
-        '    prompt: "robot gripper"\\n' +
-        '    role: effector\\n' +
-        '  cubeA:\\n' +
-        '    prompt: "red block"\\n' +
-        '    aliases: [cube_a, red_cube]\\n' +
-        '    size_cm: 4.0\\n' +
-        '  cubeB:\\n' +
-        '    prompt: "green block"\\n' +
-        '    aliases: [cube_b, green_cube]\\n' +
-        '    size_cm: 4.0\\n\\n' +
-        'steps:\\n' +
-        '  - grasp: moves_with(gripper, cubeA, slip_cm<=1.0) and lifted(cubeA, min_cm>=' + liftVal + ')\\n' +
-        '  - place: on(cubeA, cubeB, align_xy_cm<=' + alignVal + ', gap_cm<=0.50)\\n' +
-        '  - release: not moves_with(gripper, cubeA) and dwell(cubeA, cubeB, for_s>=' + dwellVal + ', max_speed_cm_s<=1.0)\\n';
+        'test: stackcube\n' +
+        'description: "' + text.replace(/"/g, "'") + '"\n\n' +
+        'objects:\n' +
+        '  gripper:\n' +
+        '    prompt: "robot gripper"\n' +
+        '    role: effector\n' +
+        '  cubeA:\n' +
+        '    prompt: "red block"\n' +
+        '    aliases: [cube_a, red_cube]\n' +
+        '    size_cm: 4.0\n' +
+        '  cubeB:\n' +
+        '    prompt: "green block"\n' +
+        '    aliases: [cube_b, green_cube]\n' +
+        '    size_cm: 4.0\n\n' +
+        'steps:\n' +
+        '  - grasp: moves_with(gripper, cubeA, slip_cm<=1.0) and lifted(cubeA, min_cm>=' + liftVal + ')\n' +
+        '  - place: on(cubeA, cubeB, align_xy_cm<=' + alignVal + ', gap_cm<=0.50)\n' +
+        '  - release: not moves_with(gripper, cubeA) and dwell(cubeA, cubeB, for_s>=' + dwellVal + ', max_speed_cm_s<=1.0)\n';
     }}
   }};
 
@@ -1388,23 +1571,29 @@ window.KODIAC_REPLAYS = {results_json};
     const rec = new SR();
     rec.lang = 'en-US';
     rec.interimResults = false;
-    if (btn) btn.textContent = '🔴 Listening...';
+    if (btn) btn.textContent = 'Listening…';
     rec.onresult = function(e) {{
       const transcript = e.results[0][0].transcript;
       document.getElementById('compile-input').value = transcript;
-      if (btn) btn.textContent = '🎙️ Speak Intent';
+      if (btn) btn.textContent = 'Speak intent';
       window.runLiveCompile();
     }};
     rec.onerror = function() {{
-      if (btn) btn.textContent = '🎙️ Speak Intent';
+      if (btn) btn.textContent = 'Speak intent';
     }};
     rec.onend = function() {{
-      if (btn) btn.textContent = '🎙️ Speak Intent';
+      if (btn) btn.textContent = 'Speak intent';
     }};
     rec.start();
   }};
 
   // Boot studio
+  document.querySelectorAll('[data-scroll]').forEach(function(el) {{
+    el.addEventListener('click', function() {{
+      const target = document.getElementById(el.getAttribute('data-scroll'));
+      if (target) target.scrollIntoView({{behavior: 'smooth', block: 'start'}});
+    }});
+  }});
   updateApiStatusUI();
   bindCanvasBrush();
   renderStudioState();

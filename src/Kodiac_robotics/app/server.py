@@ -23,6 +23,23 @@ from Kodiac_robotics.app.settings import AppSettings
 
 _RUN_ID_RE = re.compile(r"^[0-9a-f]{16}$")
 
+_FALLBACK_CSS = """
+:root{--void:#000;--paper:#fff;--bone:#e5e7eb;--hair:rgba(229,231,235,.22)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--void);color:var(--paper);padding:45px 20px 90px;
+  font:300 15px/1.63 'Inter',ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,sans-serif}
+main{max-width:1200px;margin:0 auto}
+.kicker{font:400 10px/1.4 'Inter',sans-serif;letter-spacing:.1em;text-transform:uppercase;margin:0 0 18px}
+h1{font-weight:300;font-size:clamp(30px,3.6vw,38px);line-height:1.2;letter-spacing:-.013em;margin:0 0 20px}
+h2{font-weight:300;font-size:24px;line-height:1.33;margin:45px 0 12px;padding-top:18px;border-top:1px solid var(--hair)}
+p{max-width:72ch;color:var(--bone);margin:0 0 18px}
+ul{padding:0 0 0 18px;color:var(--bone);max-width:78ch}
+li{margin:0 0 10px}
+a{color:var(--paper);text-decoration:none;border-bottom:1px solid var(--bone)}
+a:hover{border-bottom-color:transparent}
+code{font-family:ui-monospace,'SF Mono',Menlo,Consolas,monospace;font-size:.88em;color:var(--bone)}
+"""
+
 
 def _client_address(request: Request, settings: AppSettings) -> str:
     ip = request.client.host if request.client else "unknown"
@@ -56,10 +73,13 @@ def create_app(
         )
         body = (
             "<!doctype html><meta charset=utf-8><title>Kodiac: busy</title>"
-            "<body style='font-family:system-ui;max-width:42rem;margin:3rem auto;padding:0 1rem'>"
-            f"<h1>Busy right now</h1><p>{html.escape(err.message)}</p>"
+            "<meta name=viewport content='width=device-width,initial-scale=1'>"
+            f"<style>{_FALLBACK_CSS}</style><body><main>"
+            "<div class=kicker>Status · 429 · cached replays still available</div>"
+            "<h1>Busy right now</h1>"
+            f"<p>{html.escape(err.message)}</p>"
             f"<p>These are <b>{html.escape(CACHED_BADGE)}</b> replays (precomputed, not live grades):</p>"
-            f"<ul>{links}</ul>"
+            f"<ul>{links}</ul></main></body>"
         )
         return HTMLResponse(
             body, status_code=429, headers={"Retry-After": str(err.extra.get("retry_after_s", 10))}
@@ -188,12 +208,14 @@ def create_app(
             )
             return (
                 "<!doctype html><meta charset=utf-8><title>Kodiac</title>"
-                "<body style='font-family:system-ui;max-width:42rem;margin:3rem auto;padding:0 1rem'>"
+                "<meta name=viewport content='width=device-width,initial-scale=1'>"
+                f"<style>{_FALLBACK_CSS}</style><body><main>"
+                "<div class=kicker>Hosted demo · API only</div>"
                 "<h1>Kodiac: Robots can finally fail a test.</h1>"
                 "<p>The interactive UI needs the optional <code>gradio</code> package, which is not installed "
                 "here. The API is live: <code>POST /grade</code>, <code>GET /replay/{id}</code>, "
                 "<code>GET /health</code>.</p>"
-                f"<h2>Cached replays</h2><ul>{items}</ul>"
+                f"<h2>Cached replays</h2><ul>{items}</ul></main></body>"
             )
 
     return app
