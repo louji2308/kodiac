@@ -1,10 +1,10 @@
 {
-  "run_id": "bce0e0ab0dbf0822",
+  "run_id": "93e59cb5e0adf947",
   "test_name": "stackcube",
   "test_sha256": "4fa6425abd5f66ed1d5078de8afb1696d8ea34fc779acfc3fffd151bde39ac25",
   "config_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
   "clip": {
-    "uri": "curated:correct_run",
+    "uri": "curated:occluded_clip",
     "source_kind": "sim",
     "dataset": null,
     "episode_index": null,
@@ -22,22 +22,22 @@
       "decisive": [
         {
           "name": "moves_with.slip",
-          "value": 1.0967741935483875,
+          "value": 45.1472337676001,
           "threshold": 1.0,
-          "margin": -7.741935,
-          "sigma": 1.0,
+          "margin": -44.147234,
+          "sigma": 0.1,
           "unit": "cm",
           "tri": "F",
           "reason": null
         },
         {
           "name": "lifted.height",
-          "value": 4.0,
+          "value": 0.0,
           "threshold": 2.0,
-          "margin": 2.0,
-          "sigma": 0.707107,
+          "margin": -2.0,
+          "sigma": 0.070711,
           "unit": "cm",
-          "tri": "T",
+          "tri": "F",
           "reason": null
         }
       ],
@@ -97,24 +97,21 @@
   "timings_ms": {
     "segment_ms": 0,
     "scale_ms": 0,
-    "eval_ms": 290,
-    "render_ms": 425,
-    "total_ms": 750
+    "eval_ms": 972,
+    "render_ms": 343,
+    "total_ms": 1351
   },
   "backends": {
     "perception": "cached_replay",
-    "scale_tier": "C"
+    "scale_tier": "A"
   },
   "badges": [
     "[FIXTURE REPLAY]",
-    "[REPLAY: CACHED SAM 3.1 TRACKS]",
-    "[GEOMETRY: TIER C · UNCALIBRATED CAMERA]",
-    "[OCCLUDER APPLIED TO ALL FRAMES]",
-    "[OCCLUSION EMULATED ON CACHED MASKS]"
+    "[REPLAY: CACHED SAM 3.1 TRACKS]"
   ],
-  "nonce": "bce0e0ab0dbf0822",
+  "nonce": "93e59cb5e0adf947",
   "is_fixture": true,
   "card_path": "card.png",
   "trace_path": "trace.jsonl",
-  "created_at": "2026-11-02T12:11:24.841410+00:00"
+  "created_at": "2026-11-04T03:58:02.888877+00:00"
 }

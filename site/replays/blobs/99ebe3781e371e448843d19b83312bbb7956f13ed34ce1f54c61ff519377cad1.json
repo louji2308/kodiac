@@ -1,5 +1,5 @@
 {
-  "run_id": "9c683c6506e46ab5",
+  "run_id": "ab449f4abcb3f526",
   "test_name": "stackcube",
   "test_sha256": "4fa6425abd5f66ed1d5078de8afb1696d8ea34fc779acfc3fffd151bde39ac25",
   "config_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
@@ -24,8 +24,8 @@
           "name": "moves_with.slip",
           "value": 0.0,
           "threshold": 1.0,
-          "margin": -5.067021,
-          "sigma": 1.0,
+          "margin": -12.241176,
+          "sigma": 0.1,
           "unit": "cm",
           "tri": "F",
           "reason": null
@@ -35,7 +35,7 @@
           "value": 0.0,
           "threshold": 2.0,
           "margin": -2.0,
-          "sigma": 0.707107,
+          "sigma": 0.070711,
           "unit": "cm",
           "tri": "F",
           "reason": null
@@ -88,23 +88,22 @@
   "manual_checks": [],
   "timings_ms": {
     "segment_ms": 0,
-    "scale_ms": 1,
-    "eval_ms": 943,
-    "render_ms": 486,
-    "total_ms": 1479
+    "scale_ms": 0,
+    "eval_ms": 674,
+    "render_ms": 353,
+    "total_ms": 1045
   },
   "backends": {
     "perception": "cached_replay",
-    "scale_tier": "C"
+    "scale_tier": "A"
   },
   "badges": [
     "[FIXTURE REPLAY]",
-    "[REPLAY: CACHED SAM 3.1 TRACKS]",
-    "[GEOMETRY: TIER C · UNCALIBRATED CAMERA]"
+    "[REPLAY: CACHED SAM 3.1 TRACKS]"
   ],
-  "nonce": "9c683c6506e46ab5",
+  "nonce": "ab449f4abcb3f526",
   "is_fixture": true,
   "card_path": "card.png",
   "trace_path": "trace.jsonl",
-  "created_at": "2026-11-02T12:10:24.035197+00:00"
+  "created_at": "2026-11-04T03:57:23.087886+00:00"
 }
