@@ -1,0 +1,273 @@
+{
+  "run_id": "0484d288174a656d",
+  "test_name": "stackcube",
+  "test_sha256": "4fa6425abd5f66ed1d5078de8afb1696d8ea34fc779acfc3fffd151bde39ac25",
+  "config_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+  "clip": {
+    "uri": "curated:correct_run",
+    "source_kind": "sim",
+    "dataset": null,
+    "episode_index": null,
+    "camera": null
+  },
+  "verdict": "PASS",
+  "exit_code": 0,
+  "steps": [
+    {
+      "index": 0,
+      "name": "grasp",
+      "verdict": "PASS",
+      "t_s": 1.2667,
+      "frame": 38,
+      "decisive": [
+        {
+          "name": "moves_with.slip",
+          "value": 0.5461666242025548,
+          "threshold": 1.0,
+          "margin": 0.453833,
+          "sigma": 0.16,
+          "unit": "cm",
+          "tri": "T",
+          "reason": null
+        },
+        {
+          "name": "lifted.height",
+          "value": 3.161290322580645,
+          "threshold": 2.0,
+          "margin": 1.16129,
+          "sigma": 0.113137,
+          "unit": "cm",
+          "tri": "T",
+          "reason": null
+        }
+      ],
+      "reasons": [],
+      "evidence": [
+        "achieved at frame 38 (t=1.2667s)"
+      ]
+    },
+    {
+      "index": 1,
+      "name": "place",
+      "verdict": "PASS",
+      "t_s": 2.7333,
+      "frame": 82,
+      "decisive": [
+        {
+          "name": "on.align_xy",
+          "value": 0.0,
+          "threshold": 3.33,
+          "margin": 3.33,
+          "sigma": 0.113137,
+          "unit": "cm",
+          "tri": "T",
+          "reason": null
+        },
+        {
+          "name": "on.gap",
+          "value": 0.06451612903225801,
+          "threshold": 0.5,
+          "margin": 0.435484,
+          "sigma": 0.113137,
+          "unit": "cm",
+          "tri": "T",
+          "reason": null
+        },
+        {
+          "name": "on.scale_ratio",
+          "value": 0.0,
+          "threshold": 0.12,
+          "margin": 0.12,
+          "sigma": 0.02,
+          "unit": "ratio",
+          "tri": "T",
+          "reason": null
+        }
+      ],
+      "reasons": [],
+      "evidence": [
+        "achieved at frame 82 (t=2.7333s)"
+      ]
+    },
+    {
+      "index": 2,
+      "name": "release",
+      "verdict": "PASS",
+      "t_s": 2.9667,
+      "frame": 89,
+      "decisive": [
+        {
+          "name": "moves_with.slip",
+          "value": 0.015645600773490198,
+          "threshold": 1.0,
+          "margin": 0.984354,
+          "sigma": 0.16,
+          "unit": "cm",
+          "tri": "F",
+          "reason": null
+        },
+        {
+          "name": "dwell.speed",
+          "value": 0.0,
+          "threshold": 1.0,
+          "margin": 1.0,
+          "sigma": 0.119257,
+          "unit": "cm/s",
+          "tri": "T",
+          "reason": null
+        },
+        {
+          "name": "dwell.duration",
+          "value": 0.5333333333333333,
+          "threshold": 0.5,
+          "margin": 0.033333,
+          "sigma": 0.033333,
+          "unit": "s",
+          "tri": "T",
+          "reason": null
+        },
+        {
+          "name": "on.align_xy",
+          "value": 0.0,
+          "threshold": 1.5,
+          "margin": 1.5,
+          "sigma": 0.113137,
+          "unit": "cm",
+          "tri": "T",
+          "reason": null
+        },
+        {
+          "name": "on.scale_ratio",
+          "value": 0.0,
+          "threshold": 0.12,
+          "margin": 0.12,
+          "sigma": 0.02,
+          "unit": "ratio",
+          "tri": "T",
+          "reason": null
+        }
+      ],
+      "reasons": [],
+      "evidence": [
+        "achieved at frame 89 (t=2.9667s)"
+      ]
+    }
+  ],
+  "reasons": [],
+  "blame": null,
+  "diff_text": null,
+  "events": [
+    {
+      "step": 0,
+      "step_name": "grasp",
+      "kind": "achieved",
+      "predicate": null,
+      "args": [
+        "gripper",
+        "cubeA"
+      ],
+      "t_s": 1.2667,
+      "frame": 38,
+      "fps": 30.0,
+      "measurements": {
+        "moves_with.slip": [
+          0.5461666242025548,
+          0.16
+        ],
+        "lifted.height": [
+          3.161290322580645,
+          0.113137
+        ]
+      },
+      "source": "attempt",
+      "verdict": "PASS"
+    },
+    {
+      "step": 1,
+      "step_name": "place",
+      "kind": "settled",
+      "predicate": "on",
+      "args": [
+        "cubeA",
+        "cubeB"
+      ],
+      "t_s": 2.7333,
+      "frame": 82,
+      "fps": 30.0,
+      "measurements": {
+        "on.align_xy": [
+          0.0,
+          0.113137
+        ],
+        "on.gap": [
+          0.06451612903225801,
+          0.113137
+        ],
+        "on.scale_ratio": [
+          0.0,
+          0.02
+        ]
+      },
+      "source": "attempt",
+      "verdict": "PASS"
+    },
+    {
+      "step": 2,
+      "step_name": "release",
+      "kind": "achieved",
+      "predicate": null,
+      "args": [
+        "gripper",
+        "cubeA"
+      ],
+      "t_s": 2.9667,
+      "frame": 89,
+      "fps": 30.0,
+      "measurements": {
+        "moves_with.slip": [
+          0.015645600773490198,
+          0.16
+        ],
+        "dwell.speed": [
+          0.0,
+          0.119257
+        ],
+        "dwell.duration": [
+          0.5333333333333333,
+          0.033333
+        ],
+        "on.align_xy": [
+          0.0,
+          0.113137
+        ],
+        "on.scale_ratio": [
+          0.0,
+          0.02
+        ]
+      },
+      "source": "attempt",
+      "verdict": "PASS"
+    }
+  ],
+  "manual_checks": [],
+  "timings_ms": {
+    "segment_ms": 0,
+    "scale_ms": 403,
+    "eval_ms": 1959,
+    "render_ms": 652,
+    "total_ms": 3048
+  },
+  "backends": {
+    "perception": "cached_replay",
+    "scale_tier": "A"
+  },
+  "badges": [
+    "[FIXTURE REPLAY]",
+    "[REPLAY: CACHED SAM 3.1 TRACKS]"
+  ],
+  "nonce": "0484d288174a656d",
+  "is_fixture": true,
+  "card_path": "card.png",
+  "trace_path": "trace.jsonl",
+  "created_at": "2026-11-04T06:19:46.527591+00:00"
+}

@@ -66,11 +66,12 @@ def evaluate_on(
         xb, db, hb, sb = coords_b
 
         # Resolve top height of object B
-        if getattr(scale, "tier", None) == "C" and obj_b in tracks and frame in tracks[obj_b].frames:
+        if hasattr(scale, "v0") and obj_b in tracks and frame in tracks[obj_b].frames:
             mb = tracks[obj_b].frames[frame]
             v_base_b = getattr(scale, "v0", {}).get(obj_b, mb.bbox_xyxy[3])
-            k_ref = getattr(scale, "k_ref", 15.0)
-            h_top_b = (v_base_b - mb.bbox_xyxy[1]) / k_ref
+            k_map = getattr(scale, "k0", {})
+            k_ref = k_map.get(obj_a, getattr(scale, "k_ref", 15.0))
+            h_top_b = (v_base_b - mb.bbox_xyxy[1]) / max(0.1, k_ref)
         else:
             b_height = 0.0
             if context:

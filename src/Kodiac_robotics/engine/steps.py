@@ -177,6 +177,9 @@ def evaluate_step_chain(
         active_carried = [
             a for a in carried_atoms if get_atom_key(a) not in negated_keys
         ]
+        next_negated_keys: set[str] = set()
+        if step_idx + 1 < len(steps):
+            next_negated_keys = _extract_negated_atom_keys(steps[step_idx + 1].expr)
 
         consecutive_t = 0
         consecutive_non_f = 0
@@ -189,29 +192,17 @@ def evaluate_step_chain(
         step_atoms = _extract_atoms(step.expr)
 
         for t in range(t_start, total_frames):
-            # 1. Check carried literals at frame t
-            carried_failed = False
-            for carried_atom in active_carried:
-                pf = _lookup_pred_frame(carried_atom, t, pred_frames_by_atom)
-                if pf is not None and pf.tri == Tri.F:
-                    broken_carried = (carried_atom, t, pf)
-                    carried_failed = True
-                    break
-
-            if carried_failed:
-                break
-
-            # 2. Evaluate step condition C_k at frame t
+            # Evaluate step condition C_k at frame t first so release handoff is recognized
             atom_values: dict[str, Tri] = {}
             frame_components: list[Component] = []
             for atom in step_atoms:
-                pf = _lookup_pred_frame(atom, t, pred_frames_by_atom)
-                if pf is not None:
-                    atom_values[get_atom_key(atom)] = pf.tri
-                    frame_components.extend(pf.components)
-                    if pf.tri == Tri.U:
+                pf_step = _lookup_pred_frame(atom, t, pred_frames_by_atom)
+                if pf_step is not None:
+                    atom_values[get_atom_key(atom)] = pf_step.tri
+                    frame_components.extend(pf_step.components)
+                    if pf_step.tri == Tri.U:
                         u_encountered = True
-                        for comp in pf.components:
+                        for comp in pf_step.components:
                             if comp.reason is not None and comp.reason not in step_uncertain_reasons:
                                 step_uncertain_reasons.append(comp.reason)
                 else:
@@ -221,6 +212,21 @@ def evaluate_step_chain(
                         step_uncertain_reasons.append(ReasonCode.NOT_VISIBLE)
 
             c_val = evaluate_expr_tree(step.expr, atom_values)
+
+            # Check carried literals at frame t
+            carried_failed = False
+            for carried_atom in active_carried:
+                pf = _lookup_pred_frame(carried_atom, t, pred_frames_by_atom)
+                if pf is not None and pf.tri == Tri.F:
+                    if get_atom_key(carried_atom) in next_negated_keys and c_val == Tri.T:
+                        continue
+                    broken_carried = (carried_atom, t, pf)
+                    carried_failed = True
+                    break
+
+            if carried_failed:
+                break
+
             decisive_components = frame_components
 
             if c_val == Tri.T:

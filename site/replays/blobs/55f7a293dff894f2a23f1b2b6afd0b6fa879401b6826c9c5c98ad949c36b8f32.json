@@ -1,31 +1,31 @@
 {
-  "run_id": "f34cd4515c7b81a2",
+  "run_id": "abe412944aeb2bfd",
   "test_name": "stackcube",
   "test_sha256": "4fa6425abd5f66ed1d5078de8afb1696d8ea34fc779acfc3fffd151bde39ac25",
   "config_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
   "clip": {
-    "uri": "curated:b09_lift_failure",
+    "uri": "curated:occluded_clip",
     "source_kind": "sim",
     "dataset": null,
     "episode_index": null,
     "camera": null
   },
-  "verdict": "FAIL",
-  "exit_code": 1,
+  "verdict": "CANT_TELL",
+  "exit_code": 2,
   "steps": [
     {
       "index": 0,
       "name": "grasp",
-      "verdict": "FAIL",
+      "verdict": "CANT_TELL",
       "t_s": 2.9667,
       "frame": 89,
       "decisive": [
         {
           "name": "moves_with.slip",
-          "value": 0.8342083692550659,
+          "value": 11.755464413673273,
           "threshold": 1.0,
-          "margin": -10.369327,
-          "sigma": 0.1,
+          "margin": -10.755464,
+          "sigma": 0.16,
           "unit": "cm",
           "tri": "F",
           "reason": null
@@ -35,13 +35,15 @@
           "value": 0.0,
           "threshold": 2.0,
           "margin": -2.0,
-          "sigma": 0.070711,
+          "sigma": 0.113137,
           "unit": "cm",
           "tri": "F",
           "reason": null
         }
       ],
-      "reasons": [],
+      "reasons": [
+        "occluded"
+      ],
       "evidence": [
         "step condition unmet by clip end (frame 89, t=2.9667s)"
       ]
@@ -49,25 +51,31 @@
     {
       "index": 1,
       "name": "place",
-      "verdict": null,
+      "verdict": "CANT_TELL",
       "t_s": null,
       "frame": null,
       "decisive": [],
-      "reasons": [],
+      "reasons": [
+        "occluded"
+      ],
       "evidence": []
     },
     {
       "index": 2,
       "name": "release",
-      "verdict": null,
+      "verdict": "CANT_TELL",
       "t_s": null,
       "frame": null,
       "decisive": [],
-      "reasons": [],
+      "reasons": [
+        "occluded"
+      ],
       "evidence": []
     }
   ],
-  "reasons": [],
+  "reasons": [
+    "occluded"
+  ],
   "blame": null,
   "diff_text": null,
   "events": [
@@ -88,10 +96,10 @@
   "manual_checks": [],
   "timings_ms": {
     "segment_ms": 0,
-    "scale_ms": 0,
-    "eval_ms": 757,
-    "render_ms": 335,
-    "total_ms": 1131
+    "scale_ms": 200,
+    "eval_ms": 1015,
+    "render_ms": 414,
+    "total_ms": 1653
   },
   "backends": {
     "perception": "cached_replay",
@@ -101,9 +109,9 @@
     "[FIXTURE REPLAY]",
     "[REPLAY: CACHED SAM 3.1 TRACKS]"
   ],
-  "nonce": "f34cd4515c7b81a2",
+  "nonce": "abe412944aeb2bfd",
   "is_fixture": true,
   "card_path": "card.png",
   "trace_path": "trace.jsonl",
-  "created_at": "2026-11-04T03:57:49.504158+00:00"
+  "created_at": "2026-11-04T06:20:40.994537+00:00"
 }

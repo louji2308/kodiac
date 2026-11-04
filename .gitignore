@@ -54,6 +54,8 @@ docs/private/
 
 # Media files > 20MB
 *.mp4
+!site/clips/*.mp4
+!tests/fixtures/clips/*.mp4
 *.mov
 *.webm
 *.avi

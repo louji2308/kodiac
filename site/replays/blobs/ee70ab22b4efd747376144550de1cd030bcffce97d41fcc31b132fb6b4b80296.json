@@ -1,5 +1,5 @@
 {
-  "run_id": "89564b53f8d49977",
+  "run_id": "dd1e09f2f7d8555e",
   "test_name": "stackcube",
   "test_sha256": "4fa6425abd5f66ed1d5078de8afb1696d8ea34fc779acfc3fffd151bde39ac25",
   "config_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
@@ -16,26 +16,49 @@
     {
       "index": 0,
       "name": "grasp",
-      "verdict": "CANT_TELL",
-      "t_s": 2.9667,
-      "frame": 89,
+      "verdict": "PASS",
+      "t_s": 1.2667,
+      "frame": 38,
       "decisive": [
         {
           "name": "moves_with.slip",
-          "value": 25.426942744402247,
+          "value": 0.07213122508063871,
           "threshold": 1.0,
-          "margin": -24.426943,
-          "sigma": 0.1,
+          "margin": 0.927869,
+          "sigma": 0.16,
           "unit": "cm",
-          "tri": "F",
+          "tri": "T",
           "reason": null
         },
         {
           "name": "lifted.height",
-          "value": 0.5288200378417969,
+          "value": 3.161290322580645,
           "threshold": 2.0,
-          "margin": -1.47118,
-          "sigma": 0.070711,
+          "margin": 1.16129,
+          "sigma": 0.113137,
+          "unit": "cm",
+          "tri": "T",
+          "reason": null
+        }
+      ],
+      "reasons": [],
+      "evidence": [
+        "achieved at frame 38 (t=1.2667s)"
+      ]
+    },
+    {
+      "index": 1,
+      "name": "place",
+      "verdict": "CANT_TELL",
+      "t_s": 2.6667,
+      "frame": 80,
+      "decisive": [
+        {
+          "name": "moves_with.slip",
+          "value": 1.35483870967742,
+          "threshold": 1.0,
+          "margin": -0.354839,
+          "sigma": 0.16,
           "unit": "cm",
           "tri": "F",
           "reason": null
@@ -45,20 +68,8 @@
         "occluded"
       ],
       "evidence": [
-        "step condition unmet by clip end (frame 89, t=2.9667s)"
+        "carried invariant moves_with(gripper, cubeA) broke at frame 80 (t=2.6667s)"
       ]
-    },
-    {
-      "index": 1,
-      "name": "place",
-      "verdict": "CANT_TELL",
-      "t_s": null,
-      "frame": null,
-      "decisive": [],
-      "reasons": [
-        "occluded"
-      ],
-      "evidence": []
     },
     {
       "index": 2,
@@ -82,11 +93,52 @@
     {
       "step": 0,
       "step_name": "grasp",
+      "kind": "achieved",
+      "predicate": null,
+      "args": [
+        "gripper",
+        "cubeA"
+      ],
+      "t_s": 1.2667,
+      "frame": 38,
+      "fps": 30.0,
+      "measurements": {
+        "moves_with.slip": [
+          0.07213122508063871,
+          0.16
+        ],
+        "lifted.height": [
+          3.161290322580645,
+          0.113137
+        ]
+      },
+      "source": "attempt",
+      "verdict": "PASS"
+    },
+    {
+      "step": 1,
+      "step_name": "place",
       "kind": "failed",
       "predicate": null,
       "args": [],
-      "t_s": 2.9667,
-      "frame": 89,
+      "t_s": 2.6667,
+      "frame": 80,
+      "fps": 30.0,
+      "measurements": {},
+      "source": "attempt",
+      "verdict": "FAIL"
+    },
+    {
+      "step": 1,
+      "step_name": "place",
+      "kind": "released",
+      "predicate": "moves_with",
+      "args": [
+        "gripper",
+        "cubeA"
+      ],
+      "t_s": 2.6667,
+      "frame": 80,
       "fps": 30.0,
       "measurements": {},
       "source": "attempt",
@@ -97,9 +149,9 @@
   "timings_ms": {
     "segment_ms": 0,
     "scale_ms": 0,
-    "eval_ms": 207,
-    "render_ms": 354,
-    "total_ms": 599
+    "eval_ms": 291,
+    "render_ms": 455,
+    "total_ms": 791
   },
   "backends": {
     "perception": "cached_replay",
@@ -111,9 +163,9 @@
     "[OCCLUDER APPLIED TO ALL FRAMES]",
     "[OCCLUSION EMULATED ON CACHED MASKS]"
   ],
-  "nonce": "89564b53f8d49977",
+  "nonce": "dd1e09f2f7d8555e",
   "is_fixture": true,
   "card_path": "card.png",
   "trace_path": "trace.jsonl",
-  "created_at": "2026-11-04T03:58:17.815197+00:00"
+  "created_at": "2026-11-04T06:20:58.201602+00:00"
 }

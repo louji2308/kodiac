@@ -163,6 +163,93 @@ class TierBScaleModel:
         return (float(x_cm), float(d_cm), float(h_cm), float(sigma_cm))
 
 
+class TabletopCalibratedScaleModel:
+    """Calibrated 2D tabletop scale model for single-camera demonstration & fixture clips."""
+
+    def __init__(
+        self,
+        tracks: dict[str, Track],
+        objects: list[ObjectDecl],
+        clip: Clip | None = None,
+        sigma_px: float = 0.5,
+        tier: Literal["A", "B", "C"] = "B",
+    ) -> None:
+        self.tracks = tracks
+        self.objects = {o.name: o for o in objects}
+        self.clip = clip
+        self.sigma_px = sigma_px
+        self.tier: Literal["A", "B", "C"] = tier
+        self.badges: list[str] = []
+
+        self.img_w = float(clip.width) if clip else 640.0
+        self.img_h = float(clip.height) if clip else 480.0
+        self.cx = self.img_w / 2.0
+        self.f_nom = 0.785 * self.img_h
+
+        self.v0: dict[str, float] = {}
+        self.k0: dict[str, float] = {}
+        k_candidates: list[float] = []
+        table_v_candidates: list[float] = []
+        for name, track in tracks.items():
+            if track.frames:
+                first_f = min(track.frames.keys())
+                m = track.frames[first_f]
+                _, (_, vb), _, _, _ = compute_anchors(m)
+                self.v0[name] = vb
+                decl = self.objects.get(name)
+                if not (decl and decl.role == "effector"):
+                    table_v_candidates.append(vb)
+                    w_px = max(1.0, float(m.bbox_xyxy[2] - m.bbox_xyxy[0]))
+                    size_cm = decl.size_cm if (decl and decl.size_cm) else 4.0
+                    k_obj = w_px / size_cm
+                    k_candidates.append(k_obj)
+                    self.k0[name] = k_obj
+        self.k_ref = float(np.mean(k_candidates)) if k_candidates else 15.5
+        self.v_table = float(np.mean(table_v_candidates)) if table_v_candidates else 341.0
+
+        # Align effector vertical baseline to its lowest closed-grasp contact row
+        for name, track in tracks.items():
+            decl = self.objects.get(name)
+            if decl and decl.role == "effector" and track.frames:
+                self.k0[name] = self.k_ref
+                widths = [
+                    float(m.bbox_xyxy[2] - m.bbox_xyxy[0])
+                    for m in track.frames.values()
+                ]
+                w_min = min(widths) if widths else 43.0
+                closed_vbs = [
+                    compute_anchors(m)[1][1]
+                    for m in track.frames.values()
+                    if float(m.bbox_xyxy[2] - m.bbox_xyxy[0]) <= 1.25 * w_min
+                ]
+                if closed_vbs:
+                    self.v0[name] = float(max(closed_vbs))
+                else:
+                    self.v0[name] = self.v_table
+
+    def to_table_frame(self, obj: str, frame: int) -> tuple[float, float, float, float]:
+        if obj not in self.tracks:
+            raise KeyError(f"Object '{obj}' not present in tracks")
+        track = self.tracks[obj]
+        if frame not in track.frames:
+            raise KeyError(f"Frame {frame} not present in track for '{obj}'")
+
+        mask = track.frames[frame]
+        _, bottom_anchor, _, _, _ = compute_anchors(mask)
+        u_b, v_b = bottom_anchor
+
+        k_ref = self.k_ref
+        k_obj = self.k0.get(obj, k_ref)
+        v_base = self.v0.get(obj, self.v_table)
+
+        h_cm = (v_base - v_b) / k_obj
+        x_cm = (u_b - self.cx) / k_ref
+        d_cm = self.f_nom / k_ref
+        sigma_cm = max(0.08, float(self.sigma_px / max(0.1, k_obj)))
+
+        return (float(x_cm), float(d_cm), float(h_cm), float(sigma_cm))
+
+
 class TierCScaleModel:
     """Tier C: Single reference prior fallback with 2.5x sigma inflation."""
 

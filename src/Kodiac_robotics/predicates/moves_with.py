@@ -93,8 +93,22 @@ def evaluate_moves_with(
     sigma_slip = math.sqrt(2.0) * math.hypot(sa_t, sb_t)
 
     is_contact = dist_curr <= contact_max_cm
+    jaw_open_penalty = 0.0
+    if obj_a in tracks and frame in tracks[obj_a].frames:
+        ma = tracks[obj_a].frames[frame]
+        w_curr = float(ma.bbox_xyxy[2] - ma.bbox_xyxy[0])
+        prior_widths = [
+            float(m_prev.bbox_xyxy[2] - m_prev.bbox_xyxy[0])
+            for f_k, m_prev in tracks[obj_a].frames.items()
+            if f_k <= frame
+        ]
+        w_min = min(prior_widths) if prior_widths else w_curr
+        if w_min > 0.0 and w_curr > 1.45 * w_min:
+            is_contact = False
+            jaw_open_penalty = (w_curr - 1.45 * w_min) / 15.5
+
     tri_val = Tri.T if (m > 0 and is_contact) else Tri.F
-    effective_margin = m if is_contact else min(m, contact_max_cm - dist_curr)
+    effective_margin = m if is_contact else min(m, contact_max_cm - dist_curr - jaw_open_penalty)
 
     c_slip = Component(
         name="moves_with.slip",

@@ -33,7 +33,7 @@ from Kodiac_robotics.contracts.core import (
 )
 from Kodiac_robotics.engine.steps import evaluate_step_chain
 from Kodiac_robotics.engine.trace import TraceWriter
-from Kodiac_robotics.geometry.scale import TierCScaleModel, fit_scale_model
+from Kodiac_robotics.geometry.scale import TabletopCalibratedScaleModel, TierCScaleModel, fit_scale_model
 from Kodiac_robotics.io.clip import open_clip
 from Kodiac_robotics.pipeline.loader import load_green_test
 from Kodiac_robotics.predicates.base import conjoin_components, get_atom_key
@@ -214,17 +214,16 @@ def run(
 
     # 4. Metric Scale Model Fitting Stage
     t_scale0 = time.perf_counter()
-    if camera == "tier_a" and cam_K is None:
-        cam_K = np.array(
-            [[500.0, 0.0, 320.0], [0.0, 500.0, 240.0], [0.0, 0.0, 1.0]],
-            dtype=np.float32,
-        )
-        if cam_extrinsic is None:
-            cam_extrinsic = np.eye(4, dtype=np.float32)
-
     if camera == "tier_c":
         scale: ScaleModel = TierCScaleModel(
             tracks=harmonized_tracks, objects=test_obj.objects, clip=clip_obj
+        )
+    elif camera in ("tier_a", "tier_b") and cam_K is None and cam_extrinsic is None:
+        scale = TabletopCalibratedScaleModel(
+            tracks=harmonized_tracks,
+            objects=test_obj.objects,
+            clip=clip_obj,
+            tier="A" if camera == "tier_a" else "B",
         )
     else:
         scale = fit_scale_model(

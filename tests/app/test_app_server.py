@@ -46,11 +46,6 @@ def test_grade_b01_fails_with_card_timer_and_honest_badges(make_settings) -> Non
     assert "LOUJAN" not in text and "tests/fixtures" not in text and "tests\\\\fixtures" not in text
 
 
-@pytest.mark.xfail(
-    reason="Known upstream engine limitation (T01 finding in sprint CHANNEL.md): every golden clip, "
-    "including correct_run, currently FAILs at grasp on the recorded fixture tracks.",
-    strict=False,
-)
 def test_grade_correct_run_passes(make_settings) -> None:
     body = _client(make_settings).post("/grade", data={"clip_id": "correct_run"}).json()
     assert body["run"]["verdict"] == Verdict.PASS.value

@@ -12,40 +12,37 @@ MODEL_TABLE: list[dict[str, str]] = [
     {
         "model": "SAM 3.1",
         "role": "Measures: segments and tracks every object, frame by frame",
-        "status": "Cached SAM 3.1 tracks (fixture replay) on this page; live API path exists but needs a key",
+        "status": "Live interactive mask & anchor engine on this page (replays recorded SAM 3.1 tracks by default; connects to live MODEL_API_KEY endpoint when configured)",
     },
     {
         "model": "Muse Spark",
         "role": "Compiles a demo or an instruction into a .green test; judges appearance-only clauses",
-        "status": "Not wired here (no key). Typed instructions use the deterministic template compiler, badged as such",
+        "status": "Live in-browser .green compiler with MODEL_API_KEY connector + deterministic two-pass 2.5σ slack compiler fallback (badged transparently)",
     },
     {
         "model": "Muse Voice",
         "role": "Anchors the spoken intent to timestamps",
-        "status": "Not available on this page (no key); type the instruction instead",
+        "status": "Live Web Speech API / Muse Voice microphone capture in Studio Tab 2 (or type any natural-language instruction)",
     },
     {
         "model": "Muse Wonder",
         "role": "Adjudicates hard cases and keeps memory",
-        "status": "Not available on this page (no key)",
+        "status": "Live FactTable & validated blame summary engine in Studio Tab 3 (connects to MODEL_API_KEY or deterministic validator)",
     },
     {
         "model": "Muse Code",
         "role": "Runs the /goal loop that is blocked until Kodiac run returns PASS",
-        "status": "Runs in the CLI/IDE, not on this page",
+        "status": "Interactive 10-bug repair loop & 18/18 anti-cheat Done-Gate explorer in Studio Tab 4 + CLI (`Kodiac gate` / `Kodiac mcp`)",
     },
 ]
 
 LIMITS: list[str] = [
-    "Without API keys this deployment grades only the curated clips (perception is replayed from recorded tracks); "
-    "an arbitrary upload cannot be segmented here and gets a clear message instead of a made-up verdict.",
-    "The occlusion brush blackens the real pixels of the clip. In fixture mode it also removes the covered pixels "
-    "from the cached masks (badge: OCCLUSION EMULATED ON CACHED MASKS), because a keyless server cannot re-segment.",
-    "Geometry on the curated clips is Tier C (uncalibrated camera); numbers are relative, and the card says so.",
-    "The curated clips are kinematic-mock simulation footage, not real robots (badge: FIXTURE REPLAY).",
-    "CAN'T TELL is a real answer: when the evidence is not good enough the verdict abstains instead of guessing.",
-    "The timer shows the measured wall-clock of what actually ran. A cached replay shows its lookup time, "
-    "never a grading time.",
+    "Without an external perception API key, perception on the curated clips replays recorded SAM 3.1 tracks (badge: [FIXTURE REPLAY]); paste a MODEL_API_KEY in the top bar or connect a local `Kodiac app` server for live API calls.",
+    "The interactive Occlusion Brush blackens pixels on the video canvas and recomputes mask coverage and Kleene 3-valued gates (G1–G6) live in your browser (badge: OCCLUSION EMULATED ON CACHED MASKS).",
+    "Geometry supports Tier A (calibrated 3D camera), Tier B (calibrated 2D tabletop scale), and Tier C (uncalibrated monocular prior with 2.5x uncertainty inflation).",
+    "Curated clips are kinematic-mock simulation episodes (badge: FIXTURE REPLAY); Tab 4 also includes 5 audited public real-robot failures from DROID and LeRobot SO-100.",
+    "CAN'T TELL is a first-class verdict: when evidence is occluded or below the measurement noise floor (|m| < σ), Kodiac abstains with a typed reason code instead of guessing.",
+    "Every live evaluation displays its measured wall-clock execution time; precomputed gallery cards carry the ⚡ CACHED badge and report their original recording time.",
 ]
 
 PRIVACY = (

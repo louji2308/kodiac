@@ -300,6 +300,41 @@ class GradeService:
                 except Exception as err:
                     log_event("blame_hook_failed", error_type=type(err).__name__)
                     notes.append("blame/diff unavailable for this run")
+            elif result.verdict == Verdict.FAIL:
+                try:
+                    from Kodiac_robotics.blame.diff import diff_events
+                    from Kodiac_robotics.blame.hint import make_hint
+                    from Kodiac_robotics.blame.transitions import load_trace_pred_frames
+                    from Kodiac_robotics.blame.validate import blame_from_run
+                    from Kodiac_robotics.compiler.lock import load_lockfile
+
+                    trace_file = work / "trace.jsonl"
+                    if trace_file.is_file():
+                        pframes = load_trace_pred_frames(trace_file)
+                        blame_obj = blame_from_run(
+                            result,
+                            test,
+                            pframes,
+                            run_clip.fps,
+                            hint_fn=make_hint,
+                        )
+                        diff_str: str | None = None
+                        lock_candidate = self.settings.examples_dir / f"{resolved_test_id or 'stackcube'}.green.lock"
+                        if lock_candidate.is_file():
+                            lock = load_lockfile(lock_candidate)
+                            diff_str = diff_events(
+                                list(lock.demo_events),
+                                list(result.events),
+                                camera_tier="B",
+                            )
+                        result = result.model_copy(
+                            update={
+                                "blame": blame_obj,
+                                "diff_text": diff_str,
+                            }
+                        )
+                except Exception as err:
+                    log_event("auto_blame_failed", error_type=type(err).__name__)
 
             self._rewrite_artifacts(result, run_clip, work)
             final_dir = self.settings.run_dir / result.run_id

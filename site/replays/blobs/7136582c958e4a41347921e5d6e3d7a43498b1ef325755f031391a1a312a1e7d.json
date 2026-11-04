@@ -1,0 +1,417 @@
+{
+  "run_id": "86bdb59df87bd632",
+  "test_name": "stackcube",
+  "test_sha256": "4fa6425abd5f66ed1d5078de8afb1696d8ea34fc779acfc3fffd151bde39ac25",
+  "config_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+  "clip": {
+    "uri": "curated:b02_xy_misalignment",
+    "source_kind": "sim",
+    "dataset": null,
+    "episode_index": null,
+    "camera": null
+  },
+  "verdict": "FAIL",
+  "exit_code": 1,
+  "steps": [
+    {
+      "index": 0,
+      "name": "grasp",
+      "verdict": "PASS",
+      "t_s": 1.2667,
+      "frame": 38,
+      "decisive": [
+        {
+          "name": "moves_with.slip",
+          "value": 0.5461666242025548,
+          "threshold": 1.0,
+          "margin": 0.453833,
+          "sigma": 0.16,
+          "unit": "cm",
+          "tri": "T",
+          "reason": null
+        },
+        {
+          "name": "lifted.height",
+          "value": 3.161290322580645,
+          "threshold": 2.0,
+          "margin": 1.16129,
+          "sigma": 0.113137,
+          "unit": "cm",
+          "tri": "T",
+          "reason": null
+        }
+      ],
+      "reasons": [],
+      "evidence": [
+        "achieved at frame 38 (t=1.2667s)"
+      ]
+    },
+    {
+      "index": 1,
+      "name": "place",
+      "verdict": "FAIL",
+      "t_s": 2.6667,
+      "frame": 80,
+      "decisive": [
+        {
+          "name": "moves_with.slip",
+          "value": 1.202734637962325,
+          "threshold": 1.0,
+          "margin": -0.202735,
+          "sigma": 0.16,
+          "unit": "cm",
+          "tri": "F",
+          "reason": null
+        }
+      ],
+      "reasons": [],
+      "evidence": [
+        "carried invariant moves_with(gripper, cubeA) broke at frame 80 (t=2.6667s)"
+      ]
+    },
+    {
+      "index": 2,
+      "name": "release",
+      "verdict": null,
+      "t_s": null,
+      "frame": null,
+      "decisive": [],
+      "reasons": [],
+      "evidence": []
+    }
+  ],
+  "reasons": [],
+  "blame": {
+    "facts": {
+      "t_star_s": 2.4,
+      "frame": 72,
+      "fps": 30.0,
+      "sigma_frames": 1.0502,
+      "step_index": 1,
+      "step_name": "place",
+      "literal": "moves_with(gripper, cubeA)",
+      "transition": "T->F",
+      "facts": {
+        "slip_cm": {
+          "value": 0.24048518941724595,
+          "sigma": 0.16,
+          "unit": "cm",
+          "threshold": 1.0,
+          "op": "<=",
+          "margin": 0.759515,
+          "tri": "T",
+          "reason": null,
+          "component": "moves_with.slip",
+          "ref": "moves_with(gripper, cubeA)",
+          "objects": [
+            "gripper",
+            "cubeA"
+          ],
+          "frame": 72,
+          "trace_ids": [
+            "tr_moves_with_0f974c445a37"
+          ],
+          "role": "cause"
+        },
+        "speed_cm_s": {
+          "value": 12.993081984243723,
+          "sigma": 0.848528,
+          "unit": "cm/s",
+          "threshold": 1.0,
+          "op": "<=",
+          "margin": -11.993082,
+          "tri": "F",
+          "reason": null,
+          "component": "dwell.speed",
+          "ref": "dwell(cubeA, cubeB)",
+          "objects": [
+            "cubeA",
+            "cubeB"
+          ],
+          "frame": 71,
+          "trace_ids": [
+            "tr_dwell_7b2ba188b367"
+          ],
+          "role": "context"
+        },
+        "dwell_s": {
+          "value": 0.03333333333333333,
+          "sigma": 0.033333,
+          "unit": "s",
+          "threshold": 0.5,
+          "op": ">=",
+          "margin": -0.466667,
+          "tri": "F",
+          "reason": null,
+          "component": "dwell.duration",
+          "ref": "dwell(cubeA, cubeB)",
+          "objects": [
+            "cubeA",
+            "cubeB"
+          ],
+          "frame": 71,
+          "trace_ids": [
+            "tr_dwell_7b2ba188b367"
+          ],
+          "role": "context"
+        },
+        "xy_offset_cm": {
+          "value": 4.359673024523161,
+          "sigma": 0.113137,
+          "unit": "cm",
+          "threshold": 1.5,
+          "op": "<=",
+          "margin": -2.859673,
+          "tri": "F",
+          "reason": null,
+          "component": "on.align_xy",
+          "ref": "dwell(cubeA, cubeB)",
+          "objects": [
+            "cubeA",
+            "cubeB"
+          ],
+          "frame": 71,
+          "trace_ids": [
+            "tr_dwell_7b2ba188b367"
+          ],
+          "role": "context"
+        },
+        "depth_ratio": {
+          "value": 0.0,
+          "sigma": 0.02,
+          "unit": "ratio",
+          "threshold": 0.12,
+          "op": "<=",
+          "margin": 0.12,
+          "tri": "T",
+          "reason": null,
+          "component": "on.scale_ratio",
+          "ref": "dwell(cubeA, cubeB)",
+          "objects": [
+            "cubeA",
+            "cubeB"
+          ],
+          "frame": 71,
+          "trace_ids": [
+            "tr_dwell_7b2ba188b367"
+          ],
+          "role": "context"
+        },
+        "lift_cm": {
+          "value": 7.032258064516129,
+          "sigma": 0.113137,
+          "unit": "cm",
+          "threshold": 2.0,
+          "op": ">=",
+          "margin": 5.032258,
+          "tri": "T",
+          "reason": null,
+          "component": "lifted.height",
+          "ref": "lifted(cubeA)",
+          "objects": [
+            "cubeA"
+          ],
+          "frame": 71,
+          "trace_ids": [
+            "tr_lifted_256191fa0685"
+          ],
+          "role": "context"
+        },
+        "xy_offset_cm@on(cubeA, cubeB)": {
+          "value": 4.359673024523161,
+          "sigma": 0.113137,
+          "unit": "cm",
+          "threshold": 3.33,
+          "op": "<=",
+          "margin": -1.029673,
+          "tri": "F",
+          "reason": null,
+          "component": "on.align_xy",
+          "ref": "on(cubeA, cubeB)",
+          "objects": [
+            "cubeA",
+            "cubeB"
+          ],
+          "frame": 71,
+          "trace_ids": [
+            "tr_on_b6c8a98c26f9"
+          ],
+          "role": "context"
+        },
+        "gap_z_cm": {
+          "value": 4.387096774193548,
+          "sigma": 0.113137,
+          "unit": "cm",
+          "threshold": 0.5,
+          "op": "<=",
+          "margin": -3.887097,
+          "tri": "F",
+          "reason": null,
+          "component": "on.gap",
+          "ref": "on(cubeA, cubeB)",
+          "objects": [
+            "cubeA",
+            "cubeB"
+          ],
+          "frame": 71,
+          "trace_ids": [
+            "tr_on_b6c8a98c26f9"
+          ],
+          "role": "context"
+        },
+        "depth_ratio@on(cubeA, cubeB)": {
+          "value": 0.0,
+          "sigma": 0.02,
+          "unit": "ratio",
+          "threshold": 0.12,
+          "op": "<=",
+          "margin": 0.12,
+          "tri": "T",
+          "reason": null,
+          "component": "on.scale_ratio",
+          "ref": "on(cubeA, cubeB)",
+          "objects": [
+            "cubeA",
+            "cubeB"
+          ],
+          "frame": 71,
+          "trace_ids": [
+            "tr_on_b6c8a98c26f9"
+          ],
+          "role": "context"
+        },
+        "occlusion": {
+          "value": 0.0,
+          "sigma": null,
+          "unit": "ratio",
+          "frames_occluded": 0,
+          "frames_checked": 85,
+          "window": [
+            64,
+            80
+          ],
+          "role": "derived"
+        },
+        "blame_class": {
+          "value": "xy_offset",
+          "unit": "class",
+          "basis": "released outside align_xy and the effector did not get closer to the target afterwards"
+        }
+      },
+      "dataset_index": null,
+      "action_chunk": null,
+      "code_location": null,
+      "evidence": [
+        "run 86bdb59df87bd632 verdict FAIL; is_fixture=True",
+        "badges: [FIXTURE REPLAY] [REPLAY: CACHED SAM 3.1 TRACKS]",
+        "trace tr_moves_with_0f974c445a37: moves_with(gripper, cubeA) @ frame 72: moves_with.slip = 0.240 +/- 0.160 cm (threshold 1.000, margin +0.760, T)",
+        "trace tr_dwell_7b2ba188b367: dwell(cubeA, cubeB) @ frame 71: dwell.speed = 12.993 +/- 0.849 cm/s (threshold 1.000, margin -11.993, F)",
+        "trace tr_dwell_7b2ba188b367: dwell(cubeA, cubeB) @ frame 71: dwell.duration = 0.033 +/- 0.033 s (threshold 0.500, margin -0.467, F)",
+        "trace tr_dwell_7b2ba188b367: dwell(cubeA, cubeB) @ frame 71: on.align_xy = 4.360 +/- 0.113 cm (threshold 1.500, margin -2.860, F)",
+        "trace tr_dwell_7b2ba188b367: dwell(cubeA, cubeB) @ frame 71: on.scale_ratio = 0.000 +/- 0.020 ratio (threshold 0.120, margin +0.120, T)",
+        "trace tr_lifted_256191fa0685: lifted(cubeA) @ frame 71: lifted.height = 7.032 +/- 0.113 cm (threshold 2.000, margin +5.032, T)",
+        "trace tr_on_b6c8a98c26f9: on(cubeA, cubeB) @ frame 71: on.align_xy = 4.360 +/- 0.113 cm (threshold 3.330, margin -1.030, F)",
+        "trace tr_on_b6c8a98c26f9: on(cubeA, cubeB) @ frame 71: on.gap = 4.387 +/- 0.113 cm (threshold 0.500, margin -3.887, F)",
+        "trace tr_on_b6c8a98c26f9: on(cubeA, cubeB) @ frame 71: on.scale_ratio = 0.000 +/- 0.020 ratio (threshold 0.120, margin +0.120, T)",
+        "dt_before_reference_s omitted: gripper did not get closer to cubeB after frame 72",
+        "t* method detach_onset: frame 72 +/- 1.05 frames"
+      ],
+      "trace_ids": [
+        "tr_moves_with_0f974c445a37",
+        "tr_dwell_7b2ba188b367",
+        "tr_lifted_256191fa0685",
+        "tr_on_b6c8a98c26f9"
+      ]
+    },
+    "summary": "blame: gripper released cubeA 4.4 ± 0.1 cm from cubeB in xy at 00:02.4, frame 72",
+    "summary_source": "template",
+    "hint": {
+      "variable": "place_xy_offset",
+      "delta": -2.97,
+      "unit": "cm",
+      "move": "shift the place target 2.97 cm toward cubeB",
+      "basis": "xy offset 4.4 ± 0.1 cm vs limit 1.50 cm; need <= 1.39 cm"
+    },
+    "warnings": [
+      "fixture replay: measurements come from recorded tracks, not a live SAM 3.1 call"
+    ]
+  },
+  "diff_text": null,
+  "events": [
+    {
+      "step": 0,
+      "step_name": "grasp",
+      "kind": "achieved",
+      "predicate": null,
+      "args": [
+        "gripper",
+        "cubeA"
+      ],
+      "t_s": 1.2667,
+      "frame": 38,
+      "fps": 30.0,
+      "measurements": {
+        "moves_with.slip": [
+          0.5461666242025548,
+          0.16
+        ],
+        "lifted.height": [
+          3.161290322580645,
+          0.113137
+        ]
+      },
+      "source": "attempt",
+      "verdict": "PASS"
+    },
+    {
+      "step": 1,
+      "step_name": "place",
+      "kind": "failed",
+      "predicate": null,
+      "args": [],
+      "t_s": 2.6667,
+      "frame": 80,
+      "fps": 30.0,
+      "measurements": {},
+      "source": "attempt",
+      "verdict": "FAIL"
+    },
+    {
+      "step": 1,
+      "step_name": "place",
+      "kind": "released",
+      "predicate": "moves_with",
+      "args": [
+        "gripper",
+        "cubeA"
+      ],
+      "t_s": 2.6667,
+      "frame": 80,
+      "fps": 30.0,
+      "measurements": {},
+      "source": "attempt",
+      "verdict": "FAIL"
+    }
+  ],
+  "manual_checks": [],
+  "timings_ms": {
+    "segment_ms": 0,
+    "scale_ms": 231,
+    "eval_ms": 560,
+    "render_ms": 467,
+    "total_ms": 1294
+  },
+  "backends": {
+    "perception": "cached_replay",
+    "scale_tier": "A"
+  },
+  "badges": [
+    "[FIXTURE REPLAY]",
+    "[REPLAY: CACHED SAM 3.1 TRACKS]"
+  ],
+  "nonce": "86bdb59df87bd632",
+  "is_fixture": true,
+  "card_path": "card.png",
+  "trace_path": "trace.jsonl",
+  "created_at": "2026-11-04T06:20:13.707054+00:00"
+}

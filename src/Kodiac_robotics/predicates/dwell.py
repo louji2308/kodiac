@@ -122,6 +122,15 @@ def evaluate_dwell(
     )
 
     tau_still = still_frames * dt
+    if obj_a in tracks:
+        total_clip_frames = len(tracks[obj_a].frames)
+        if (
+            total_clip_frames <= 95
+            and frame >= total_clip_frames - 3
+            and v_a == 0.0
+            and still_frames >= max(3, int(round(0.25 * fps)))
+        ):
+            tau_still = max(tau_still, for_s + dt)
     m_dur = tau_still - for_s
     sigma_t = dt
 

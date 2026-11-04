@@ -83,13 +83,13 @@ def compute_anchors(
         # Lowest 5% of mask rows (physically bottom, largest row indices)
         cutoff_low = y_max - 0.05 * h_span
         cols_low = xs[ys >= cutoff_low]
-        med_x_low = float(np.median(cols_low)) if len(cols_low) > 0 else float(np.median(xs))
+        med_x_low = 0.5 * (float(np.min(cols_low)) + float(np.max(cols_low))) if len(cols_low) > 0 else float(np.median(xs))
         bottom_anchor = (med_x_low, float(y_max))
 
         # Highest 5% of mask rows (physically top, smallest row indices)
         cutoff_high = y_min + 0.05 * h_span
         cols_high = xs[ys <= cutoff_high]
-        med_x_high = float(np.median(cols_high)) if len(cols_high) > 0 else float(np.median(xs))
+        med_x_high = 0.5 * (float(np.min(cols_high)) + float(np.max(cols_high))) if len(cols_high) > 0 else float(np.median(xs))
         top_anchor = (med_x_high, float(y_min))
 
     if base_area_px is None or base_area_px <= 0:
