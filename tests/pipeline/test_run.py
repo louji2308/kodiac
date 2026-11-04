@@ -21,6 +21,7 @@ def test_run_pipeline_fail_on_b01() -> None:
         res = run(
             test="examples/stackcube.green",
             clip="tests/fixtures/clips/b01_early_release.mp4",
+            camera="tier_a",
             output_dir=out_dir,
         )
 
@@ -141,12 +142,14 @@ def test_run_dense_frames_full_set_matches_default_evaluation() -> None:
             test="examples/stackcube.green",
             clip=clip,
             tracks=tracks,
+            camera="tier_a",
             output_dir=out_dir / "run_dense_full",
         )
         res_dense = run(
             test="examples/stackcube.green",
             clip=clip,
             tracks=tracks,
+            camera="tier_a",
             dense_frames=set(range(clip.n_frames)),
             output_dir=out_dir / "run_dense_all",
         )

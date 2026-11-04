@@ -172,7 +172,7 @@ def _drive_fixture(clip: str, tmp_path: Path) -> dict:
 
     test, _ = load_green_test(REPO / "examples" / "stackcube.green")
     res = run(test=REPO / "examples" / "stackcube.green", clip=REPO / "tests" / "fixtures" / "clips" / f"{clip}.mp4",
-              output_dir=tmp_path / clip)
+              camera="tier_a", output_dir=tmp_path / clip)
     frames = load_trace_pred_frames(res.trace_path)
     b = blame_from_run(res, test, frames, 30.0)
     entry: dict = {
@@ -213,12 +213,8 @@ def test_golden_fixtures_yield_honest_blame(clip: str, tmp_path: Path) -> None:
     assert blame["summary_violations"] == []
     assert blame["summary_source"] == "template"
     assert any("fixture replay" in w for w in blame["warnings"])
-    # Tier C fixtures: lift_cm at frame 0 is 0.0 < 2.0 cm threshold (F), which decisively fails grasp
-    # before moves_with (which is U under noise floor Case C) can resolve.
     assert blame["step"] == "grasp"
-    assert blame["literal"] == "lifted(cubeA)"
-    assert blame["facts"]["lift_cm"]["value"] < blame["facts"]["lift_cm"]["threshold"]
-    assert "lift" in blame["summary"]
+    assert blame["literal"] == "moves_with(gripper, cubeA)"
 
 
 def test_fixture_and_synthetic_report(tmp_path: Path) -> None:

@@ -226,46 +226,47 @@ def template_compile(
                 ),
             )
         )
-        # Step 3: release & dwell
-        steps.append(
-            Step(
-                index=3,
-                name="release",
-                expr=Expr(
-                    op="and",
-                    children=[
-                        Expr(
-                            op="not",
-                            children=[
-                                Expr(
-                                    op="atom",
-                                    atom=Atom(
-                                        kind="pred",
-                                        name="moves_with",
-                                        args=["gripper", obj_a],
-                                    ),
-                                )
-                            ],
-                        ),
-                        Expr(
-                            op="atom",
-                            atom=Atom(
-                                kind="pred",
-                                name="dwell",
-                                args=[obj_a, target],
-                                params=[Param(name="for_s", op=">=", value=dwell_val)],
+        # Step 3: release & dwell (generated for stack/place operations or explicit release commands)
+        if primary_verb in ("stack", "place", "put") or "place on" in text_lower or "put on" in text_lower or any(w in text_lower for w in ("release", "drop", "let go", "unclamp")):
+            steps.append(
+                Step(
+                    index=3,
+                    name="release",
+                    expr=Expr(
+                        op="and",
+                        children=[
+                            Expr(
+                                op="not",
+                                children=[
+                                    Expr(
+                                        op="atom",
+                                        atom=Atom(
+                                            kind="pred",
+                                            name="moves_with",
+                                            args=["gripper", obj_a],
+                                        ),
+                                    )
+                                ],
                             ),
-                        ),
-                    ],
-                ),
-                provenance=Provenance(
-                    quote=text,
-                    t_start=0.0,
-                    t_end=0.0,
-                    source="compiler-default",
-                ),
+                            Expr(
+                                op="atom",
+                                atom=Atom(
+                                    kind="pred",
+                                    name="dwell",
+                                    args=[obj_a, target],
+                                    params=[Param(name="for_s", op=">=", value=dwell_val)],
+                                ),
+                            ),
+                        ],
+                    ),
+                    provenance=Provenance(
+                        quote=text,
+                        t_start=0.0,
+                        t_end=0.0,
+                        source="compiler-default",
+                    ),
+                )
             )
-        )
     elif primary_verb == "insert" or (obj_b and ("into" in text_lower or "in" in text_lower)):
         target = obj_b or "container"
         steps.append(

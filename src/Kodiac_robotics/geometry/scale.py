@@ -190,6 +190,7 @@ class TierCScaleModel:
         self.v0: dict[str, float] = {}
         self.k0: dict[str, float] = {}
         k_candidates: list[float] = []
+        table_v_candidates: list[float] = []
         for name, track in tracks.items():
             if track.frames:
                 first_f = min(track.frames.keys())
@@ -198,12 +199,14 @@ class TierCScaleModel:
                 self.v0[name] = vb
                 decl = self.objects.get(name)
                 if not (decl and decl.role == "effector"):
+                    table_v_candidates.append(vb)
                     w_px = max(1.0, float(m.bbox_xyxy[2] - m.bbox_xyxy[0]))
                     size_cm = decl.size_cm if (decl and decl.size_cm) else 4.0
                     k_obj = w_px / size_cm
                     k_candidates.append(k_obj)
                     self.k0[name] = k_obj
         self.k_ref = float(np.mean(k_candidates)) if k_candidates else 15.0
+        self.v_table = float(np.mean(table_v_candidates)) if table_v_candidates else 341.0
 
     def to_table_frame(self, obj: str, frame: int) -> tuple[float, float, float, float]:
         """Returns table-frame coordinates (X_cm, D_cm, h_cm, sigma_cm) with 2.5x inflated uncertainty."""
@@ -221,7 +224,11 @@ class TierCScaleModel:
         k_ref = self.k_ref
         k_obj = self.k0.get(obj, k_ref)
 
-        v_base = self.v0.get(obj, v_b)
+        decl = self.objects.get(obj)
+        if decl and decl.role == "effector":
+            v_base = self.v_table
+        else:
+            v_base = self.v0.get(obj, v_b)
         h_cm = (v_base - v_b) / k_obj
         x_cm = (u_b - self.cx) / k_ref
         d_cm = self.f_nom / k_ref

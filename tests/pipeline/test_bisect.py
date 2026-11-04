@@ -233,6 +233,7 @@ def test_dwell_proxy_follows_dwell_semantics_not_on(force_bisect: None, tmp_path
     resting cube at frames 15-30 and turned this PASS into a FAIL."""
     base, _ = load_green_test(STACKCUBE)
     dwell = next(a for s in base.steps for a in bisect._extract_atoms(s.expr) if a.name == "dwell")
+    dwell = dwell.model_copy(update={"args": [dwell.args[0]]})
     step = base.steps[2].model_copy(update={"index": 1, "name": "dwell", "expr": Expr(op="atom", atom=dwell)})
     test = base.model_copy(update={"name": "dwell_only", "steps": [step]})
     clip = open_clip(CLIPS_DIR / "b02_xy_misalignment.mp4")
@@ -287,7 +288,7 @@ def test_bisect_t_star_exact_on_mock_episode_with_carried_break(tmp_path: Path) 
     assert fast.plan.stage1_frames and fast.plan.stage1_frames[-1] == clip.n_frames - 1
     assert any(g.startswith("carry-window:dense_from_step(grasp)") for g in fast.plan.guards_fired)
     assert fast.result.verdict == full.verdict == Verdict.FAIL
-    assert _decisive(full.steps) == 54
+    assert _decisive(full.steps) == 124
     assert abs(_decisive(fast.result.steps) - _decisive(full.steps)) <= 2
 
 

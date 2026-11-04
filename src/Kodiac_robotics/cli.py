@@ -340,6 +340,12 @@ def test_command(
         "--threshold-profile",
         help="Threshold margin profile: strict (2*sigma), nominal (2.5*sigma), loose (3*sigma).",
     ),
+    camera: str = typer.Option(
+        None,
+        "--camera",
+        "-c",
+        help="Camera calibration tier: tier_a, tier_b, tier_c, or auto (default: auto).",
+    ),
     webcam: int = typer.Option(
         None,
         "--webcam",
@@ -509,7 +515,8 @@ def test_command(
 
         # Step 6: Demo Self-Test Verification (self-test)
         t_self0 = time.perf_counter()
-        passed, run_result, diagnostics = run_demo_selftest(calibrated_test, clip)
+        cam_tier = camera or "tier_b"
+        passed, run_result, diagnostics = run_demo_selftest(calibrated_test, clip, camera=cam_tier)
         dt_self = time.perf_counter() - t_self0
 
         if not passed:

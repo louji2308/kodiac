@@ -185,11 +185,28 @@ def run(
 
             hb = HostedSamBackend()
             prompts = {obj.name: [obj.name] for obj in test_obj.objects}
-            seeds = hb.segment_frames(clip_obj, [0], prompts)
-            resolved_tracks = hb.track(clip_obj, 0, clip_obj.n_frames, seeds)
-            badges.append("[sam-3.1]")
-            backends_map["perception"] = "api"
-
+            try:
+                seeds = hb.segment_frames(clip_obj, [0], prompts)
+                resolved_tracks = hb.track(clip_obj, 0, clip_obj.n_frames, seeds)
+                badges.append("[sam-3.1]")
+                backends_map["perception"] = "api"
+            except Exception as api_exc:
+                # Per ARCHITECTURE.md Table 12: Network or auth failure on hosted SAM 3.1
+                # falls back to cached fixture replay if precomputed tracks exist for this clip.
+                fb = FixtureBackend()
+                try:
+                    resolved_tracks = fb._load_tracks(clip_obj)
+                    is_fixture = True
+                    for b_label in ("[FIXTURE REPLAY: API FALLBACK]", "[REPLAY: CACHED SAM 3.1 TRACKS]"):
+                        if b_label not in badges:
+                            badges.append(b_label)
+                    backends_map["perception"] = "fixture_fallback"
+                    logger.warning(
+                        "Hosted SAM 3.1 unavailable (%s); fell back to cached fixture tracks",
+                        api_exc,
+                    )
+                except Exception:
+                    raise api_exc
         segment_ms = int(round((time.perf_counter() - t_seg0) * 1000))
 
     # Harmonize object track keys
@@ -197,6 +214,14 @@ def run(
 
     # 4. Metric Scale Model Fitting Stage
     t_scale0 = time.perf_counter()
+    if camera == "tier_a" and cam_K is None:
+        cam_K = np.array(
+            [[500.0, 0.0, 320.0], [0.0, 500.0, 240.0], [0.0, 0.0, 1.0]],
+            dtype=np.float32,
+        )
+        if cam_extrinsic is None:
+            cam_extrinsic = np.eye(4, dtype=np.float32)
+
     if camera == "tier_c":
         scale: ScaleModel = TierCScaleModel(
             tracks=harmonized_tracks, objects=test_obj.objects, clip=clip_obj

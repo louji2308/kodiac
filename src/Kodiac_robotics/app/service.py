@@ -258,6 +258,7 @@ class GradeService:
                     extra_badges.append(OCCLUSION_EMULATION_BADGE)
 
             try:
+                cam_mode = "tier_a" if (tracks is not None or (clip_id and clip_id in clips) or self.settings.backend == "fixture") else None
                 result = run(
                     test,
                     run_clip,
@@ -265,6 +266,7 @@ class GradeService:
                     backend="fixture" if tracks is not None else self.settings.backend,
                     render_card=True,
                     output_dir=work,
+                    camera=cam_mode,
                 )
             except AppError:
                 raise

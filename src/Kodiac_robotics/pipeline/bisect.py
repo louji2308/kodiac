@@ -811,6 +811,8 @@ def _window_problem(
     bad = next((s for s in ev.steps if s.verdict in (Verdict.FAIL, Verdict.CANT_TELL)), None)
     if bad is None:
         return "contradicted", anchor_from_start
+    if bad.verdict == Verdict.CANT_TELL and w0 > 0:
+        return "gap_before", anchor_from_start
     if bad.frame is None or not (w0 <= bad.frame <= w1):
         return "outside", anchor_from_start
     return None, anchor_from_start

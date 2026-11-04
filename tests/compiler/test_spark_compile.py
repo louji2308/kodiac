@@ -178,8 +178,11 @@ def test_compile_speech_to_skeleton_fixture_mode():
     assert "cubeB" in obj_names
 
 
-def test_compile_speech_to_skeleton_api_missing_key(monkeypatch):
+def test_compile_speech_to_skeleton_api_missing_key(monkeypatch, tmp_path):
     """Verify compile_speech_to_skeleton raises ValueError if MODEL_API_KEY is missing."""
+    empty_env = tmp_path / "empty.env"
+    empty_env.touch()
+    monkeypatch.setenv("KODIAC_ENV_FILE", str(empty_env))
     monkeypatch.delenv("KODIAC_MODEL_API_KEY", raising=False)
     monkeypatch.delenv("MODEL_API_KEY", raising=False)
 

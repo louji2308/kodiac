@@ -144,8 +144,11 @@ def test_transcribe_demo_audio_fixture_mode():
     assert turns[2].transcript == "release gripper and dwell"
 
 
-def test_transcribe_demo_audio_api_missing_key(monkeypatch):
+def test_transcribe_demo_audio_api_missing_key(monkeypatch, tmp_path):
     """Verify transcribe_demo_audio raises ValueError when MODEL_API_KEY is missing."""
+    empty_env = tmp_path / "empty.env"
+    empty_env.touch()
+    monkeypatch.setenv("KODIAC_ENV_FILE", str(empty_env))
     monkeypatch.delenv("KODIAC_MODEL_API_KEY", raising=False)
     monkeypatch.delenv("MODEL_API_KEY", raising=False)
 

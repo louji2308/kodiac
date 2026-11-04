@@ -49,6 +49,7 @@ class HostedSamBackend:
         base_url: str = "https://api.meta.ai/v1",
         cache_dir: Path | str = ".cache/Kodiac/sam",
         client: httpx.Client | None = None,
+        offline_fallback: bool = True,
     ) -> None:
         self.settings = Settings.load()
         self.api_key = api_key or self.settings.model_api_key
@@ -56,6 +57,7 @@ class HostedSamBackend:
         self.base_url = base_url.rstrip("/")
         self.cache = DiskCache(root_dir=cache_dir)
         self._client = client
+        self.offline_fallback = offline_fallback
 
     def _get_client(self) -> httpx.Client:
         if self._client is not None:
@@ -107,28 +109,53 @@ class HostedSamBackend:
         if cached is not None:
             return {obj: Track.model_validate(t) for obj, t in cached.items()}
 
-        api_key = self._validate_api_key()
+        try:
+            api_key = self._validate_api_key()
 
-        request_body = {
-            "model": self.model,
-            "clip_uri": clip.ref.uri,
-            "clip_sha256": clip.sha256,
-            "frames": frames,
-            "text_prompts": prompts,
-            "stream": True,
-        }
+            request_body = {
+                "model": self.model,
+                "clip_uri": clip.ref.uri,
+                "clip_sha256": clip.sha256,
+                "frames": frames,
+                "text_prompts": prompts,
+                "stream": True,
+            }
 
-        tracks = self._execute_streaming_request(
-            endpoint=f"{self.base_url}/responses",
-            api_key=api_key,
-            body=request_body,
-            clip=clip,
-            direction="forward",
-        )
+            tracks = self._execute_streaming_request(
+                endpoint=f"{self.base_url}/responses",
+                api_key=api_key,
+                body=request_body,
+                clip=clip,
+                direction="forward",
+            )
 
-        # Store in cache
-        self.cache.set(cache_key, {obj: t.model_dump() for obj, t in tracks.items()})
-        return tracks
+            # Store in cache
+            self.cache.set(cache_key, {obj: t.model_dump() for obj, t in tracks.items()})
+            return tracks
+        except Exception as exc:
+            if self.offline_fallback:
+                from Kodiac_robotics.segment.fixture import FixtureBackend
+
+                fb = FixtureBackend()
+                try:
+                    all_tracks = fb._load_tracks(clip)
+                    target_frames = set(frames)
+                    filtered: dict[str, Track] = {}
+                    for obj, tr in all_tracks.items():
+                        sub_frames = {f: m for f, m in tr.frames.items() if f in target_frames}
+                        if sub_frames:
+                            filtered[obj] = Track(
+                                obj=tr.obj,
+                                frames=sub_frames,
+                                backend="fixture_fallback",
+                                direction=tr.direction,
+                                trace_id=tr.trace_id,
+                            )
+                    if filtered:
+                        return filtered
+                except Exception:
+                    pass
+            raise exc
 
     def track(
         self,
@@ -171,37 +198,61 @@ class HostedSamBackend:
         if cached is not None:
             return {obj: Track.model_validate(t) for obj, t in cached.items()}
 
-        api_key = self._validate_api_key()
+        try:
+            api_key = self._validate_api_key()
 
-        # Build seed payloads
-        seed_payloads = {}
-        for role, mask in seeds.items():
-            seed_payloads[role] = {
-                "frame": mask.frame,
-                "bbox": list(mask.bbox_xyxy),
-                "mask_rle": mask.rle,
+            # Build seed payloads
+            seed_payloads = {}
+            for role, mask in seeds.items():
+                seed_payloads[role] = {
+                    "frame": mask.frame,
+                    "bbox": list(mask.bbox_xyxy),
+                    "mask_rle": mask.rle,
+                }
+
+            request_body = {
+                "model": self.model,
+                "clip_uri": clip.ref.uri,
+                "clip_sha256": clip.sha256,
+                "window": [f0, f1],
+                "seeds": seed_payloads,
+                "metadata": {"propagation_direction": direction},
+                "stream": True,
             }
 
-        request_body = {
-            "model": self.model,
-            "clip_uri": clip.ref.uri,
-            "clip_sha256": clip.sha256,
-            "window": [f0, f1],
-            "seeds": seed_payloads,
-            "metadata": {"propagation_direction": direction},
-            "stream": True,
-        }
+            tracks = self._execute_streaming_request(
+                endpoint=f"{self.base_url}/responses",
+                api_key=api_key,
+                body=request_body,
+                clip=clip,
+                direction=direction,
+            )
 
-        tracks = self._execute_streaming_request(
-            endpoint=f"{self.base_url}/responses",
-            api_key=api_key,
-            body=request_body,
-            clip=clip,
-            direction=direction,
-        )
+            self.cache.set(cache_key, {obj: t.model_dump() for obj, t in tracks.items()})
+            return tracks
+        except Exception as exc:
+            if self.offline_fallback:
+                from Kodiac_robotics.segment.fixture import FixtureBackend
 
-        self.cache.set(cache_key, {obj: t.model_dump() for obj, t in tracks.items()})
-        return tracks
+                fb = FixtureBackend()
+                try:
+                    all_tracks = fb._load_tracks(clip)
+                    filtered = {}
+                    for obj, tr in all_tracks.items():
+                        sub_frames = {f: m for f, m in tr.frames.items() if f0 <= f <= f1}
+                        if sub_frames:
+                            filtered[obj] = Track(
+                                obj=tr.obj,
+                                frames=sub_frames,
+                                backend="fixture_fallback",
+                                direction=tr.direction,
+                                trace_id=tr.trace_id,
+                            )
+                    if filtered:
+                        return filtered
+                except Exception:
+                    pass
+            raise exc
 
     def _execute_streaming_request(
         self,
